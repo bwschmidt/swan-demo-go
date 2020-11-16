@@ -253,6 +253,8 @@ var pubTemplate = newHTMLTemplate("pub", `
         <h3>SWAN supporters</h3>
         <ul>
             <li><img src="//51degrees.com/img/logo.png"></li>
+            <li><img src="//zetaglobal.com/wp-content/uploads/2017/12/Top_Logo@2x.png"></li>
+            <li><img src="//www.liveintent.com/assets/img/brand-assets/LiveIntentLogo-Horiz-Orange.png"></li>
         </ul>
     </section>
     {{ if .CBID }}
