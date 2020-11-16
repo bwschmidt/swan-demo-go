@@ -3,9 +3,140 @@ Shared Web Advertising Network (SWAN) - Demo in go of SWAN, SWIFT and OWID
 
 # Deployment
 
-## AWS Elastic Beanstalk
+## AWS Elastic Beanstalk - without docker
 
-TODO
+### Prerequisites
+
+* Familiar with the concepts associated with 
+[SWIFT](https://github.com/51degrees/swift) and 
+[OWID](https://github.com/51Degrees/owid).
+
+* AWS account with Elastic Beanstalk and DynamoDB administration privileges.
+
+* Local Go version 1.15 or greater installation sufficient to run the Go command
+line.
+
+* Setup domains to use with the demo in AWS using 
+[Route 53](https://console.aws.amazon.com/route53). Domains are needed for the 
+following roles.
+
+    * SWAN access domain. For example ``51d.io``.
+
+    * Each of the SWIFT nodes that will support SWAN. At least two domains are 
+    needed. For the purposes of the demo they may be sub domains. For example
+    ``51da.uk`` and ``51db.uk``.
+
+    * At least two different domains for publishers. For example ``swan-pub.uk``
+    and ``swift-pub.uk``.
+
+    * At least two different domains for marketers. For example 
+    ``cool-bikes.uk`` and ``cool-creams.uk``.
+
+* Setup SSL certificates in AWS using 
+[Certificate Manager](https://console.aws.amazon.com/acm/) 
+for each of the domains.
+
+### Steps
+
+* TODO : **add instructions for setting up DynamoDB**.
+
+* Add the AWS DynamoDB access credentials to a copy of the ``appsettings.json`` 
+file in the root of this repository.
+
+* Add the domains to the ``appsettings.json`` fields for ``demo-pubs``, 
+``demo-mars``, and ``demo-swan``. ``Demo-swan`` is a single domain for the 
+access point domain. ``Demo-pubs`` and ``demo-mars`` are a list of multiple 
+domains for publishers and marketers respectively.
+
+```
+{
+    "demo-pubs": [
+        "swan-pub.uk",
+        "swift-pub.uk" 
+    ],
+    "demo-mars": [
+        "cool-bikes.uk",
+        "cool-creams.uk"
+    ],
+    "demo-swan": "51d.io"
+}
+```
+
+* You may need to support multiple SSL certificates if the demo deployment 
+should respond to five or more domains. 
+See AWS
+[documentation](https://aws.amazon.com/premiumsupport/knowledge-center/elastic-beanstalk-ssl-load-balancer/).
+Locate the ARN for each of the certificates that should be used with the demo.
+
+* Add SSL certificate ARNs to a copy of ``.ebextensions/.config``. For example 
+if you have the SSL ARNs A, B and C your .config file would contain the
+following entries.
+
+```
+option_settings:
+  aws:elbv2:listener:443:
+    Protocol: HTTPS
+    SSLCertificateArns: "A"
+Resources:
+  SSLCert2:
+    Type: "AWS::ElasticLoadBalancingV2::ListenerCertificate"
+    Properties:
+      ListenerArn:
+        Ref : "AWSEBV2LoadBalancerListener443"
+      Certificates:
+        - CertificateArn: "B"
+  SSLCert3:
+    Type: "AWS::ElasticLoadBalancingV2::ListenerCertificate"
+    Properties:
+      ListenerArn:
+        Ref : "AWSEBV2LoadBalancerListener443"
+      Certificates:
+        - CertificateArn: "C"
+```
+
+* Run the build.bat (Windows) or build.sh (Linux) to create the 
+``aws-eb-swan-demo.zip`` bundle. The bundle should contain the ``application`` 
+executable compiled for Linux 64 bit, ``Procfile`` to tell Elastic Beanstalk how 
+to start the application, and ``.ebextensions/.config`` to configure additional
+HTTPS listeners for additional domains and SSL certificates.
+
+* Create a new Elastic Beanstalk Application and Environment using the 
+[AWS document](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/create_deploy_go.html).
+
+* Upload the ``aws-eb-swan-demo.zip`` bundle to the environment.
+
+* Add an A record for each of the domains to direct traffic to the Elastic 
+Beanstalk environment following the 
+[AWS documentation](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-to-beanstalk-environment.html).
+
+* The SWAN access domain will be used to sign all the outgoing Open Web IDs and
+also to capture people's preferences. Register this domain with the following
+URL and entering any of the details requested. This will create a record in the 
+``owidcreators`` table for the domain which will contain randomly generated 
+public and private signing keys.
+
+```
+https://swan-access-domain/owid/register
+```
+
+* For each of the storage nodes that will be used for the SWIFT component of the
+demo register these using the following URL. Enter the network as "swan" (no 
+quotes) to match the value provided in the ``appsettings.json`` in the 
+``swanNetwork`` field. Leave the others as default.
+
+```
+https://swift-node-domain/swift/register
+```
+
+* At least one SWIFT access node is required. Repeat the previous process but 
+select the "Access Node" option rather than the default "Storage Node". The 
+records from these steps will be visible in the ``swiftnodes`` and 
+``swiftsecrets`` tables.
+
+* Verify the demo is working by navigating to the publisher domain. The first 
+request from a web browser will result in the progress circle as SWIFT nodes
+are navigated between before the preference capture page from the SWAN domain
+is displayed.
 
 ## Azure App Service
 
@@ -13,19 +144,36 @@ TODO
 
 # Files
 
-Procfile : needed by AWS Elastic Beanstalk to indicate the application executable for web services.
+Procfile : needed by AWS Elastic Beanstalk to indicate the application 
+executable for web services.
 
 build.bat : builds AWS or Azure packages on Windows ready for manual deployment.
 
-appsettings.json.rename : template application settings ready for Azure and AWS storage or DynameDB keys.
+appsettings.json.rename : template application settings ready for Azure and AWS 
+storage or DynameDB keys.
 
 appsettings.dev.json.rename : development app settings template.
 
-.ebextensions/.config.rename : AWS Elastic Beanstalk .config template ready for additional SSL certificates.
+.ebextensions/.config.rename : AWS Elastic Beanstalk .config template ready for
+additional SSL certificates.
 
-Note: .gitignore will ignore appsettings.json and appsettings.dev.json to limit the risk of commits containing access keys.
+Note: .gitignore will ignore appsettings.json and appsettings.dev.json to limit
+the risk of commits containing access keys.
 
 # Environments
+
+This demo makes extensive use of multiple domains. For development purposes 
+setup local domains to resolve to 127.0.0.1.
+
+## Windows 
+
+```
+notepad C:\Windows\System32\drivers\etc\hosts
+```
+
+## Linux
+
+**TODO: add instructions to setup local hosts**
 
 ## Visual Studio Code
 
