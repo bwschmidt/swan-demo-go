@@ -1,0 +1,28 @@
+{
+    "message": "Hang tight. We're getting things ready.",
+    "title": "Swift Example",
+    "bundleTimeout": 20,
+    "cookieTimeout": 60,
+    "backgroundColor": "#f5f5f5",
+    "messageColor": "darkslategray",
+    "progressColor": "darkgreen",
+    "scheme": "http",
+    "nodeCount": 10,
+    "azureAccessKey": "[ADD YOUR AZURE STORAGE KEY OR DELETE]",
+    "azureAccount": "[ADD YOUR AZURE STORAGE ACCOUNT OR DELETE]",
+    "swanNetwork": "swan-dev",
+    "debug": false,
+    "demo-pubs": [
+        "new-pork-limes.uk:5000",
+        "current-bun.uk:5000",
+        "swan-pub.uk:5000",
+        "swallow-pub.uk:5000",
+        "swift-pub.uk:5000" 
+    ],
+    "demo-mars": [
+        "cool-bikes.uk:5000",
+        "cool-cars.uk:5000",
+        "cool-creams.uk:5000"
+    ],
+    "demo-swan": "51d.io:5000"
+}

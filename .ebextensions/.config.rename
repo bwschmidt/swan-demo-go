@@ -1,0 +1,12 @@
+option_settings:
+  aws:elbv2:listener:443:
+    Protocol: HTTPS
+    SSLCertificateArns: "[ADD AWS SSL CERT ARN]"
+Resources:
+  AddingSSLCert2:
+    Type: "AWS::ElasticLoadBalancingV2::ListenerCertificate"
+    Properties:
+      ListenerArn:
+        Ref : "AWSEBV2LoadBalancerListener443"
+      Certificates:
+        - CertificateArn: "[MORE AWS SSL CERT ARN]"

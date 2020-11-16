@@ -1,0 +1,12 @@
+*.exe
+*.test
+__debug_bin
+pkg/
+bin/
+src/github.com
+src/golang.org
+appsettings.json
+appsettings.dev.json
+application
+*.zip
+.config

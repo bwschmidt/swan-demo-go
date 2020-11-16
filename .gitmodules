@@ -1,0 +1,9 @@
+[submodule "src/swan"]
+	path = src/swan
+	url = https://github.com/51Degrees/swan-go
+[submodule "src/owid"]
+	path = src/owid
+	url = https://github.com/51Degrees/owid-go
+[submodule "src/swift"]
+	path = src/swift
+	url = https://github.com/51Degrees/swift-go
