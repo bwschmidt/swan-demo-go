@@ -14,9 +14,13 @@ TODO
 # Files
 
 Procfile : needed by AWS Elastic Beanstalk to indicate the application executable for web services.
+
 build.bat : builds AWS or Azure packages on Windows ready for manual deployment.
+
 appsettings.json.rename : template application settings ready for Azure and AWS storage or DynameDB keys.
+
 appsettings.dev.json.rename : development app settings template.
+
 .ebextensions/.config.rename : AWS Elastic Beanstalk .config template ready for additional SSL certificates.
 
 Note: .gitignore will ignore appsettings.json and appsettings.dev.json to limit the risk of commits containing access keys.
