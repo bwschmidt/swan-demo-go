@@ -23,6 +23,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"owid"
 	"swan"
 	"swift"
 )
@@ -34,11 +35,13 @@ func AddHandlers(settingsFile string) {
 	demoConfig := newConfig(settingsFile)
 
 	// Create the demo access keys.
-	swiftAccess := swift.NewAccessSimple([]string{"123"})
+	accessKeys := []string{"key"}
+	swiftAccess := swift.NewAccessSimple(accessKeys)
+	owidAccess := owid.NewAccessSimple(accessKeys)
 
 	// Add the SWAN handlers, with the publisher handler being used for any
 	// malformed storeage requests.
-	swan.AddHandlers(settingsFile, swiftAccess, handlerPublisher(&demoConfig))
+	swan.AddHandlers(settingsFile, swiftAccess, owidAccess, handlerPublisher(&demoConfig))
 
 	// TODO Add a handler for the marketers end point.
 	// http.HandleFunc("/mar", handlerPublisher(&demoConfig))
