@@ -118,7 +118,7 @@ func handlerPublisher(c *Configuration) http.HandlerFunc {
 					returnServerError(c, w, err)
 				}
 			} else {
-				// No, so redirect to the CMP.
+				// No, so redirect to SWAN.
 				http.Redirect(w, r, p.swanURL, 303)
 			}
 		} else {

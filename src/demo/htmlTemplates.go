@@ -171,9 +171,6 @@ var pubTemplate = newHTMLTemplate("pub", `
         main section ul li {
             margin: 1em 0;
         }
-        main section img {
-            width: 128px;
-        }
         footer {
             position: sticky;
             bottom: 0;
@@ -190,6 +187,22 @@ var pubTemplate = newHTMLTemplate("pub", `
         }
         footer ul li {
             display: inline;
+        }
+        .logos {
+            list-style: none;
+            display: flex;
+            padding: 0;
+            align-items: center;
+            flex-flow: row wrap;
+            justify-content: center;
+        }
+        .logos li {
+            display: block;
+            float: left;
+            margin: 1em;
+        }
+        .logos li img {
+            width: 96px;
         }
     </style>
     <script>
@@ -242,16 +255,16 @@ var pubTemplate = newHTMLTemplate("pub", `
         <h3>Welcome to SWAN : the future of open web advertising</h3>
         <p>By enabling us to set a secure, privacy-by-design ID, we and other SWAN supporters promise to respect your privacy choices. The SWAN network is a privacy-by-design method of enabling personalized cross-publisher experiences on all publishers that adopt it.</p>
         <ul>
-        <li><strong>People</strong> : enhacned transparency, persistent choices (no more consent fatigue) and "right to be forgotten".</li>
+        <li><strong>People</strong> : enhanced transparency, persistent choices (no more consent fatigue) and "right to be forgotten".</li>
         <li><strong>Publishers</strong> : effective engagement, optimized advertising yield and accountable auditing to detect misappropriation.</li>
         <li><strong>Marketers</strong> : optimize cross publisher effectiveness, ensure you get what you pay for.</li>
-        <li><strong>Decentralized</strong> : open source with multiple implementors forming a network.</li> 
         </ul>
+        <p>Multiple implementors of SWAN open source form a dencentralized network. There's no single point of failure.</p>
         <p>Read on for a brief introduction to SWAN. To find out more go <a href="https://github.com/51degrees/swan">here</a>.</p>
     </section>
     <section>
         <h3>SWAN supporters</h3>
-        <ul>
+        <ul class="logos">
             <li><img src="//51degrees.com/img/logo.png"></li>
             <li><img src="//zetaglobal.com/wp-content/uploads/2017/12/Top_Logo@2x.png"></li>
             <li><img src="//www.liveintent.com/assets/img/brand-assets/LiveIntentLogo-Horiz-Orange.png"></li>
