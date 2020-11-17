@@ -150,7 +150,7 @@ var pubTemplate = newHTMLTemplate("pub", `
             font-family: monospace;
         }
         main section pre {
-            display: block;
+            display: inline-block;
             padding: 0.5em;
         }
         main section span {
