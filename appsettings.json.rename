@@ -10,6 +10,7 @@
     "nodeCount": 10,
     "azureAccessKey": "[ADD YOUR AZURE STORAGE KEY OR DELETE]",
     "azureAccount": "[ADD YOUR AZURE STORAGE ACCOUNT OR DELETE]",
+    "useDynamoDB": true 
     "debug": false,
     "swanNetwork": "swan",
     "demo-pubs": [

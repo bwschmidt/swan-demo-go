@@ -11,7 +11,14 @@ Shared Web Accountable Network (SWAN) - Demo in go of SWAN, SWIFT and OWID
 [SWIFT](https://github.com/51degrees/swift) and 
 [OWID](https://github.com/51Degrees/owid).
 
-* AWS account with Elastic Beanstalk and DynamoDB administration privileges.
+* AWS account with Elastic Beanstalk and DynamoDB administration privileges. 
+
+  * See
+  [Configuring AWS SDK for Go](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html)
+  to set up your environment.
+
+  * Make sure to set the `AWS_REGION`, `AWS_ACCESS_KEY_ID` and 
+  `AWS_SECRET_ACCESS_KEY` environment variables as a minimum.
 
 * Local Go version 1.15 or greater installation sufficient to run the Go command
 line.
@@ -38,9 +45,7 @@ for each of the domains.
 
 ### Steps
 
-* TODO : **add instructions for setting up DynamoDB**.
-
-* Add the AWS DynamoDB access credentials to a copy of the ``appsettings.json`` 
+* Ensure the field ``useDynamoDB`` to `true` in the ``appsettings.json`` 
 file in the root of this repository.
 
 * Add the domains to the ``appsettings.json`` fields for ``demo-pubs``, 
@@ -103,6 +108,12 @@ HTTPS listeners for additional domains and SSL certificates.
 * Create a new Elastic Beanstalk Application and Environment using the 
 [AWS document](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/create_deploy_go.html).
 
+* Give the Elastic Beanstalk Environment permissions to create and read DynamoDB
+tables:
+ 
+  * For the Elastic Beanstalk Environment role (default: `aws-elasticbeanstal-ec2-role`), attach the 
+  [AmazonDynamoDBFullAccess](https://console.aws.amazon.com/iam/home#/policies/arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess$serviceLevelSummary) permission policy.
+
 * Upload the ``aws-eb-swan-demo.zip`` bundle to the environment.
 
 * Add an A record for each of the domains to direct traffic to the Elastic 
@@ -144,20 +155,22 @@ TODO
 
 # Files
 
-Procfile : needed by AWS Elastic Beanstalk to indicate the application 
+`Procfile` : needed by AWS Elastic Beanstalk to indicate the application 
 executable for web services.
 
-build.bat : builds AWS or Azure packages on Windows ready for manual deployment.
+`build.bat` : builds AWS or Azure packages on Windows ready for manual deployment.
 
-appsettings.json.rename : template application settings ready for Azure and AWS 
+`build.sh` : builds AWS or Azure packages on Linux ready for manual deployment.
+
+`appsettings.json.rename` : template application settings ready for Azure and AWS 
 storage or DynameDB keys.
 
-appsettings.dev.json.rename : development app settings template.
+`appsettings.dev.json.rename` : development app settings template.
 
-.ebextensions/.config.rename : AWS Elastic Beanstalk .config template ready for
+`.ebextensions/.config.rename` : AWS Elastic Beanstalk .config template ready for
 additional SSL certificates.
 
-Note: .gitignore will ignore appsettings.json and appsettings.dev.json to limit
+Note: `.gitignore` will ignore `appsettings.json` and `appsettings.dev.json` to limit
 the risk of commits containing access keys.
 
 # Environments
@@ -173,7 +186,9 @@ notepad C:\Windows\System32\drivers\etc\hosts
 
 ## Linux
 
-**TODO: add instructions to setup local hosts**
+```
+vi /etc/hosts
+```
 
 ## Visual Studio Code
 
