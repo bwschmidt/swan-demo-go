@@ -24,6 +24,7 @@ import (
 	"log"
 	"net/http"
 	"swan"
+	"swift"
 )
 
 // AddHandlers and outputs configuration information.
@@ -32,9 +33,12 @@ func AddHandlers(settingsFile string) {
 	// Get the demo configuration.
 	demoConfig := newConfig(settingsFile)
 
+	// Create the demo access keys.
+	swiftAccess := swift.NewAccessSimple([]string{"123"})
+
 	// Add the SWAN handlers, with the publisher handler being used for any
 	// malformed storeage requests.
-	swan.AddHandlers(settingsFile, handlerPublisher(&demoConfig))
+	swan.AddHandlers(settingsFile, swiftAccess, handlerPublisher(&demoConfig))
 
 	// TODO Add a handler for the marketers end point.
 	// http.HandleFunc("/mar", handlerPublisher(&demoConfig))
