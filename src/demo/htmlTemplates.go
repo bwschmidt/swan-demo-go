@@ -300,6 +300,11 @@ var pubTemplate = newHTMLTemplate("pub", `
         <p>SID and CBID are all implemented in SWAN using the Open Web ID schema. It's open source and your can find out more <a href="https://github.com/51degrees/owid">here</a>.</p>
     </section>
     {{ end }}
+    <section>
+        <h3>Offer ID (OID)</h3>
+        <p>Here's an advertising OfferID generated for this page request.</p>
+        <pre>{{ .NewOfferID "1" }}</pre>
+    </section>
     {{ if .Allow }}
     <section>
         <h3>Preferences</h3>

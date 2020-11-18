@@ -33,19 +33,26 @@ type preference struct {
 	results []*swan.Pair   // The results for display
 }
 
-func (p *preference) CBID() *swan.Pair  { return findResult(p, "cbid") }
-func (p *preference) SID() *swan.Pair   { return findResult(p, "sid") }
-func (p *preference) Allow() *swan.Pair { return findResult(p, "allow") }
-func (p *preference) Pubs() []string    { return p.config.Pubs }
-func (p *preference) Title() string     { return p.request.Host }
+func (p *preference) CBID() *swan.Pair      { return findResult(p, "cbid") }
+func (p *preference) SID() *swan.Pair       { return findResult(p, "sid") }
+func (p *preference) Allow() *swan.Pair     { return findResult(p, "allow") }
+func (p *preference) Pubs() []string        { return p.config.Pubs }
+func (p *preference) Title() string         { return p.request.Host }
+func (p *preference) Results() []*swan.Pair { return p.results }
 func (p *preference) BackgroundColor() string {
 	return getBackgroundColor(p.request.Host)
 }
+
+func (p *preference) NewOfferID(placement string) string {
+	oid, _ := p.createOfferID(placement)
+	return oid
+}
+
 func (p *preference) SWANURL() string {
 	u, _ := createUpdateURL(p.config, p.request)
 	return u
 }
-func (p *preference) Results() []*swan.Pair { return p.results }
+
 func (p *preference) JSON() string {
 	b, err := json.Marshal(p.results)
 	if err != nil {
@@ -54,6 +61,7 @@ func (p *preference) JSON() string {
 	}
 	return string(b)
 }
+
 func (p *preference) IsSet() bool {
 	for _, e := range p.results {
 		if e.Key == "allow" {
@@ -317,4 +325,36 @@ func findResult(p *preference, k string) *swan.Pair {
 		}
 	}
 	return nil
+}
+
+func (p *preference) createOfferID(placement string) (string, error) {
+
+	u, err := url.Parse(
+		p.config.Scheme + "://" + p.config.SwanDomain +
+			"/swan/api/v1/create-offer-id")
+	if err != nil {
+		return "", err
+	}
+
+	q := u.Query()
+	q.Add("accessKey", p.config.AccessKey)
+	q.Add("placement", placement)
+	q.Add("pubdomain", p.request.Host)
+	q.Add("cbid", p.CBID().Value)
+	q.Add("sid", p.SID().Value)
+	q.Add("preferences", p.Allow().Value)
+	u.RawQuery = q.Encode()
+
+	resp, err := http.Get(u.String())
+	if err != nil {
+		return "", err
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return string(body), nil
 }
