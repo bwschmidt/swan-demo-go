@@ -150,7 +150,7 @@ var pubTemplate = newHTMLTemplate("pub", `
             font-family: monospace;
         }
         main section pre {
-            display: block;
+            display: inline-block;
             padding: 0.5em;
         }
         main section span {
@@ -288,15 +288,15 @@ var pubTemplate = newHTMLTemplate("pub", `
         <pre><script>publicKey(document.scripts[document.scripts.length - 1].parentNode, '{{ .CBID.CreatorURL }}');</script></pre>
     </section>
     {{ end }}
-    {{ if .UUID }}
+    {{ if .SID }}
     <section>
         <h3>Signed-in ID (SID)</h3>
         <p>If you wish to preserve your preferences across multiple browsers or devices, you can use SWAN to share your signed-in ID (SID). This relies on hashing a validated email you provide to register at this site. Here's the SID SWAN generated from whatever you entered.</p>
-        <pre>{{ .UUID.AsOWID.PayloadAsString }}</pre>
+        <pre>{{ .SID.AsOWID.PayloadAsString }}</pre>
         <p>Just like CBID it's secured to make it verifiable. Here's the longer version.</p>
-        <pre>{{ .UUID.Value }}</pre>
+        <pre>{{ .SID.Value }}</pre>
         <p>When all of this is decoded and verified it looks like this.</p>
-        <pre><script>text(document.scripts[document.scripts.length - 1].parentNode, '{{ .UUID.DecodeAndVerifyURL }}');</script></pre>
+        <pre><script>text(document.scripts[document.scripts.length - 1].parentNode, '{{ .SID.DecodeAndVerifyURL }}');</script></pre>
         <p>SID and CBID are all implemented in SWAN using the Open Web ID schema. It's open source and your can find out more <a href="https://github.com/51degrees/owid">here</a>.</p>
     </section>
     {{ end }}

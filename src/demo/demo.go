@@ -34,13 +34,14 @@ func AddHandlers(settingsFile string) {
 	// Get the demo configuration.
 	dc := newConfig(settingsFile)
 
-	// Create the demo access keys.
-	sa := swift.NewAccessSimple(dc.AccessKeys)
+	// Get the example simple access control implementations.
+	swi := swift.NewAccessSimple(dc.AccessKeys)
 	oa := owid.NewAccessSimple(dc.AccessKeys)
+	swa := swan.NewAccessSimple(dc.AccessKeys)
 
 	// Add the SWAN handlers, with the publisher handler being used for any
-	// malformed storeage requests.
-	swan.AddHandlers(settingsFile, sa, oa, handlerPublisher(&dc))
+	// malformed storage requests.
+	swan.AddHandlers(settingsFile, swa, swi, oa, handlerPublisher(&dc))
 
 	// TODO Add a handler for the marketers end point.
 	// http.HandleFunc("/mar", handlerPublisher(&demoConfig))

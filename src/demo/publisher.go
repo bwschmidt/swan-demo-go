@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -30,18 +31,20 @@ type preference struct {
 	config  *Configuration // Configuration information for the demo
 	request *http.Request  // The background color for the page.
 	results []*swan.Pair   // The results for display
-	swanURL string         // The URL for the preferences at the SWAN preferences page
 }
 
 func (p *preference) CBID() *swan.Pair  { return findResult(p, "cbid") }
-func (p *preference) UUID() *swan.Pair  { return findResult(p, "uuid") }
+func (p *preference) SID() *swan.Pair   { return findResult(p, "sid") }
 func (p *preference) Allow() *swan.Pair { return findResult(p, "allow") }
 func (p *preference) Pubs() []string    { return p.config.Pubs }
 func (p *preference) Title() string     { return p.request.Host }
 func (p *preference) BackgroundColor() string {
 	return getBackgroundColor(p.request.Host)
 }
-func (p *preference) SWANURL() string       { return p.swanURL }
+func (p *preference) SWANURL() string {
+	u, _ := createUpdateURL(p.config, p.request)
+	return u
+}
 func (p *preference) Results() []*swan.Pair { return p.results }
 func (p *preference) JSON() string {
 	b, err := json.Marshal(p.results)
@@ -77,19 +80,27 @@ func handlerPublisher(c *Configuration) http.HandlerFunc {
 		}
 
 		// Try the URL path for the preference values.
-		if r.URL.RawQuery != "" {
+		if r.URL.Path != "/" {
 			p, err = newPreferencesFromPath(c, r)
 			if err != nil {
 				returnServerError(c, w, err)
 				return
 			}
 			if p != nil {
+
+				// Preferences could be obtained from the URL. Remove the SWAN
+				// data string and redirect back to the page setting cookies.
+				n := c.Scheme + "://" + r.Host +
+					strings.ReplaceAll(r.URL.Path, getSWANString(r), "")
+				if c.Debug {
+					log.Printf("Redirecting to '%s'\n", n)
+				}
+
+				// Set the preferences as cookies and redirect back to the page
+				// to remove the SWAN data string from the address bar.
 				setCookies(r, w, p)
-				http.Redirect(
-					w,
-					r,
-					fmt.Sprintf("%s://%s%s", c.Scheme, r.Host, r.URL.Path),
-					303)
+				http.Redirect(w, r, n, 303)
+				return
 			}
 		}
 
@@ -97,14 +108,6 @@ func handlerPublisher(c *Configuration) http.HandlerFunc {
 		// cookies.
 		if p == nil {
 			p = newPreferencesFromCookies(r)
-		}
-
-		// Set the preferences URL for the CMP. Could you used if the user wants to
-		// change their choices, or none exist and a redirect is needed.
-		p.swanURL, err = createPreferenceURL(c, r, p)
-		if err != nil {
-			returnServerError(c, w, err)
-			return
 		}
 
 		if p != nil && len(p.results) > 0 {
@@ -118,11 +121,15 @@ func handlerPublisher(c *Configuration) http.HandlerFunc {
 					returnServerError(c, w, err)
 				}
 			} else {
-				// No, so redirect to SWAN.
-				http.Redirect(w, r, p.swanURL, 303)
+				// No, so ask the user from SWAN.
+				u, err := createUpdateURL(c, r)
+				if err != nil {
+					returnServerError(c, w, err)
+				}
+				http.Redirect(w, r, u, 303)
 			}
 		} else {
-			// No preferences so start the process to fetch them.
+			// No preferences so start the process to fetch them from SWAN.
 			u, err := createFetchURL(c, r)
 			if err != nil {
 				returnServerError(c, w, err)
@@ -135,7 +142,7 @@ func handlerPublisher(c *Configuration) http.HandlerFunc {
 func newPreferencesFromCookies(r *http.Request) *preference {
 	var p preference
 	for _, c := range r.Cookies() {
-		if c.Name == "cbid" || c.Name == "uuid" || c.Name == "allow" {
+		if c.Name == "cbid" || c.Name == "sid" || c.Name == "allow" {
 			var s swan.Pair
 			s.Key = c.Name
 			s.Value = c.Value
@@ -151,7 +158,6 @@ func setCookies(r *http.Request, w http.ResponseWriter, p *preference) {
 		c := http.Cookie{
 			Name:     i.Key,
 			Domain:   getDomain(r.Host),
-			Path:     r.URL.Path,
 			Value:    i.Value,
 			SameSite: http.SameSiteLaxMode,
 			HttpOnly: true,
@@ -165,16 +171,29 @@ func getDomain(h string) string {
 	return s[0]
 }
 
+func getSWANString(r *http.Request) string {
+	i := strings.LastIndex(r.URL.Path, "/")
+	if i >= 0 {
+		return r.URL.Path[i+1:]
+	}
+	return r.URL.RawQuery
+}
+
 func newPreferencesFromPath(
 	config *Configuration,
 	r *http.Request) (*preference, error) {
 
 	var p preference // Preferences for display in the HTML
 
-	// Decrypt the string with the CMP.
-	in, err := pubDecrypt(config, r, r.URL.RawQuery)
+	// Decrypt the SWAN data string.
+	in, err := decode(config, r, getSWANString(r))
 	if err != nil {
 		return nil, err
+	}
+
+	// If debug is enabled then output the JSON.
+	if config.Debug {
+		log.Println(string(in))
 	}
 
 	// Get the results.
@@ -186,15 +205,18 @@ func newPreferencesFromPath(
 	return &p, nil
 }
 
-func pubDecrypt(config *Configuration, r *http.Request, q string) ([]byte, error) {
+func decode(config *Configuration, r *http.Request, d string) ([]byte, error) {
 
 	// Combine it with the access node to decrypt the result.
 	u, err := url.Parse(config.Scheme + "://" + config.SwanDomain)
 	if err != nil {
 		return nil, err
 	}
-	u.Path = "/swan/api/v1/decrypt"
-	u.RawQuery = q
+	u.Path = "/swan/api/v1/decode-as-json"
+	q := u.Query()
+	q.Set("data", d)
+	q.Set("accessKey", config.AccessKey)
+	u.RawQuery = q.Encode()
 
 	// Call the URL and unpack the results if they're available.
 	res, err := http.Get(u.String())
@@ -215,14 +237,12 @@ func getPage(config *Configuration, r *http.Request) string {
 }
 
 func setCommon(config *Configuration, r *http.Request, q *url.Values) {
-	// set the access key
+
+	// Set the access key
 	q.Set("accessKey", config.AccessKey)
 
 	// Set the url for the return operation.
-	q.Set("returnUrl", getPage(config, r)+"?")
-
-	// Set the table for the operation.
-	q.Set("table", "example")
+	q.Set("returnUrl", getPage(config, r))
 
 	// Set the remote address and X-FORWARDED-FOR header.
 	if r.Header.Get("X-FORWARDED-FOR") != "" {
@@ -236,47 +256,34 @@ func setCommon(config *Configuration, r *http.Request, q *url.Values) {
 	q.Set("backgroundColor", getBackgroundColor(r.Host))
 	q.Set("progressColor", "darkblue")
 	q.Set("messageColor", "black")
-	q.Set("bounces", "10")
 }
 
-func createPreferenceURL(
-	config *Configuration,
-	r *http.Request,
-	p *preference) (string, error) {
-
-	// Build a new URL to request the first storeage operation URL.
-	u, err := url.Parse(
-		config.Scheme + "://" + config.SwanDomain + "/swan/preferences")
-	if err != nil {
-		return "", err
-	}
-
-	// Add the query string paramters for the share web state operation.
-	q := u.Query()
-	setCommon(config, r, &q)
-	for _, i := range p.results {
-		q.Set(i.Key, i.Value)
-	}
-	u.RawQuery = q.Encode()
-
-	return u.String(), nil
+func createUpdateURL(config *Configuration, r *http.Request) (string, error) {
+	return createSWANActionURL(config, r, "update")
 }
 
 func createFetchURL(config *Configuration, r *http.Request) (string, error) {
+	return createSWANActionURL(config, r, "fetch")
+}
+
+func createSWANActionURL(
+	config *Configuration,
+	r *http.Request,
+	action string) (string, error) {
 
 	// Build a new URL to request the first storage operation URL.
 	u, err := url.Parse(
-		config.Scheme + "://" + config.SwanDomain + "/swan/api/v1/fetch")
+		config.Scheme + "://" + config.SwanDomain + "/swan/api/v1/" + action)
 	if err != nil {
 		return "", err
 	}
 
-	// Add the query string paramters for the share web state operation.
+	// Add the query string paramters for the SWIFT operation.
 	q := u.Query()
 	setCommon(config, r, &q)
 	u.RawQuery = q.Encode()
 
-	// Get the first storeage operation URL from the access node.
+	// Get the link to SWAN to use for the fetch operation.
 	res, err := http.Get(u.String())
 	if err != nil {
 		return "", err
