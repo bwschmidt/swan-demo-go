@@ -118,7 +118,7 @@ func handlerPublisher(c *Configuration) http.HandlerFunc {
 				p.config = c
 
 				// TODO : call SWAN to get a new offer ID for this page request.
-				o, err := requestOfferID(c, p)
+				o, err := requestOfferID("bikes", c, p, r)
 				if err != nil {
 					returnServerError(c, w, err)
 				}
@@ -321,7 +321,11 @@ func findResult(p *preference, k string) *swan.Pair {
 	return nil
 }
 
-func requestOfferID(c *Configuration, p *preference) (*owid.OWID, error) {
+func requestOfferID(
+	placement string,
+	c *Configuration,
+	p *preference,
+	r *http.Request) (*owid.OWID, error) {
 	client := &http.Client{}
 
 	u := c.Scheme + "://" + c.SwanDomain + "/swan/api/v1/create-offer-id"
@@ -336,12 +340,22 @@ func requestOfferID(c *Configuration, p *preference) (*owid.OWID, error) {
 		return nil, err
 	}
 
+	sid, err := p.UUID().AsOWID()
+	if err != nil {
+		return nil, err
+	}
+
+	pref, err := p.Allow().AsOWID()
+	if err != nil {
+		return nil, err
+	}
+
 	q := req.URL.Query()
-	q.Add("placement", "")
-	q.Add("pubdomain", "")
+	q.Add("placement", placement)
+	q.Add("pubdomain", r.Host)
 	q.Add("cbid", cbid.PayloadAsString())
-	q.Add("sid", "")
-	q.Add("preferences", "")
+	q.Add("sid", sid.PayloadAsString())
+	q.Add("preferences", pref.PayloadAsString())
 	req.URL.RawQuery = q.Encode()
 
 	resp, err := client.Do(req)
