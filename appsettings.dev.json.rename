@@ -25,4 +25,9 @@
         "cool-creams.uk:5000"
     ],
     "demo-swan": "51d.io:5000"
+    "accessKeys" : [
+        "key1",
+        "key2"
+    ],
+    accessKey: "key1"
 }

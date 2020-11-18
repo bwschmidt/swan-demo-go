@@ -32,29 +32,28 @@ import (
 func AddHandlers(settingsFile string) {
 
 	// Get the demo configuration.
-	demoConfig := newConfig(settingsFile)
+	dc := newConfig(settingsFile)
 
 	// Create the demo access keys.
-	accessKeys := []string{"key"}
-	swiftAccess := swift.NewAccessSimple(accessKeys)
-	owidAccess := owid.NewAccessSimple(accessKeys)
+	sa := swift.NewAccessSimple(dc.AccessKeys)
+	oa := owid.NewAccessSimple(dc.AccessKeys)
 
 	// Add the SWAN handlers, with the publisher handler being used for any
 	// malformed storeage requests.
-	swan.AddHandlers(settingsFile, swiftAccess, owidAccess, handlerPublisher(&demoConfig))
+	swan.AddHandlers(settingsFile, sa, oa, handlerPublisher(&dc))
 
 	// TODO Add a handler for the marketers end point.
 	// http.HandleFunc("/mar", handlerPublisher(&demoConfig))
 
 	// Start the web server on the port provided.
-	log.Printf("Demo scheme: %s\n", demoConfig.Scheme)
-	log.Printf("SWAN access node domain: %s\n", demoConfig.SwanDomain)
+	log.Printf("Demo scheme: %s\n", dc.Scheme)
+	log.Printf("SWAN access node domain: %s\n", dc.SwanDomain)
 	log.Println("Pub. URLs:")
-	for _, s := range demoConfig.Pubs {
+	for _, s := range dc.Pubs {
 		log.Println("  ", s)
 	}
 	log.Println("Mar. URLs:")
-	for _, s := range demoConfig.Mars {
+	for _, s := range dc.Mars {
 		log.Println("  ", s)
 	}
 }

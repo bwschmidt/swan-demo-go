@@ -25,6 +25,8 @@ import (
 
 // Configuration maps to the appsettings.json settings file.
 type Configuration struct {
+	AccessKey  string        `json:"accessKey"`     // Key to authenticate with the nodes
+	AccessKeys []string      `json:"accessKeys"`    // Array of keys to authenticate nodes with
 	Pubs       []string      `json:"demo-pubs"`     // Array of publisher URLs
 	Mars       []string      `json:"demo-mars"`     // Array of marketers URLs
 	SwanDomain string        `json:"demo-swan"`     // Domain for the SWAN access node

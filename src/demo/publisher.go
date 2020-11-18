@@ -215,6 +215,8 @@ func getPage(config *Configuration, r *http.Request) string {
 }
 
 func setCommon(config *Configuration, r *http.Request, q *url.Values) {
+	// set the access key
+	q.Set("accessKey", config.AccessKey)
 
 	// Set the url for the return operation.
 	q.Set("returnUrl", getPage(config, r)+"?")
