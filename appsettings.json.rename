@@ -29,5 +29,5 @@
         "key1",
         "key2"
     ],
-    accessKey: "key1"
+    "accessKey": "key1"
 }
