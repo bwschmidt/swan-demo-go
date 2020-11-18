@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -86,12 +87,20 @@ func handlerPublisher(c *Configuration) http.HandlerFunc {
 				return
 			}
 			if p != nil {
+
+				// Preferences could be obtained from the URL. Remove the SWAN
+				// data string and redirect back to the page setting cookies.
+				n := c.Scheme + "://" + r.Host +
+					strings.ReplaceAll(r.URL.Path, getSWANString(r), "")
+				if c.Debug {
+					log.Printf("Redirecting to '%s'\n", n)
+				}
+
+				// Set the preferences as cookies and redirect back to the page
+				// to remove the SWAN data string from the address bar.
 				setCookies(r, w, p)
-				http.Redirect(
-					w,
-					r,
-					fmt.Sprintf("%s://%s%s", c.Scheme, r.Host, r.URL.Path),
-					303)
+				http.Redirect(w, r, n, 303)
+				return
 			}
 		}
 
@@ -113,7 +122,7 @@ func handlerPublisher(c *Configuration) http.HandlerFunc {
 				}
 			} else {
 				// No, so ask the user from SWAN.
-				u, err := createUpdateURL(p.config, p.request)
+				u, err := createUpdateURL(c, r)
 				if err != nil {
 					returnServerError(c, w, err)
 				}
@@ -149,7 +158,6 @@ func setCookies(r *http.Request, w http.ResponseWriter, p *preference) {
 		c := http.Cookie{
 			Name:     i.Key,
 			Domain:   getDomain(r.Host),
-			Path:     r.URL.Path,
 			Value:    i.Value,
 			SameSite: http.SameSiteLaxMode,
 			HttpOnly: true,
@@ -163,22 +171,29 @@ func getDomain(h string) string {
 	return s[0]
 }
 
+func getSWANString(r *http.Request) string {
+	i := strings.LastIndex(r.URL.Path, "/")
+	if i >= 0 {
+		return r.URL.Path[i+1:]
+	}
+	return r.URL.RawQuery
+}
+
 func newPreferencesFromPath(
 	config *Configuration,
 	r *http.Request) (*preference, error) {
 
 	var p preference // Preferences for display in the HTML
 
-	// The last path segment is the data.
-	l := strings.LastIndex(r.URL.Path, "/")
-	if l < 0 {
-		return nil, fmt.Errorf("URL path contains no SWAN data")
-	}
-
-	// Decrypt the string with SWAN.
-	in, err := pubDecrypt(config, r, r.URL.Path[l+1:])
+	// Decrypt the SWAN data string.
+	in, err := decode(config, r, getSWANString(r))
 	if err != nil {
 		return nil, err
+	}
+
+	// If debug is enabled then output the JSON.
+	if config.Debug {
+		log.Println(string(in))
 	}
 
 	// Get the results.
@@ -190,14 +205,14 @@ func newPreferencesFromPath(
 	return &p, nil
 }
 
-func pubDecrypt(config *Configuration, r *http.Request, q string) ([]byte, error) {
+func decode(config *Configuration, r *http.Request, q string) ([]byte, error) {
 
 	// Combine it with the access node to decrypt the result.
 	u, err := url.Parse(config.Scheme + "://" + config.SwanDomain)
 	if err != nil {
 		return nil, err
 	}
-	u.Path = "/swan/api/v1/decrypt"
+	u.Path = "/swan/api/v1/decode-as-json"
 	u.RawQuery = q
 
 	// Call the URL and unpack the results if they're available.
@@ -235,18 +250,17 @@ func setCommon(config *Configuration, r *http.Request, q *url.Values) {
 	q.Set("backgroundColor", getBackgroundColor(r.Host))
 	q.Set("progressColor", "darkblue")
 	q.Set("messageColor", "black")
-	q.Set("bounces", "10")
 }
 
 func createUpdateURL(config *Configuration, r *http.Request) (string, error) {
-	return createSwanURL(config, r, "update")
+	return createSWANActionURL(config, r, "update")
 }
 
 func createFetchURL(config *Configuration, r *http.Request) (string, error) {
-	return createSwanURL(config, r, "fetch")
+	return createSWANActionURL(config, r, "fetch")
 }
 
-func createSwanURL(
+func createSWANActionURL(
 	config *Configuration,
 	r *http.Request,
 	action string) (string, error) {
@@ -258,12 +272,12 @@ func createSwanURL(
 		return "", err
 	}
 
-	// Add the query string paramters for the share web state operation.
+	// Add the query string paramters for the SWIFT operation.
 	q := u.Query()
 	setCommon(config, r, &q)
 	u.RawQuery = q.Encode()
 
-	// Get the first storage operation URL from the access node.
+	// Get the link to SWAN to use for the fetch operation.
 	res, err := http.Get(u.String())
 	if err != nil {
 		return "", err
