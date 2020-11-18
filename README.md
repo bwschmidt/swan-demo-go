@@ -1,6 +1,42 @@
 # swan-demo-go
 Shared Web Accountable Network (SWAN) - Demo in go of SWAN, SWIFT and OWID
 
+The SWAN demo implements the concepts explained in 
+[SWAN](https://github.com/51degrees/swan)
+
+The deployment guide later on is an example with multiple swioft nodes, 
+publishers and marketers but every SWAN needs at least the following:
+
+* 5x SWIFT Nodes
+* 1x SWAN Node
+* 1x Publisher
+* 1x Marketer
+
+```
+             +-----------+  +-----------+  +-----------+
+             |           |  |           |  |           |
+Swift Nodes  | 1.51da.uk |  | 2.51da.uk |  | 3.51da.uk |  ... etc
+             |           |  |           |  |           |
+             +-----------+  +-----------+  +-----------+
+
+             +--------+
+             |        |
+Swan Nodes   | 51d.uk |
+             |        |
+             +--------+
+
+             +--------------+  +-------------+
+             |              |  |             |
+Publisher    | swift-pub.uk |  | swan-pub.uk |
+             |              |  |             |
+             +--------------+  +-------------+
+
+             +--------------+
+             |              |
+Marketer     | cool-cars.uk |
+             |              |
+             +--------------+
+```
 # Deployment
 
 ## AWS Elastic Beanstalk - without docker
