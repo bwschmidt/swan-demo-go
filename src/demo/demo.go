@@ -33,7 +33,7 @@ func AddHandlers(settingsFile string) {
 	demoConfig := newConfig(settingsFile)
 
 	// Add the SWAN handlers, with the publisher handler being used for any
-	// malformed storeage requests.
+	// malformed storage requests.
 	swan.AddHandlers(settingsFile, handlerPublisher(&demoConfig))
 
 	// TODO Add a handler for the marketers end point.
