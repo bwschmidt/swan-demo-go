@@ -118,7 +118,11 @@ func handlerPublisher(c *Configuration) http.HandlerFunc {
 				p.config = c
 
 				// TODO : call SWAN to get a new offer ID for this page request.
-				p.offerID = nil
+				o, err := requestOfferID(c)
+				if err != nil {
+					returnServerError(c, w, err)
+				}
+				p.offerID = o
 
 				err = pubTemplate.Execute(w, &p)
 				if err != nil {
@@ -315,4 +319,41 @@ func findResult(p *preference, k string) *swan.Pair {
 		}
 	}
 	return nil
+}
+
+func requestOfferID(config *Configuration) (*owid.OWID, error) {
+	client := &http.Client{}
+
+	u := config.Scheme + "://" + config.SwanDomain + "/swan/api/v1/create-offer-id"
+
+	req, err := http.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	q := req.URL.Query()
+	q.Add("placement", "")
+	q.Add("pubdomain", "")
+	q.Add("cbid", "")
+	q.Add("sid", "")
+	q.Add("preferences", "")
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	o, err := owid.DecodeFromBase64(string(body))
+	if err != nil {
+		return nil, err
+	}
+
+	return o, nil
 }
