@@ -35,17 +35,37 @@ type preference struct {
 	offerID *owid.OWID     // The OfferID for the demo page
 }
 
-func (p *preference) CBID() *swan.Pair    { return findResult(p, "cbid") }
-func (p *preference) UUID() *swan.Pair    { return findResult(p, "uuid") }
-func (p *preference) Allow() *swan.Pair   { return findResult(p, "allow") }
-func (p *preference) OfferID() *owid.OWID { return p.offerID }
-func (p *preference) Pubs() []string      { return p.config.Pubs }
-func (p *preference) Title() string       { return p.request.Host }
+func (p *preference) CBID() *swan.Pair        { return findResult(p, "cbid") }
+func (p *preference) UUID() *swan.Pair        { return findResult(p, "uuid") }
+func (p *preference) Allow() *swan.Pair       { return findResult(p, "allow") }
+func (p *preference) OfferIDOwid() *owid.OWID { return p.offerID }
+func (p *preference) Pubs() []string          { return p.config.Pubs }
+func (p *preference) Title() string           { return p.request.Host }
+func (p *preference) SWANURL() string         { return p.swanURL }
+func (p *preference) Results() []*swan.Pair   { return p.results }
 func (p *preference) BackgroundColor() string {
 	return getBackgroundColor(p.request.Host)
 }
-func (p *preference) SWANURL() string       { return p.swanURL }
-func (p *preference) Results() []*swan.Pair { return p.results }
+func (p *preference) OfferID() *swan.OfferID {
+	ob := p.offerID.Payload
+	var of swan.OfferID
+	err := of.SetFromByteArray(ob)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	return &of
+}
+func (p *preference) OfferIDDecodeAndVerifyURL() string {
+	v, err := p.OfferIDOwid().EncodeAsBase64()
+	fmt.Println(v)
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	s := "//" + p.offerID.Domain + "/owid/api/v1/decode-and-verify?owid=" + v
+	return s
+}
 func (p *preference) JSON() string {
 	b, err := json.Marshal(p.results)
 	if err != nil {
@@ -118,7 +138,7 @@ func handlerPublisher(c *Configuration) http.HandlerFunc {
 				p.config = c
 
 				// TODO : call SWAN to get a new offer ID for this page request.
-				o, err := requestOfferID("bikes", c, p, r)
+				o, err := requestOfferID("1", c, p, r)
 				if err != nil {
 					returnServerError(c, w, err)
 				}

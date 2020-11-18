@@ -300,6 +300,22 @@ var pubTemplate = newHTMLTemplate("pub", `
         <p>SID and CBID are all implemented in SWAN using the Open Web ID schema. It's open source and your can find out more <a href="https://github.com/51degrees/owid">here</a>.</p>
     </section>
     {{ end }}
+    {{ if .OfferIDOwid }}
+    <section>
+        <h3>Offer ID</h3>
+        <p></p>
+        <pre>Placement:      {{ .OfferID.Placement }}
+PubDomain:      {{ .OfferID.PubDomain }}
+CBID:           {{ .OfferID.CBID }}
+SID:            {{ .OfferID.SID }}
+Preferences:    {{ .OfferID.Preferences }}</pre>
+        <p>Just like CBID & SID it's secured to make it verifiable. Here's the longer version.</p>
+        <pre>{{ .OfferIDOwid.EncodeAsBase64 }}</pre>
+        <p>When all of this is decoded and verified it looks like this.</p>
+        <pre><script>text(document.scripts[document.scripts.length - 1].parentNode, '{{ .OfferIDDecodeAndVerifyURL }}');</script></pre>
+        <p>SID, CBID & OfferID are all implemented in SWAN using the Open Web ID schema. It's open source and your can find out more <a href="https://github.com/51degrees/owid">here</a>.</p>
+    </section>
+    {{ end }}
     {{ if .Allow }}
     <section>
         <h3>Preferences</h3>
