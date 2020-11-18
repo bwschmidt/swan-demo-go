@@ -292,7 +292,7 @@ var pubTemplate = newHTMLTemplate("pub", `
     <section>
         <h3>Signed-in ID (SID)</h3>
         <p>If you wish to preserve your preferences across multiple browsers or devices, you can use SWAN to share your signed-in ID (SID). This relies on hashing a validated email you provide to register at this site. Here's the SID SWAN generated from whatever you entered.</p>
-        <pre>{{ .SID.AsOWID.PayloadAsString }}</pre>
+        <pre>{{ .SID.AsOWID.PayloadAsPrintable }}</pre>
         <p>Just like CBID it's secured to make it verifiable. Here's the longer version.</p>
         <pre>{{ .SID.Value }}</pre>
         <p>When all of this is decoded and verified it looks like this.</p>
@@ -342,9 +342,9 @@ var pubTemplate = newHTMLTemplate("pub", `
     </main>
     <footer>
         <ul>
-            {{ range $val := .Results }}
-            <li>{{ $val.Key }} : {{ $val.AsOWID.PayloadAsString }}</li>
-            {{ end }}
+            <li>CBID:{{ .CBID.AsOWID.PayloadAsString }}</li>
+            <li>SID:{{ .SID.AsOWID.PayloadAsPrintable }}</li>
+            <li>Pref.:{{ .Allow.AsOWID.PayloadAsString }}</li>
             <li><a href="{{ .SWANURL }}">Privacy Preferences</a></li>
         </ul>
     </footer>
