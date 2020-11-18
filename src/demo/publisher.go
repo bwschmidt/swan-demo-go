@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"owid"
 	"strings"
 	"swan"
 )
@@ -31,13 +32,15 @@ type preference struct {
 	request *http.Request  // The background color for the page.
 	results []*swan.Pair   // The results for display
 	swanURL string         // The URL for the preferences at the SWAN preferences page
+	offerID *owid.OWID     // The OfferID for the demo page
 }
 
-func (p *preference) CBID() *swan.Pair  { return findResult(p, "cbid") }
-func (p *preference) UUID() *swan.Pair  { return findResult(p, "uuid") }
-func (p *preference) Allow() *swan.Pair { return findResult(p, "allow") }
-func (p *preference) Pubs() []string    { return p.config.Pubs }
-func (p *preference) Title() string     { return p.request.Host }
+func (p *preference) CBID() *swan.Pair    { return findResult(p, "cbid") }
+func (p *preference) UUID() *swan.Pair    { return findResult(p, "uuid") }
+func (p *preference) Allow() *swan.Pair   { return findResult(p, "allow") }
+func (p *preference) OfferID() *owid.OWID { return p.offerID }
+func (p *preference) Pubs() []string      { return p.config.Pubs }
+func (p *preference) Title() string       { return p.request.Host }
 func (p *preference) BackgroundColor() string {
 	return getBackgroundColor(p.request.Host)
 }
@@ -113,6 +116,10 @@ func handlerPublisher(c *Configuration) http.HandlerFunc {
 				// Yes, so display the page.
 				p.request = r
 				p.config = c
+
+				// TODO : call SWAN to get a new offer ID for this page request.
+				p.offerID = nil
+
 				err = pubTemplate.Execute(w, &p)
 				if err != nil {
 					returnServerError(c, w, err)
