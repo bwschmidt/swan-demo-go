@@ -24,5 +24,10 @@
         "cool-cars.uk",
         "cool-creams.uk"
     ],
-    "demo-swan": "51d.io"
+    "demo-swan": "51d.io",
+    "accessKeys" : [
+        "key1",
+        "key2"
+    ],
+    "accessKey": "key1"
 }

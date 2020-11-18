@@ -23,31 +23,38 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"owid"
 	"swan"
+	"swift"
 )
 
 // AddHandlers and outputs configuration information.
 func AddHandlers(settingsFile string) {
 
 	// Get the demo configuration.
-	demoConfig := newConfig(settingsFile)
+	dc := newConfig(settingsFile)
+
+	// Get the example simple access control implementations.
+	swi := swift.NewAccessSimple(dc.AccessKeys)
+	oa := owid.NewAccessSimple(dc.AccessKeys)
+	swa := swan.NewAccessSimple(dc.AccessKeys)
 
 	// Add the SWAN handlers, with the publisher handler being used for any
 	// malformed storage requests.
-	swan.AddHandlers(settingsFile, handlerPublisher(&demoConfig))
+	swan.AddHandlers(settingsFile, swa, swi, oa, handlerPublisher(&dc))
 
 	// TODO Add a handler for the marketers end point.
 	// http.HandleFunc("/mar", handlerPublisher(&demoConfig))
 
 	// Start the web server on the port provided.
-	log.Printf("Demo scheme: %s\n", demoConfig.Scheme)
-	log.Printf("SWAN access node domain: %s\n", demoConfig.SwanDomain)
+	log.Printf("Demo scheme: %s\n", dc.Scheme)
+	log.Printf("SWAN access node domain: %s\n", dc.SwanDomain)
 	log.Println("Pub. URLs:")
-	for _, s := range demoConfig.Pubs {
+	for _, s := range dc.Pubs {
 		log.Println("  ", s)
 	}
 	log.Println("Mar. URLs:")
-	for _, s := range demoConfig.Mars {
+	for _, s := range dc.Mars {
 		log.Println("  ", s)
 	}
 }
