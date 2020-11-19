@@ -225,6 +225,38 @@ var pubTemplate = newHTMLTemplate("pub", `
         main section div.container .container-desc h4 {
             margin: 0px;
         }
+        .slot {
+            position: relative;
+            font-family: Arial;
+            width:389px;
+        }
+        .slot .tooltip {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: royalblue;
+            color: white;
+            border-radius: 50%;
+            padding: 8px;
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+        .slot .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 120px;
+            background-color: black;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 1;
+            top: -5px;
+            right: 105%;
+        }
+        .slot .tooltip:hover .tooltiptext {
+            visibility: visible;
+        }
     </style>
     <script>
         {{ if ne .JSON "" }}
@@ -264,14 +296,39 @@ var pubTemplate = newHTMLTemplate("pub", `
                 .then(data => {
                     e.innerText = data;
                 });
-        }         
+        }
+        var url = "//{{ .Title }}/ssp/bid?cbid={{ .CBID.Value }}&sid={{ .SID.Value }}&oid={{ .OID }}&allow={{ .Allow.Value }}"
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                var img = document.createElement("img");
+                img.setAttribute("src", data["bid"]["creativeURL"]);
+                img.setAttribute("width", "389px;");
+                var link = document.createElement('a');
+                link.setAttribute('href', data["bid"]["clickURL"]);
+                link.appendChild(img)
+                var span1 = document.createElement("span")
+                span1.textContent="i";
+                var span2 = document.createElement("span")
+                span2.setAttribute('class', "tooltiptext");
+                span2.textContent="The following companies were involved in supplying this advert: " + data["ids"].join(', ');
+                var tooltip = document.createElement("div")
+                tooltip.appendChild(span1)
+                tooltip.appendChild(span2)
+                tooltip.setAttribute('class', 'tooltip')
+                document.getElementById("slot1").appendChild(link);
+                document.getElementById("slot1").appendChild(tooltip);
+            });
     </script>
 </head>
 <body>
     <header>
         <h1>Welcome to {{ .Title }}, powered by SWAN</h1>
     </header>
+    
     <main>
+    <div id="slot1" class="slot"></div>
     <section>
         <h3>What is SWAN?</h3>
         <p>Shared Web Accountable Network (SWAN) is a secure, privacy-by-design ID that adds accountability to the Open Web. By enabling us to set your temporary SWAN ID, we and other SWAN supporters promise to respect your privacy choices. The SWAN network is a privacy-by-design method of enchancing people's cross-publisher experiences.</p>
