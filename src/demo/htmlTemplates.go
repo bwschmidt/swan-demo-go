@@ -99,7 +99,7 @@ var marTemplate = newHTMLTemplate("mar", `
     <footer>
         <ul>
             {{ range $val := .Results }}
-            <li>{{ $val.Key }} : {{ $val.Value }} | </li>
+            <li>{{ $val.Key }}: {{ $val.Value }} | </li>
             {{ end }}
             <li><a href="{{ .SWANURL }}">Privacy Preferences</a></li>
         </ul>
@@ -159,7 +159,7 @@ var pubTemplate = newHTMLTemplate("pub", `
         main section div {
             padding: 0.5em;
         }
-        main section div .button {
+        main section div .button, main section p .button {
             border-radius: 0.5em;
             background-color: lightblue;
             padding: 0.5em;
@@ -269,19 +269,22 @@ var pubTemplate = newHTMLTemplate("pub", `
 </head>
 <body>
     <header>
-        <h1>Publisher: {{ .Title }}</h1>
+        <h1>Welcome to {{ .Title }}, powered by SWAN</h1>
     </header>
     <main>
     <section>
-        <h3>Welcome to SWAN : the future of open web advertising</h3>
-        <p>By enabling us to set a secure, privacy-by-design ID, we and other SWAN supporters promise to respect your privacy choices. The SWAN network is a privacy-by-design method of enabling personalized cross-publisher experiences on all publishers that adopt it.</p>
+        <h3>What is SWAN?</h3>
+        <p>Shared Web Accountable Network (SWAN) is a secure, privacy-by-design ID that adds accountability to the Open Web. By enabling us to set your temporary SWAN ID, we and other SWAN supporters promise to respect your privacy choices. The SWAN network is a privacy-by-design method of enchancing people's cross-publisher experiences.</p>
         <ul>
-        <li><strong>People</strong> : enhanced transparency, persistent choices (no more consent fatigue) and "right to be forgotten".</li>
-        <li><strong>Publishers</strong> : effective engagement, optimized advertising yield and accountable auditing to detect misappropriation.</li>
-        <li><strong>Marketers</strong> : optimize cross publisher effectiveness, ensure you get what you pay for.</li>
+        <li><strong>People</strong>: enhanced transparency, persistent personalization and privacy choices, while honoring people’s right to be forgotten.</li>
+        <li><strong>Publishers</strong>: effective engagement, optimized advertising yield and accountable auditing to detect misappropriation.</li>
+        <li><strong>Marketers</strong>: optimize cross publisher effectiveness, ensure you get what you pay for.</li>
         </ul>
-        <p>Multiple implementors of SWAN open source form a dencentralized network. There's no single point of failure.</p>
-        <p>Read on for a brief introduction to SWAN. To find out more go <a href="https://github.com/51degrees/swan">here</a>.</p>
+        <p>SWAN was designed to provide enhanced transparency around data collection and enable stronger accountability and enforcement for those that violate your privacy. Recently browsers owned by the largest US publishers announced they intend to interfere with how we and other smaller publishers operate our business.</p>
+        <p>Our partners support the competitive open web, which relies on the use of a fair, transparent, and privacy-centric identifier. We believe you deserve not only transparency and control, but an auditable view into which organizations were involved in displaying content to you on this publisher.</p>
+        <p>To provide you access to our website, marketers fund our operations with advertising. In exchange, they need to measure and optimize their cross-publisher advertising as easily as they can within the Walled Gardens. However, marketers do not need to know your offline identity and SWAN members agree to keep your offline identity distinct from your digital activity.</p>
+        <p>Like the World Wide Web, SWAN is a free, public service, operated by an open market of organizations that do not want or have a central controller. To ensure there is no single point of failure, there isn't a single SWAN domain, but many of them. To speed up your online experience, each browser can remember your privacy preferences, which reduces the number of times publishers need to ask you for your information.</p>
+        <p>To learn more about the SWAN project, please visit our Open Source code repository <a href="https://github.com/51degrees/swan">here</a>.</p>
     </section>
     <section>
         <h3>SWAN supporters</h3>
@@ -296,6 +299,7 @@ var pubTemplate = newHTMLTemplate("pub", `
         <h3>Common Browser ID (CBID)</h3>
         <p>SWAN provides a Common Browser ID that you can easily reset at any time. Here's the SWAN CBID for this browser.<p>
         <pre>{{ .CBID.AsOWID.PayloadAsString }}</pre>
+        <p>You can reset this ID by clicking the reset button: [reset]</p>
         <p>SWAN secures your ID to ensure you can have an accountable audit log. Here's the secured version:<p>
         <pre>{{ .CBID.Value }}</pre>
         <pre>Created: {{ .CBID.Created }} Expires: {{ .CBID.Expires }}</pre>
@@ -340,16 +344,10 @@ var pubTemplate = newHTMLTemplate("pub", `
         <p>Just like your Common Browser ID, we secure your preferences too. Your preference token is:</p>
         <pre>{{ .Allow.Value }}</pre>
         <pre>Created: {{ .Allow.Created }} Expires: {{ .Allow.Expires }}</pre>
-        <p>You can change your preferences any time <a href="{{ .SWANURL }}">here</a>.</p>
+        <p>You can change your preferences any time by clicking the My preferences button. <a class="button" href="{{ .SWANURL }}">My preferences</a></p>
         <p>If you want to only temporarily change your preference, you can using a new incognito or private browsing tab.</p>
     </section>
     {{ end }}
-    <section>
-        <h3>Improving the Web</h3>
-        <p>We believe you deserve not only transparency and control, but an auditable view into the organizations involved in displaying the content on this publisher.  We need to rely on SWAN given recent announcements by browsers owned by the largest US publishers who intend to interfere with how we and other smaller publishers operate our business.</p>
-        <p>To provide you access to our website, we rely on advertising paid by marketers. In exchange, they need to measure and optimize their advertising as easily as they can within the Walled Gardens. However, marketers do not need to know your offline identity and SWAN members agree to keep your offline identity distinct from your digital activity.</p>
-        <p>Like the World Wide Web, SWAN is operated by an open market of hosts that do not want or have a central controller. Accordingly, there isn't a single SWAN domain, but many of them. To speed up your online experience, every browser is assigned a home domain. This reduces the number of times publishers need to ask multiple SWAN domains for your information.</p>
-    </section>
     <section>
         <h3>Find out more about the open source projects used in this demo.</h3>
         <div class='container'>
@@ -358,7 +356,7 @@ var pubTemplate = newHTMLTemplate("pub", `
             </div>	
                 <div class='container-desc'>
                 <h4><a href="https://github.com/51degrees/swift">SWIFT</a></h4>
-                <p class="text">Shared Web InFormaTion is a browser-agnostic method to share information across web domains.</p>
+                <p class="text">Shared Web InFormaTion (SWIFT) is a browser-agnostic method to share information across web domains.</p>
             </div>
             </div>
             <div class='container'>
