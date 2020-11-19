@@ -1,5 +1,5 @@
 # swan-demo-go
-Shared Web Accountable Network (SWAN) - Demo in go of SWAN, SWIFT and OWID
+Secured Web Accountable Network (SWAN) - Demo in go of SWAN, SWIFT and OWID
 
 # Deployment
 
