@@ -17,12 +17,53 @@
 package demo
 
 import (
+	"encoding/base64"
 	"errors"
+	"fmt"
 	"net/http"
+	"swan"
 )
+
+type marketer struct {
+	config  *Configuration // Configuration information for the demo
+	request *http.Request  // The background color for the page.
+	results []*swan.Pair   // The results for display
+	bid     string
+}
+
+func (m *marketer) Title() string { return m.request.Host }
+func (m *marketer) BackgroundColor() string {
+	return getBackgroundColor(m.request.Host)
+}
+func (m *marketer) JSON() string {
+
+	//var bid BidResponse
+
+	sd, err := base64.StdEncoding.DecodeString(m.bid)
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	// err = json.Unmarshal(sd, &bid)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return ""
+	// }
+	return string(sd)
+}
+func (m *marketer) Results() []*swan.Pair { return m.results }
+func (m *marketer) SWANURL() string {
+	u, _ := createUpdateURL(m.config, m.request)
+	return u
+}
 
 func handlerMarketer(c *Configuration) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var m marketer
+
+		m.config = c
+		m.request = r
+
 		err := r.ParseForm()
 		if err != nil {
 			returnServerError(c, w, err)
@@ -36,6 +77,12 @@ func handlerMarketer(c *Configuration) http.HandlerFunc {
 				w,
 				errors.New("bid param not set"),
 				http.StatusBadRequest)
+		}
+		m.bid = bid
+
+		err = marTemplate.Execute(w, &m)
+		if err != nil {
+			returnServerError(c, w, err)
 		}
 
 	}

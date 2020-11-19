@@ -243,7 +243,7 @@ var pubTemplate = newHTMLTemplate("pub", `
         }
         .slot .tooltip .tooltiptext {
             visibility: hidden;
-            width: 120px;
+            width: 240px;
             background-color: black;
             color: #fff;
             text-align: center;
@@ -298,15 +298,15 @@ var pubTemplate = newHTMLTemplate("pub", `
                 });
         }
         var url = "//{{ .Title }}/ssp/bid?cbid={{ .CBID.Value }}&sid={{ .SID.Value }}&oid={{ .OID }}&allow={{ .Allow.Value }}"
-
         fetch(url)
             .then(response => response.json())
             .then(data => {
+                let bid = btoa(JSON.stringify(data));
                 var img = document.createElement("img");
                 img.setAttribute("src", data["bid"]["creativeURL"]);
                 img.setAttribute("width", "389px;");
                 var link = document.createElement('a');
-                link.setAttribute('href', data["bid"]["clickURL"]);
+                link.setAttribute('href', data["bid"]["clickURL"] + "?bid=" + bid);
                 link.appendChild(img)
                 var span1 = document.createElement("span")
                 span1.textContent="i";
@@ -326,7 +326,6 @@ var pubTemplate = newHTMLTemplate("pub", `
     <header>
         <h1>Welcome to {{ .Title }}, powered by SWAN</h1>
     </header>
-    
     <main>
     <div id="slot1" class="slot"></div>
     <section>
