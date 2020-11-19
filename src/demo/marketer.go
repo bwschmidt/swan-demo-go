@@ -36,19 +36,11 @@ func (m *marketer) BackgroundColor() string {
 	return getBackgroundColor(m.request.Host)
 }
 func (m *marketer) JSON() string {
-
-	//var bid BidResponse
-
 	sd, err := base64.StdEncoding.DecodeString(m.bid)
 	if err != nil {
 		fmt.Println(err)
 		return ""
 	}
-	// err = json.Unmarshal(sd, &bid)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return ""
-	// }
 	return string(sd)
 }
 func (m *marketer) Results() []*swan.Pair { return m.results }
