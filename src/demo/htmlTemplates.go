@@ -204,6 +204,27 @@ var pubTemplate = newHTMLTemplate("pub", `
         .logos li img {
             width: 96px;
         }
+        main section div.container {
+            padding: 1%;
+            position: relative;
+            display: table;
+        }
+        main section div.container .iconDetails {
+            float: left;
+            margin-right: 10px;
+        }
+        main section div.container .container-desc{
+            display: table-cell;
+            vertical-align: middle;
+            padding-left: 10px;
+        }
+        main section div.container .text{
+            margin: 0;
+            padding: 0;
+        }
+        main section div.container .container-desc h4 {
+            margin: 0px;
+        }
     </style>
     <script>
         {{ if ne .JSON "" }}
@@ -277,6 +298,7 @@ var pubTemplate = newHTMLTemplate("pub", `
         <pre>{{ .CBID.AsOWID.PayloadAsString }}</pre>
         <p>SWAN secures your ID to ensure you can have an accountable audit log. Here's the secured version:<p>
         <pre>{{ .CBID.Value }}</pre>
+        <pre>Created: {{ .CBID.Created }} Expires: {{ .CBID.Expires }}</pre>
         <p>Anyone can confirm that this ID was created by <span><script>creator(document.scripts[document.scripts.length - 1].parentNode, '{{ .CBID.CreatorURL }}');</script></span> using this link.</p>
         <pre>{{ .CBID.VerifyURL }}</pre>
         <p>Go on. Tap the following button to check it's good.</p>
@@ -295,16 +317,21 @@ var pubTemplate = newHTMLTemplate("pub", `
         <pre>{{ .SID.AsOWID.PayloadAsPrintable }}</pre>
         <p>Just like CBID it's secured to make it verifiable. Here's the longer version.</p>
         <pre>{{ .SID.Value }}</pre>
+        <pre>Created: {{ .SID.Created }} Expires: {{ .SID.Expires }}</pre>
         <p>When all of this is decoded and verified it looks like this.</p>
         <pre><script>text(document.scripts[document.scripts.length - 1].parentNode, '{{ .SID.DecodeAndVerifyURL }}');</script></pre>
-        <p>SID and CBID are all implemented in SWAN using the Open Web ID schema. It's open source and your can find out more <a href="https://github.com/51degrees/owid">here</a>.</p>
+        <p>SID and CBID are all implemented in SWAN using the Open Web ID schema. It's open source and you can find out more <a href="https://github.com/51degrees/owid">here</a>.</p>
     </section>
     {{ end }}
+    {{ if .OID }}
     <section>
         <h3>Offer ID (OID)</h3>
         <p>Here's an advertising OfferID generated for this page request.</p>
-        <pre>{{ .NewOfferID "1" }}</pre>
+        <pre>{{ .OID }}</pre>
+        <p>When this is decoded it looks like this.</p>
+        <pre>{{ .UnpackOID }}</pre>
     </section>
+    {{ end }}
     {{ if .Allow }}
     <section>
         <h3>Preferences</h3>
@@ -312,6 +339,7 @@ var pubTemplate = newHTMLTemplate("pub", `
         <pre>{{ .Allow.AsOWID.PayloadAsString }}</pre>
         <p>Just like your Common Browser ID, we secure your preferences too. Your preference token is:</p>
         <pre>{{ .Allow.Value }}</pre>
+        <pre>Created: {{ .Allow.Created }} Expires: {{ .Allow.Expires }}</pre>
         <p>You can change your preferences any time <a href="{{ .SWANURL }}">here</a>.</p>
         <p>If you want to only temporarily change your preference, you can using a new incognito or private browsing tab.</p>
     </section>
@@ -324,11 +352,33 @@ var pubTemplate = newHTMLTemplate("pub", `
     </section>
     <section>
         <h3>Find out more about the open source projects used in this demo.</h3>
-        <ul>
-            <li><a href="https://github.com/51degrees/swift">SWIFT</a> Shared Web InFormaTion is a browser-agnostic method to share information across web domains.</li>
-            <li><a href="https://github.com/51degrees/owid">OWID</a> Open Web ID (OWID) is a privacy-by-design schema for ID.</li>
-            <li><a href="https://github.com/51degrees/swan">SWAN</a> Shared Web Accountable Network (SWAN) brings it all together to support digital marketing use cases.</li>
-        </ul>
+        <div class='container'>
+            <div>
+                <img class='iconDetails' src='https://github.com/51Degrees/swift/raw/main/images/swift_128px_72dpi_v2.png'>
+            </div>	
+                <div class='container-desc'>
+                <h4><a href="https://github.com/51degrees/swift">SWIFT</a></h4>
+                <p class="text">Shared Web InFormaTion is a browser-agnostic method to share information across web domains.</p>
+            </div>
+            </div>
+            <div class='container'>
+            <div>
+                <img class='iconDetails' src='https://github.com/51Degrees/owid/raw/main/images/owl_128px_72dpi.png'>
+            </div>	
+                <div class='container-desc'>
+                <h4><a href="https://github.com/51degrees/owid">OWID</a></h4>
+                <p class="text">Open Web ID (OWID) is a privacy-by-design schema for ID.</p>
+            </div>
+            </div>
+            <div class='container'>
+            <div>
+                <img class='iconDetails' src='https://github.com/51Degrees/swan/raw/main/images/swan_128px_72dpi.png'>
+            </div>	
+                <div class='container-desc'>
+                <h4><a href="https://github.com/51degrees/swan">SWAN</a></h4>
+                <p class="text">Shared Web Accountable Network (SWAN) brings it all together to support digital marketing use cases.</p>
+            </div>
+        </div>
     </section>
     <section>
         <h3>Visit these other domains</h3>
