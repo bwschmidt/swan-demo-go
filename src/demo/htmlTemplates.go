@@ -134,6 +134,7 @@ var marTemplate = newHTMLTemplate("mar", `
             <li>Item 3</li>
         </ul>
     </section>   
+    {{ if .JSON }}
     <section>
         <h3>Incoming request in JSON</h3>
         <pre id="bid-json"></pre>
@@ -162,7 +163,7 @@ Promise.all(urls.map(u=>fetch(u))).then(responses =>
     console.log(data)
 });</pre>
     </section>
-            
+    {{ end }}
     </main>
     <footer>
         <ul>
@@ -214,7 +215,7 @@ var pubTemplate = newHTMLTemplate("pub", `
         main section h3, main section p, main section pre, main section div {
             margin: 1em;
         }
-        main section pre, main section span {
+        main section pre, main section .inline-span {
             background-color: lightgray;
             white-space: break-spaces;
             word-break: break-all;
@@ -224,7 +225,7 @@ var pubTemplate = newHTMLTemplate("pub", `
             display: inline-block;
             padding: 0.5em;
         }
-        main section span {
+        main section .inline-span {
             display: inline;
         }
         main section div {
@@ -235,6 +236,7 @@ var pubTemplate = newHTMLTemplate("pub", `
             background-color: lightblue;
             padding: 0.5em;
             border: lightgrey solid 1px;
+            text-decoration: none; 
         }
         main section ul {
             list-style: none;
@@ -418,7 +420,9 @@ var pubTemplate = newHTMLTemplate("pub", `
         <h1>Welcome to {{ .Title }}, powered by SWAN</h1>
     </header>
     <main>
-    <div id="slot1" class="slot"></div>
+    <section>
+        <div id="slot1" class="slot"></div>
+    </section>
     <section>
         <h3>What is SWAN?</h3>
         <p>Shared Web Accountable Network (SWAN) is a secure, privacy-by-design ID that adds accountability to the Open Web. By enabling us to set your temporary SWAN ID, we and other SWAN supporters promise to respect your privacy choices. The SWAN network is a privacy-by-design method of enchancing people's cross-publisher experiences.</p>
@@ -449,12 +453,12 @@ var pubTemplate = newHTMLTemplate("pub", `
         <p>You can reset this ID by clicking the reset button: [reset]</p>
         <p>SWAN secures your ID to ensure you can have an accountable audit log. Here's the secured version:<p>
         <pre>{{ .CBID.Value }}</pre>
-        <p>Anyone can confirm that this ID was created by <span><script>creator(document.scripts[document.scripts.length - 1].parentNode, '{{ .CBID.CreatorURL }}');</script></span> using this link.</p>
+        <p>Anyone can confirm that this ID was created by <span class="inline-span"><script>creator(document.scripts[document.scripts.length - 1].parentNode, '{{ .CBID.CreatorURL }}');</script></span> using this link.</p>
         <pre>{{ .CBID.VerifyURL }}</pre>
         <p>Go on. Tap the following button to check it's good.</p>
         <div><a class="button" onclick="verify(this, '{{ .CBID.VerifyURL }}')">Verify</a></div>
-        <p>This shows that the domain <span>{{ .CBID.AsOWID.Domain }}</span> generated this ID on <span>{{ .CBID.AsOWID.Date }}</span>.</p>
-        <p>The domain <span>{{ .CBID.AsOWID.Domain }}</span> used the following signature.</p>
+        <p>This shows that the domain <span class="inline-span">{{ .CBID.AsOWID.Domain }}</span> generated this ID on <span class="inline-span">{{ .CBID.AsOWID.Date }}</span>.</p>
+        <p>The domain <span class="inline-span">{{ .CBID.AsOWID.Domain }}</span> used the following signature.</p>
         <pre>{{ .CBID.AsOWID.Signature }}</pre>
         <p>Because your online experience matters this publisher uses their public signing key so anyone can verify in microseconds.</p>
         <pre><script>publicKey(document.scripts[document.scripts.length - 1].parentNode, '{{ .CBID.CreatorURL }}');</script></pre>
@@ -488,7 +492,8 @@ var pubTemplate = newHTMLTemplate("pub", `
         <pre>{{ .Allow.AsOWID.PayloadAsString }}</pre>
         <p>Just like your Common Browser ID, we secure your preferences too. Your preference token is:</p>
         <pre>{{ .Allow.Value }}</pre>
-        <p>You can change your preferences any time by clicking the My preferences button. <a class="button" href="{{ .SWANURL }}">My preferences</a></p>
+        <p>You can change your preferences any time by clicking the My preferences button.</p>
+        <p><a class="button" href="{{ .SWANURL }}">My preferences</a></p>
         <p>If you want to only temporarily change your preference, you can using a new incognito or private browsing tab.</p>
     </section>
     {{ end }}

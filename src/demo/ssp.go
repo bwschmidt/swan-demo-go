@@ -148,7 +148,7 @@ func getAd(
 	bid := Bid{
 		bidder,
 		"//" + bidder + createive,
-		"//" + bidder + "/mar"}
+		"//" + bidder + "/mar/"}
 
 	br := BidResponse{ids, &bid}
 

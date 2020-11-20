@@ -47,7 +47,7 @@ func AddHandlers(settingsFile string) {
 	http.HandleFunc("/ssp/bid", handlerSSP(&dc))
 
 	// Add a handler for the marketers end point.
-	http.HandleFunc("/mar", handlerMarketer(&dc))
+	http.HandleFunc("/mar/", handlerMarketer(&dc))
 	// Add FileServer for marketer images
 	fs := http.FileServer(http.Dir("./images"))
 	http.Handle("/campaign/images/", http.StripPrefix("/campaign/images/", fs))

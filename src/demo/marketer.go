@@ -18,7 +18,6 @@ package demo
 
 import (
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"net/http"
 	"swan"
@@ -63,19 +62,11 @@ func handlerMarketer(c *Configuration) http.HandlerFunc {
 		}
 
 		bid := r.FormValue("bid")
-		if bid == "" {
-			returnAPIError(
-				c,
-				w,
-				errors.New("bid param not set"),
-				http.StatusBadRequest)
-		}
 		m.bid = bid
 
 		err = marTemplate.Execute(w, &m)
 		if err != nil {
 			returnServerError(c, w, err)
 		}
-
 	}
 }
