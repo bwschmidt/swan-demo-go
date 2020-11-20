@@ -163,7 +163,7 @@ Promise.all(urls.map(u=>fetch(u))).then(responses =>
     console.log(data)
 });</pre>
     </section>
-    {{ end }}
+    {{ end }}    
     </main>
     <footer>
         <ul>
@@ -493,7 +493,7 @@ var pubTemplate = newHTMLTemplate("pub", `
         <p>Just like your Common Browser ID, we secure your preferences too. Your preference token is:</p>
         <pre>{{ .Allow.Value }}</pre>
         <p>You can change your preferences any time by clicking the My preferences button.</p>
-        <p><a class="button" href="{{ .SWANURL }}">My preferences</a></p>
+        <p><a class="button" href="?privacy=update">My preferences</a></p>
         <p>If you want to only temporarily change your preference, you can using a new incognito or private browsing tab.</p>
     </section>
     {{ end }}
@@ -542,7 +542,7 @@ var pubTemplate = newHTMLTemplate("pub", `
             <li>CBID:{{ .CBID.AsOWID.PayloadAsString }}</li>
             <li>SID:{{ .SID.AsOWID.PayloadAsPrintable }}</li>
             <li>Pref.:{{ .Allow.AsOWID.PayloadAsString }}</li>
-            <li><a href="{{ .SWANURL }}">Privacy Preferences</a></li>
+            <li><a href="?privacy=update">Privacy Preferences</a></li>
         </ul>
     </footer>
 </body>
