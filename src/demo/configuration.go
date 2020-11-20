@@ -25,14 +25,14 @@ import (
 
 // Configuration maps to the appsettings.json settings file.
 type Configuration struct {
-	AccessKey  string        `json:"accessKey"`     // Key to authenticate with the nodes
-	AccessKeys []string      `json:"accessKeys"`    // Array of keys to authenticate nodes with
-	Pubs       []string      `json:"demo-pubs"`     // Array of publisher URLs
-	Mars       []string      `json:"demo-mars"`     // Array of marketers URLs
-	SwanDomain string        `json:"demo-swan"`     // Domain for the SWAN access node
-	Scheme     string        `json:"scheme"`        // The scheme to use for requests
-	Timeout    time.Duration `json:"cookieTimeout"` // Seconds until the data provided from the CMP expires
-	Debug      bool          `json:"debug"`
+	AccessKey  string            `json:"accessKey"`     // Key to authenticate with the nodes
+	AccessKeys []string          `json:"accessKeys"`    // Array of keys to authenticate nodes with
+	Pubs       []string          `json:"demo-pubs"`     // Array of publisher URLs
+	Mars       map[string]string `json:"demo-mars"`     // Array of marketers URLs
+	SwanDomain string            `json:"demo-swan"`     // Domain for the SWAN access node
+	Scheme     string            `json:"scheme"`        // The scheme to use for requests
+	Timeout    time.Duration     `json:"cookieTimeout"` // Seconds until the data provided from the CMP expires
+	Debug      bool              `json:"debug"`
 }
 
 // NewConfig creates a new instance of configuration from the file provided.

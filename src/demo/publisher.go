@@ -23,6 +23,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"owid"
 	"strings"
 	"swan"
 )
@@ -31,11 +32,13 @@ type preference struct {
 	config  *Configuration // Configuration information for the demo
 	request *http.Request  // The background color for the page.
 	results []*swan.Pair   // The results for display
+	offerID string         // The Offer ID for display
 }
 
 func (p *preference) CBID() *swan.Pair      { return findResult(p, "cbid") }
 func (p *preference) SID() *swan.Pair       { return findResult(p, "sid") }
 func (p *preference) Allow() *swan.Pair     { return findResult(p, "allow") }
+func (p *preference) OID() string           { return p.offerID }
 func (p *preference) Pubs() []string        { return p.config.Pubs }
 func (p *preference) Title() string         { return p.request.Host }
 func (p *preference) Results() []*swan.Pair { return p.results }
@@ -46,6 +49,15 @@ func (p *preference) BackgroundColor() string {
 func (p *preference) NewOfferID(placement string) string {
 	oid, _ := p.createOfferID(placement)
 	return oid
+}
+
+func (p *preference) UnpackOID() string {
+	var o swan.OfferID
+	ow, _ := owid.DecodeFromBase64(p.offerID)
+	o.SetFromByteArray(ow.Payload)
+
+	b, _ := json.Marshal(o)
+	return string(b)
 }
 
 func (p *preference) JSON() string {
@@ -137,6 +149,7 @@ func handlerPublisher(c *Configuration) http.HandlerFunc {
 				// Yes, so display the page.
 				p.request = r
 				p.config = c
+				p.offerID = p.NewOfferID("1")
 				err = pubTemplate.Execute(w, &p)
 				if err != nil {
 					returnServerError(c, w, err)
@@ -167,7 +180,6 @@ func newPreferencesFromCookies(r *http.Request) *preference {
 			var s swan.Pair
 			s.Key = c.Name
 			s.Value = c.Value
-			s.Expires = c.Expires
 			p.results = append(p.results, &s)
 		}
 	}
