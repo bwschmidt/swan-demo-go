@@ -10,6 +10,8 @@
     "nodeCount": 10,
     "azureAccessKey": "[ADD YOUR AZURE STORAGE KEY OR DELETE]",
     "azureAccount": "[ADD YOUR AZURE STORAGE ACCOUNT OR DELETE]",
+    "useDynamoDB": [SET TRUE OR FALSE],
+    "awsRegion": "[SET IF 'useDynamoDB' IS TRUE]",
     "debug": false,
     "swanNetwork": "swan",
     "demo-pubs": [
@@ -19,11 +21,11 @@
         "swallow-pub.uk",
         "swift-pub.uk" 
     ],
-    "demo-mars": [
-        "cool-bikes.uk",
-        "cool-cars.uk",
-        "cool-creams.uk"
-    ],
+    "demo-mars": {
+        "cool-bikes.uk": "/campaign/images/234657570.jpeg",
+        "cool-cars.uk": "/campaign/images/190811762.jpeg",
+        "cool-creams.uk": "/campaign/images/221406343.jpeg"
+    },
     "demo-swan": "51d.io",
     "accessKeys" : [
         "key1",

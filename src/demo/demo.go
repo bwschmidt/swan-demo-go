@@ -43,8 +43,14 @@ func AddHandlers(settingsFile string) {
 	// malformed storage requests.
 	swan.AddHandlers(settingsFile, swa, swi, oa, handlerPublisher(&dc))
 
-	// TODO Add a handler for the marketers end point.
-	// http.HandleFunc("/mar", handlerPublisher(&demoConfig))
+	// Add the SSP handlers
+	http.HandleFunc("/ssp/bid", handlerSSP(&dc))
+
+	// Add a handler for the marketers end point.
+	http.HandleFunc("/mar", handlerMarketer(&dc))
+	// Add FileServer for marketer images
+	fs := http.FileServer(http.Dir("./images"))
+	http.Handle("/campaign/images/", http.StripPrefix("/campaign/images/", fs))
 
 	// Start the web server on the port provided.
 	log.Printf("Demo scheme: %s\n", dc.Scheme)
@@ -54,7 +60,7 @@ func AddHandlers(settingsFile string) {
 		log.Println("  ", s)
 	}
 	log.Println("Mar. URLs:")
-	for _, s := range dc.Mars {
+	for s := range dc.Mars {
 		log.Println("  ", s)
 	}
 }
@@ -75,6 +81,20 @@ func returnServerError(c *Configuration, w http.ResponseWriter, err error) {
 	} else {
 		http.Error(w, "", http.StatusInternalServerError)
 	}
+	if c.Debug {
+		println(err.Error())
+	}
+}
+
+func returnAPIError(
+	c *Configuration,
+	w http.ResponseWriter,
+	err error,
+	code int) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	http.Error(w, err.Error(), code)
 	if c.Debug {
 		println(err.Error())
 	}

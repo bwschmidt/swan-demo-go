@@ -45,20 +45,34 @@ var marTemplate = newHTMLTemplate("mar", `
             display: inline;
         }
         main {
-            display: flex;
-            flex-wrap: wrap;
+            margin: 0 auto;
+            max-width: 57rem;
         }
         main section {
-            flex: 0 0 33.3333%;
+            margin: 4em auto;
+            display: block;
         }
         main section h3, main section p {
             padding: 0 1em;
+        }
+        main section h3, main section p, main section pre, main section div {
+            margin: 1em;
         }
         main section ul {
             list-style: none;
         }
         main section ul li {
             margin: 1em 0;
+        }
+        main section pre {
+            background-color: lightgray;
+            white-space: break-spaces;
+            word-break: break-all;
+            font-family: monospace;
+        }
+        main section pre {
+            display: inline-block;
+            padding: 0.5em;
         }
         footer {
             padding: 5px 20px;
@@ -82,6 +96,29 @@ var marTemplate = newHTMLTemplate("mar", `
         var preferences = {{ .JSON }};
         console.log(preferences);
         {{ end }}
+        // Get bid from the URL
+        let urlParams = new URLSearchParams(window.location.search);
+        let bid = urlParams.get('bid');
+
+        // Parse the base64 string into JSON and parse to a JS Object.
+        let data = JSON.parse(atob(bid));
+        
+        // Get the URLs to verify the OWIDs
+        let urls = []
+        for(let property in data['ids']) {
+            let host = data['ids'][property].host;
+            let owid = data['ids'][property].owid;
+            if(host !== '' && owid != '') {
+                urls.push('//' + host + '/owid/api/v1/decode-and-verify?owid=' +owid);
+            }
+        }
+    
+        // Verify that the IDs are valid
+        Promise.all(urls.map(u=>fetch(u))).then(responses =>
+            Promise.all(responses.map(res => res.json()))
+        ).then(data => {
+            data.forEach(d => console.log("'" + d.signature + "' is valid: " + d.valid))
+        });
     </script>
 </head>
 <body>
@@ -92,18 +129,52 @@ var marTemplate = newHTMLTemplate("mar", `
     <section>
         <h3>Find out more about our great products.</h3>
         <ul>
-
+            <li>Item 1</li>
+            <li>Item 2</li>
+            <li>Item 3</li>
         </ul>
-    </section>           
+    </section>   
+    <section>
+        <h3>Incoming request in JSON</h3>
+        <pre id="bid-json"></pre>
+        <p>The incoming JSON can be verified using the following JavaScript</p>
+        <pre>// Get bid from the URL
+let urlParams = new URLSearchParams(window.location.search);
+let bid = urlParams.get('bid');
+
+// Parse the base64 string into JSON and parse to a JS Object.
+let data = JSON.parse(atob(bid));
+
+// Get the URLs to verify the OWIDs
+let urls = []
+for(let property in data['ids']) {
+    let host = data['ids'][property].host;
+    let owid = data['ids'][property].owid;
+    if(host !== '' && owid != '') {
+        urls.push('//' + host + '/owid/api/v1/decode-and-verify?owid=' +owid);
+    }
+}
+
+// Verify that the IDs are valid
+Promise.all(urls.map(u=>fetch(u))).then(responses =>
+    Promise.all(responses.map(res => res.json()))
+).then(data => {
+    console.log(data)
+});</pre>
+    </section>
+            
     </main>
     <footer>
         <ul>
             {{ range $val := .Results }}
-            <li>{{ $val.Key }} : {{ $val.Value }} | </li>
+            <li>{{ $val.Key }}: {{ $val.Value }} | </li>
             {{ end }}
             <li><a href="{{ .SWANURL }}">Privacy Preferences</a></li>
         </ul>
-    </footer>   
+    </footer>
+    <script>
+        document.getElementById("bid-json").innerText = atob(bid);
+    </script>
 </body>
 </html>`)
 
@@ -159,7 +230,7 @@ var pubTemplate = newHTMLTemplate("pub", `
         main section div {
             padding: 0.5em;
         }
-        main section div .button {
+        main section div .button, main section p .button {
             border-radius: 0.5em;
             background-color: lightblue;
             padding: 0.5em;
@@ -204,6 +275,59 @@ var pubTemplate = newHTMLTemplate("pub", `
         .logos li img {
             width: 96px;
         }
+        main section div.container {
+            padding: 1%;
+            position: relative;
+            display: table;
+        }
+        main section div.container .iconDetails {
+            float: left;
+            margin-right: 10px;
+        }
+        main section div.container .container-desc{
+            display: table-cell;
+            vertical-align: middle;
+            padding-left: 10px;
+        }
+        main section div.container .text{
+            margin: 0;
+            padding: 0;
+        }
+        main section div.container .container-desc h4 {
+            margin: 0px;
+        }
+        .slot {
+            position: relative;
+            font-family: Arial;
+            width:389px;
+        }
+        .slot .tooltip {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: royalblue;
+            color: white;
+            border-radius: 50%;
+            padding: 8px;
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+        .slot .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 240px;
+            background-color: black;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 1;
+            top: -5px;
+            right: 105%;
+        }
+        .slot .tooltip:hover .tooltiptext {
+            visibility: visible;
+        }
     </style>
     <script>
         {{ if ne .JSON "" }}
@@ -243,24 +367,71 @@ var pubTemplate = newHTMLTemplate("pub", `
                 .then(data => {
                     e.innerText = data;
                 });
-        }         
+        }
+        let url = "//{{ .Title }}/ssp/bid?" + 
+            "cbid=" + encodeURIComponent("{{ .CBID.Value }}") +
+            "&sid=" + encodeURIComponent("{{ .SID.Value }}") +
+            "&oid=" + encodeURIComponent("{{ .OID }}") +
+            "&allow=" + encodeURIComponent("{{ .Allow.Value }}")
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                let bid = btoa(JSON.stringify(data));
+                let img = document.createElement("img");
+                img.setAttribute("src", data["bid"]["creativeURL"]);
+                img.setAttribute("width", "389px;");
+                let link = document.createElement('a');
+                link.setAttribute('href', data["bid"]["clickURL"] + "?bid=" + bid);
+                link.appendChild(img)
+                document.getElementById("slot1").appendChild(link);
+        
+                let urls = []
+        
+                for(let property in data['ids']) {
+                    let host = data['ids'][property].host;
+                    let owid = data['ids'][property].owid;
+                    if(host !== '' && owid != '') {
+                        urls.push('//' + host + '/owid/api/v1/decode-and-verify?owid=' + encodeURIComponent(owid));
+                    }
+                }
+            
+                Promise.all(urls.map(u=>fetch(u))).then(responses =>
+                    Promise.all(responses.map(res => res.json()))
+                ).then(data => {
+                    let span1 = document.createElement("span")
+                    span1.textContent="i";
+                    let span2 = document.createElement("span")
+                    span2.setAttribute('class', "tooltiptext");
+                    let orgs = [...new Set(data.map(d => d.name))]
+                    span2.textContent="The following companies were involved in supplying this advert: " + orgs.join(', ');
+                    let tooltip = document.createElement("div")
+                    tooltip.appendChild(span1)
+                    tooltip.appendChild(span2)
+                    tooltip.setAttribute('class', 'tooltip')
+                    document.getElementById("slot1").appendChild(tooltip);
+                });
+            });
     </script>
 </head>
 <body>
     <header>
-        <h1>Publisher: {{ .Title }}</h1>
+        <h1>Welcome to {{ .Title }}, powered by SWAN</h1>
     </header>
     <main>
+    <div id="slot1" class="slot"></div>
     <section>
-        <h3>Welcome to SWAN : the future of open web advertising</h3>
-        <p>By enabling us to set a secure, privacy-by-design ID, we and other SWAN supporters promise to respect your privacy choices. The SWAN network is a privacy-by-design method of enabling personalized cross-publisher experiences on all publishers that adopt it.</p>
+        <h3>What is SWAN?</h3>
+        <p>Shared Web Accountable Network (SWAN) is a secure, privacy-by-design ID that adds accountability to the Open Web. By enabling us to set your temporary SWAN ID, we and other SWAN supporters promise to respect your privacy choices. The SWAN network is a privacy-by-design method of enchancing people's cross-publisher experiences.</p>
         <ul>
-        <li><strong>People</strong> : enhanced transparency, persistent choices (no more consent fatigue) and "right to be forgotten".</li>
-        <li><strong>Publishers</strong> : effective engagement, optimized advertising yield and accountable auditing to detect misappropriation.</li>
-        <li><strong>Marketers</strong> : optimize cross publisher effectiveness, ensure you get what you pay for.</li>
+        <li><strong>People</strong>: enhanced transparency, persistent personalization and privacy choices, while honoring people’s right to be forgotten.</li>
+        <li><strong>Publishers</strong>: effective engagement, optimized advertising yield and accountable auditing to detect misappropriation.</li>
+        <li><strong>Marketers</strong>: optimize cross publisher effectiveness, ensure you get what you pay for.</li>
         </ul>
-        <p>Multiple implementors of SWAN open source form a dencentralized network. There's no single point of failure.</p>
-        <p>Read on for a brief introduction to SWAN. To find out more go <a href="https://github.com/51degrees/swan">here</a>.</p>
+        <p>SWAN was designed to provide enhanced transparency around data collection and enable stronger accountability and enforcement for those that violate your privacy. Recently browsers owned by the largest US publishers announced they intend to interfere with how we and other smaller publishers operate our business.</p>
+        <p>Our partners support the competitive open web, which relies on the use of a fair, transparent, and privacy-centric identifier. We believe you deserve not only transparency and control, but an auditable view into which organizations were involved in displaying content to you on this publisher.</p>
+        <p>To provide you access to our website, marketers fund our operations with advertising. In exchange, they need to measure and optimize their cross-publisher advertising as easily as they can within the Walled Gardens. However, marketers do not need to know your offline identity and SWAN members agree to keep your offline identity distinct from your digital activity.</p>
+        <p>Like the World Wide Web, SWAN is a free, public service, operated by an open market of organizations that do not want or have a central controller. To ensure there is no single point of failure, there isn't a single SWAN domain, but many of them. To speed up your online experience, each browser can remember your privacy preferences, which reduces the number of times publishers need to ask you for your information.</p>
+        <p>To learn more about the SWAN project, please visit our Open Source code repository <a href="https://github.com/51degrees/swan">here</a>.</p>
     </section>
     <section>
         <h3>SWAN supporters</h3>
@@ -275,6 +446,7 @@ var pubTemplate = newHTMLTemplate("pub", `
         <h3>Common Browser ID (CBID)</h3>
         <p>SWAN provides a Common Browser ID that you can easily reset at any time. Here's the SWAN CBID for this browser.<p>
         <pre>{{ .CBID.AsOWID.PayloadAsString }}</pre>
+        <p>You can reset this ID by clicking the reset button: [reset]</p>
         <p>SWAN secures your ID to ensure you can have an accountable audit log. Here's the secured version:<p>
         <pre>{{ .CBID.Value }}</pre>
         <p>Anyone can confirm that this ID was created by <span><script>creator(document.scripts[document.scripts.length - 1].parentNode, '{{ .CBID.CreatorURL }}');</script></span> using this link.</p>
@@ -297,14 +469,18 @@ var pubTemplate = newHTMLTemplate("pub", `
         <pre>{{ .SID.Value }}</pre>
         <p>When all of this is decoded and verified it looks like this.</p>
         <pre><script>text(document.scripts[document.scripts.length - 1].parentNode, '{{ .SID.DecodeAndVerifyURL }}');</script></pre>
-        <p>SID and CBID are all implemented in SWAN using the Open Web ID schema. It's open source and your can find out more <a href="https://github.com/51degrees/owid">here</a>.</p>
+        <p>SID and CBID are all implemented in SWAN using the Open Web ID schema. It's open source and you can find out more <a href="https://github.com/51degrees/owid">here</a>.</p>
     </section>
     {{ end }}
+    {{ if .OID }}
     <section>
         <h3>Offer ID (OID)</h3>
         <p>Here's an advertising OfferID generated for this page request.</p>
-        <pre>{{ .NewOfferID "1" }}</pre>
+        <pre>{{ .OID }}</pre>
+        <p>When this is decoded it looks like this.</p>
+        <pre>{{ .UnpackOID }}</pre>
     </section>
+    {{ end }}
     {{ if .Allow }}
     <section>
         <h3>Preferences</h3>
@@ -312,23 +488,39 @@ var pubTemplate = newHTMLTemplate("pub", `
         <pre>{{ .Allow.AsOWID.PayloadAsString }}</pre>
         <p>Just like your Common Browser ID, we secure your preferences too. Your preference token is:</p>
         <pre>{{ .Allow.Value }}</pre>
-        <p>You can change your preferences any time <a href="{{ .SWANURL }}">here</a>.</p>
+        <p>You can change your preferences any time by clicking the My preferences button. <a class="button" href="{{ .SWANURL }}">My preferences</a></p>
         <p>If you want to only temporarily change your preference, you can using a new incognito or private browsing tab.</p>
     </section>
     {{ end }}
     <section>
-        <h3>Improving the Web</h3>
-        <p>We believe you deserve not only transparency and control, but an auditable view into the organizations involved in displaying the content on this publisher.  We need to rely on SWAN given recent announcements by browsers owned by the largest US publishers who intend to interfere with how we and other smaller publishers operate our business.</p>
-        <p>To provide you access to our website, we rely on advertising paid by marketers. In exchange, they need to measure and optimize their advertising as easily as they can within the Walled Gardens. However, marketers do not need to know your offline identity and SWAN members agree to keep your offline identity distinct from your digital activity.</p>
-        <p>Like the World Wide Web, SWAN is operated by an open market of hosts that do not want or have a central controller. Accordingly, there isn't a single SWAN domain, but many of them. To speed up your online experience, every browser is assigned a home domain. This reduces the number of times publishers need to ask multiple SWAN domains for your information.</p>
-    </section>
-    <section>
         <h3>Find out more about the open source projects used in this demo.</h3>
-        <ul>
-            <li><a href="https://github.com/51degrees/swift">SWIFT</a> Shared Web InFormaTion is a browser-agnostic method to share information across web domains.</li>
-            <li><a href="https://github.com/51degrees/owid">OWID</a> Open Web ID (OWID) is a privacy-by-design schema for ID.</li>
-            <li><a href="https://github.com/51degrees/swan">SWAN</a> Shared Web Accountable Network (SWAN) brings it all together to support digital marketing use cases.</li>
-        </ul>
+        <div class='container'>
+            <div>
+                <img class='iconDetails' src='https://github.com/51Degrees/swift/raw/main/images/swift_128px_72dpi_v2.png'>
+            </div>	
+                <div class='container-desc'>
+                <h4><a href="https://github.com/51degrees/swift">SWIFT</a></h4>
+                <p class="text">Shared Web InFormaTion (SWIFT) is a browser-agnostic method to share information across web domains.</p>
+            </div>
+            </div>
+            <div class='container'>
+            <div>
+                <img class='iconDetails' src='https://github.com/51Degrees/owid/raw/main/images/owl_128px_72dpi.png'>
+            </div>	
+                <div class='container-desc'>
+                <h4><a href="https://github.com/51degrees/owid">OWID</a></h4>
+                <p class="text">Open Web ID (OWID) is a privacy-by-design schema for ID.</p>
+            </div>
+            </div>
+            <div class='container'>
+            <div>
+                <img class='iconDetails' src='https://github.com/51Degrees/swan/raw/main/images/swan_128px_72dpi.png'>
+            </div>	
+                <div class='container-desc'>
+                <h4><a href="https://github.com/51degrees/swan">SWAN</a></h4>
+                <p class="text">Shared Web Accountable Network (SWAN) brings it all together to support digital marketing use cases.</p>
+            </div>
+        </div>
     </section>
     <section>
         <h3>Visit these other domains</h3>
