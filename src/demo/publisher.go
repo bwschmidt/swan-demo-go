@@ -62,19 +62,19 @@ func (p *preference) JSON() string {
 	return string(b)
 }
 
+// IsSet returns true if all three of the values are present in the results and
+// are valid OWIDs.
 func (p *preference) IsSet() bool {
+	c := 0
 	for _, e := range p.results {
-		if e.Key == "allow" {
+		if e.Key == "allow" || e.Key == "cbid" || e.Key == "sid" {
 			o, err := e.AsOWID()
-			if err != nil {
-				return false
-			}
-			if o.PayloadAsString() != "" {
-				return true
+			if err == nil && o.PayloadAsString() != "" {
+				c++
 			}
 		}
 	}
-	return false
+	return c == 3
 }
 
 func handlerPublisher(c *Configuration) http.HandlerFunc {
