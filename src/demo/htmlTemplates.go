@@ -99,7 +99,7 @@ var marTemplate = newHTMLTemplate("mar", `
         // Get bid from the URL
         let urlParams = new URLSearchParams(window.location.search);
         let bid = urlParams.get('bid');
-        
+
         // Parse the base64 string into JSON and parse to a JS Object.
         let data = JSON.parse(atob(bid));
         
@@ -117,7 +117,7 @@ var marTemplate = newHTMLTemplate("mar", `
         Promise.all(urls.map(u=>fetch(u))).then(responses =>
             Promise.all(responses.map(res => res.json()))
         ).then(data => {
-            console.log(data)
+            data.forEach(d => console.log("'" + d.signature + "' is valid: " + d.valid))
         });
     </script>
 </head>
