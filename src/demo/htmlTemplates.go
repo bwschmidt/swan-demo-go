@@ -312,7 +312,7 @@ var pubTemplate = newHTMLTemplate("pub", `
         <pre>{{ .Allow.AsOWID.PayloadAsString }}</pre>
         <p>Just like your Common Browser ID, we secure your preferences too. Your preference token is:</p>
         <pre>{{ .Allow.Value }}</pre>
-        <p>You can change your preferences any time <a href="{{ .SWANURL }}">here</a>.</p>
+        <p>You can change your preferences any time <a href="?privacy=update">here</a>.</p>
         <p>If you want to only temporarily change your preference, you can using a new incognito or private browsing tab.</p>
     </section>
     {{ end }}
@@ -345,7 +345,7 @@ var pubTemplate = newHTMLTemplate("pub", `
             <li>CBID:{{ .CBID.AsOWID.PayloadAsString }}</li>
             <li>SID:{{ .SID.AsOWID.PayloadAsPrintable }}</li>
             <li>Pref.:{{ .Allow.AsOWID.PayloadAsString }}</li>
-            <li><a href="{{ .SWANURL }}">Privacy Preferences</a></li>
+            <li><a href="?privacy=update">Privacy Preferences</a></li>
         </ul>
     </footer>
 </body>

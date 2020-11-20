@@ -48,11 +48,6 @@ func (p *preference) NewOfferID(placement string) string {
 	return oid
 }
 
-func (p *preference) SWANURL() string {
-	u, _ := createUpdateURL(p.config, p.request)
-	return u
-}
-
 func (p *preference) JSON() string {
 	b, err := json.Marshal(p.results)
 	if err != nil {
@@ -84,6 +79,24 @@ func handlerPublisher(c *Configuration) http.HandlerFunc {
 
 		// Only process the request if the host is on the list of publishers.
 		if find(c.Pubs, r.Host) == false {
+			return
+		}
+
+		// Parse the incoming parameters.
+		err = r.ParseForm()
+		if err != nil {
+			returnServerError(c, w, err)
+			return
+		}
+
+		// See if this is a request to update preferences.
+		if r.Form.Get("privacy") == "update" {
+			n, err := createUpdateURL(c, r)
+			if err != nil {
+				returnServerError(c, w, err)
+				return
+			}
+			http.Redirect(w, r, n, 303)
 			return
 		}
 
