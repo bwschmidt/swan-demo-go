@@ -49,7 +49,7 @@ func AddHandlers(settingsFile string) {
 	// Add a handler for the marketers end point.
 	http.HandleFunc("/mar", handlerMarketer(&dc))
 	// Add FileServer for marketer images
-	fs := http.FileServer(http.Dir("./src/images"))
+	fs := http.FileServer(http.Dir("./images"))
 	http.Handle("/campaign/images/", http.StripPrefix("/campaign/images/", fs))
 
 	// Start the web server on the port provided.
@@ -60,7 +60,7 @@ func AddHandlers(settingsFile string) {
 		log.Println("  ", s)
 	}
 	log.Println("Mar. URLs:")
-	for _, s := range dc.Mars {
+	for s := range dc.Mars {
 		log.Println("  ", s)
 	}
 }

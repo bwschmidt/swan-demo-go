@@ -45,20 +45,34 @@ var marTemplate = newHTMLTemplate("mar", `
             display: inline;
         }
         main {
-            display: flex;
-            flex-wrap: wrap;
+            margin: 0 auto;
+            max-width: 57rem;
         }
         main section {
-            flex: 0 0 33.3333%;
+            margin: 4em auto;
+            display: block;
         }
         main section h3, main section p {
             padding: 0 1em;
+        }
+        main section h3, main section p, main section pre, main section div {
+            margin: 1em;
         }
         main section ul {
             list-style: none;
         }
         main section ul li {
             margin: 1em 0;
+        }
+        main section pre {
+            background-color: lightgray;
+            white-space: break-spaces;
+            word-break: break-all;
+            font-family: monospace;
+        }
+        main section pre {
+            display: inline-block;
+            padding: 0.5em;
         }
         footer {
             padding: 5px 20px;
@@ -82,6 +96,29 @@ var marTemplate = newHTMLTemplate("mar", `
         var preferences = {{ .JSON }};
         console.log(preferences);
         {{ end }}
+        // Get bid from the URL
+        let urlParams = new URLSearchParams(window.location.search);
+        let bid = urlParams.get('bid');
+        
+        // Parse the base64 string into JSON and parse to a JS Object.
+        let data = JSON.parse(atob(bid));
+        
+        // Get the URLs to verify the OWIDs
+        let urls = []
+        for(let property in data['ids']) {
+            let host = data['ids'][property].host;
+            let owid = data['ids'][property].owid;
+            if(host !== '' && owid != '') {
+                urls.push('//' + host + '/owid/api/v1/decode-and-verify?owid=' +owid);
+            }
+        }
+    
+        // Verify that the IDs are valid
+        Promise.all(urls.map(u=>fetch(u))).then(responses =>
+            Promise.all(responses.map(res => res.json()))
+        ).then(data => {
+            console.log(data)
+        });
     </script>
 </head>
 <body>
@@ -92,9 +129,40 @@ var marTemplate = newHTMLTemplate("mar", `
     <section>
         <h3>Find out more about our great products.</h3>
         <ul>
-
+            <li>Item 1</li>
+            <li>Item 2</li>
+            <li>Item 3</li>
         </ul>
-    </section>           
+    </section>   
+    <section>
+        <h3>Incoming request in JSON</h3>
+        <pre id="bid-json"></pre>
+        <p>The incoming JSON can be verified using the following JavaScript</p>
+        <pre>// Get bid from the URL
+let urlParams = new URLSearchParams(window.location.search);
+let bid = urlParams.get('bid');
+
+// Parse the base64 string into JSON and parse to a JS Object.
+let data = JSON.parse(atob(bid));
+
+// Get the URLs to verify the OWIDs
+let urls = []
+for(let property in data['ids']) {
+    let host = data['ids'][property].host;
+    let owid = data['ids'][property].owid;
+    if(host !== '' && owid != '') {
+        urls.push('//' + host + '/owid/api/v1/decode-and-verify?owid=' +owid);
+    }
+}
+
+// Verify that the IDs are valid
+Promise.all(urls.map(u=>fetch(u))).then(responses =>
+    Promise.all(responses.map(res => res.json()))
+).then(data => {
+    console.log(data)
+});</pre>
+    </section>
+            
     </main>
     <footer>
         <ul>
@@ -103,7 +171,10 @@ var marTemplate = newHTMLTemplate("mar", `
             {{ end }}
             <li><a href="{{ .SWANURL }}">Privacy Preferences</a></li>
         </ul>
-    </footer>   
+    </footer>
+    <script>
+        document.getElementById("bid-json").innerText = atob(bid);
+    </script>
 </body>
 </html>`)
 
@@ -297,28 +368,48 @@ var pubTemplate = newHTMLTemplate("pub", `
                     e.innerText = data;
                 });
         }
-        var url = "//{{ .Title }}/ssp/bid?cbid={{ .CBID.Value }}&sid={{ .SID.Value }}&oid={{ .OID }}&allow={{ .Allow.Value }}"
+        let url = "//{{ .Title }}/ssp/bid?" + 
+            "cbid=" + encodeURIComponent("{{ .CBID.Value }}") +
+            "&sid=" + encodeURIComponent("{{ .SID.Value }}") +
+            "&oid=" + encodeURIComponent("{{ .OID }}") +
+            "&allow=" + encodeURIComponent("{{ .Allow.Value }}")
         fetch(url)
             .then(response => response.json())
             .then(data => {
                 let bid = btoa(JSON.stringify(data));
-                var img = document.createElement("img");
+                let img = document.createElement("img");
                 img.setAttribute("src", data["bid"]["creativeURL"]);
                 img.setAttribute("width", "389px;");
-                var link = document.createElement('a');
+                let link = document.createElement('a');
                 link.setAttribute('href', data["bid"]["clickURL"] + "?bid=" + bid);
                 link.appendChild(img)
-                var span1 = document.createElement("span")
-                span1.textContent="i";
-                var span2 = document.createElement("span")
-                span2.setAttribute('class', "tooltiptext");
-                span2.textContent="The following companies were involved in supplying this advert: " + data["ids"].join(', ');
-                var tooltip = document.createElement("div")
-                tooltip.appendChild(span1)
-                tooltip.appendChild(span2)
-                tooltip.setAttribute('class', 'tooltip')
                 document.getElementById("slot1").appendChild(link);
-                document.getElementById("slot1").appendChild(tooltip);
+        
+                let urls = []
+        
+                for(let property in data['ids']) {
+                    let host = data['ids'][property].host;
+                    let owid = data['ids'][property].owid;
+                    if(host !== '' && owid != '') {
+                        urls.push('//' + host + '/owid/api/v1/decode-and-verify?owid=' + encodeURIComponent(owid));
+                    }
+                }
+            
+                Promise.all(urls.map(u=>fetch(u))).then(responses =>
+                    Promise.all(responses.map(res => res.json()))
+                ).then(data => {
+                    let span1 = document.createElement("span")
+                    span1.textContent="i";
+                    let span2 = document.createElement("span")
+                    span2.setAttribute('class', "tooltiptext");
+                    let orgs = [...new Set(data.map(d => d.name))]
+                    span2.textContent="The following companies were involved in supplying this advert: " + orgs.join(', ');
+                    let tooltip = document.createElement("div")
+                    tooltip.appendChild(span1)
+                    tooltip.appendChild(span2)
+                    tooltip.setAttribute('class', 'tooltip')
+                    document.getElementById("slot1").appendChild(tooltip);
+                });
             });
     </script>
 </head>
@@ -358,7 +449,6 @@ var pubTemplate = newHTMLTemplate("pub", `
         <p>You can reset this ID by clicking the reset button: [reset]</p>
         <p>SWAN secures your ID to ensure you can have an accountable audit log. Here's the secured version:<p>
         <pre>{{ .CBID.Value }}</pre>
-        <pre>Created: {{ .CBID.Created }} Expires: {{ .CBID.Expires }}</pre>
         <p>Anyone can confirm that this ID was created by <span><script>creator(document.scripts[document.scripts.length - 1].parentNode, '{{ .CBID.CreatorURL }}');</script></span> using this link.</p>
         <pre>{{ .CBID.VerifyURL }}</pre>
         <p>Go on. Tap the following button to check it's good.</p>
@@ -377,7 +467,6 @@ var pubTemplate = newHTMLTemplate("pub", `
         <pre>{{ .SID.AsOWID.PayloadAsPrintable }}</pre>
         <p>Just like CBID it's secured to make it verifiable. Here's the longer version.</p>
         <pre>{{ .SID.Value }}</pre>
-        <pre>Created: {{ .SID.Created }} Expires: {{ .SID.Expires }}</pre>
         <p>When all of this is decoded and verified it looks like this.</p>
         <pre><script>text(document.scripts[document.scripts.length - 1].parentNode, '{{ .SID.DecodeAndVerifyURL }}');</script></pre>
         <p>SID and CBID are all implemented in SWAN using the Open Web ID schema. It's open source and you can find out more <a href="https://github.com/51degrees/owid">here</a>.</p>
@@ -399,7 +488,6 @@ var pubTemplate = newHTMLTemplate("pub", `
         <pre>{{ .Allow.AsOWID.PayloadAsString }}</pre>
         <p>Just like your Common Browser ID, we secure your preferences too. Your preference token is:</p>
         <pre>{{ .Allow.Value }}</pre>
-        <pre>Created: {{ .Allow.Created }} Expires: {{ .Allow.Expires }}</pre>
         <p>You can change your preferences any time by clicking the My preferences button. <a class="button" href="{{ .SWANURL }}">My preferences</a></p>
         <p>If you want to only temporarily change your preference, you can using a new incognito or private browsing tab.</p>
     </section>

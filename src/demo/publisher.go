@@ -167,7 +167,6 @@ func newPreferencesFromCookies(r *http.Request) *preference {
 			var s swan.Pair
 			s.Key = c.Name
 			s.Value = c.Value
-			s.Expires = c.Expires
 			p.results = append(p.results, &s)
 		}
 	}

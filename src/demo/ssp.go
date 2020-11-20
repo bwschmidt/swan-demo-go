@@ -21,37 +21,25 @@ import (
 	"errors"
 	"math/rand"
 	"net/http"
+	"owid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
-var bidJSON = `{
-	"ids":[
-		"51degrees"
-	],
-	"bids":[
-        {
-            "bidder": "cool-cars",
-            "creativeUrl": "http://cool-cars.uk:5000/campaign/images/190811762.jpeg",
-            "clickUrl": "http://cool-cars.uk:5000/mar"
-        },
-        {
-            "bidder": "cool-bkes",
-            "creativeUrl": "http://cool-bikes.uk:5000/campaign/images/234657570.jpeg",
-            "clickUrl": "http://cool-bikes.uk:5000/mar"
-        },
-        {
-            "bidder": "cool-creams",
-            "creativeUrl": "http://cool-creams.uk:5000/campaign/images/221406343.jpeg",
-            "clickUrl": "http://cool-creams.uk:5000/mar"
-        }
-    ]
+// Pair contains OWID nad OWID host returned to consumer
+type Pair struct {
+	Host string `json:"host"`
+	Owid string `json:"owid"`
 }
-`
 
-// Bids from the DSP
-type Bids struct {
-	IDs  []string `json:"ids"`  // ids of companies involved in bid process
-	Bids []Bid    `json:"bids"` // response
+// IDs from the request
+type IDs struct {
+	CBID  *Pair `json:"cbid"`  // Common Browser ID
+	SID   *Pair `json:"sid"`   // Signed-in ID
+	OID   *Pair `json:"oid"`   // Offer ID
+	Allow *Pair `json:"allow"` // Consumer preferences
+	TID   *Pair `json:"tid"`   // Transaction ID
 }
 
 // Bid payload
@@ -63,8 +51,8 @@ type Bid struct {
 
 // BidResponse to consumer
 type BidResponse struct {
-	IDs []string `json:"ids"` // ids of companies involved in bid process
-	Bid *Bid     `json:"bid"` // response
+	IDs IDs  `json:"ids"` // ids of companies involved in bid process
+	Bid *Bid `json:"bid"` // response
 }
 
 func handlerSSP(c *Configuration) http.HandlerFunc {
@@ -108,7 +96,7 @@ func handlerSSP(c *Configuration) http.HandlerFunc {
 				http.StatusBadRequest)
 		}
 
-		bid, err := getAd(cbid, sid, oid, allow)
+		bid, err := getAd(c, cbid, sid, oid, allow)
 		if err != nil {
 			returnServerError(c, w, err)
 			return
@@ -120,25 +108,63 @@ func handlerSSP(c *Configuration) http.HandlerFunc {
 	}
 }
 
-func getAd(cbid string, sid string, oid string, allow string) (*BidResponse, error) {
-	var b Bids
+func getAd(
+	c *Configuration,
+	cbid string,
+	sid string,
+	oid string,
+	allow string) (*BidResponse, error) {
 
-	err := json.Unmarshal([]byte(bidJSON), &b)
+	cb, err := getPairFromOwid(cbid)
+	if err != nil {
+		return nil, err
+	}
+	s, err := getPairFromOwid(sid)
+	if err != nil {
+		return nil, err
+	}
+	o, err := getPairFromOwid(oid)
+	if err != nil {
+		return nil, err
+	}
+	a, err := getPairFromOwid(allow)
 	if err != nil {
 		return nil, err
 	}
 
-	count := 0
-	for range b.Bids {
-		count++
+	ids := IDs{
+		cb, s, o, a,
+		&Pair{"", uuid.New().String()}}
+
+	keys := []string{}
+	for k := range c.Mars {
+		keys = append(keys, k)
 	}
-
 	rand.Seed(time.Now().UnixNano())
-	randomNum := rand.Intn(count)
+	randomNum := rand.Intn(len(keys))
+	bidder := keys[randomNum]
+	createive := c.Mars[bidder]
 
-	bid := &b.Bids[randomNum]
+	bid := Bid{
+		bidder,
+		"//" + bidder + createive,
+		"//" + bidder + "/mar"}
 
-	br := BidResponse{append(b.IDs, bid.Bidder), bid}
+	br := BidResponse{ids, &bid}
 
 	return &br, nil
+}
+
+func getPairFromOwid(o string) (*Pair, error) {
+	var p Pair
+
+	ow, err := owid.DecodeFromBase64(o)
+	if err != nil {
+		return nil, err
+	}
+
+	p.Owid = o
+	p.Host = ow.Domain
+
+	return &p, nil
 }
