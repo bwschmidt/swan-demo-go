@@ -334,6 +334,11 @@ var pubTemplate = newHTMLTemplate("pub", `
         main section .slot .tooltip:hover .tooltiptext {
             visibility: visible;
         }
+        main section .label {
+            color: darkgrey;
+            font-size: 0.8em;
+            text-align: center;
+        }
     </style>
     <script>
         {{ if ne .JSON "" }}
@@ -425,7 +430,9 @@ var pubTemplate = newHTMLTemplate("pub", `
     </header>
     <main>
     <section>
-        <div id="slot1" class="slot"></div>
+        <div id="slot1" class="slot">
+        <div class="label">advertisement</div>
+        </div>
     </section>
     <section>
         <h3>What is SWAN?</h3>
