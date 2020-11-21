@@ -212,7 +212,7 @@ var pubTemplate = newHTMLTemplate("pub", `
             margin: 4em auto;
             display: block;
         }
-        main section h3, main section p, main section pre, main section div {
+        main section h3, main section p, main section pre {
             margin: 1em;
         }
         main section pre, main section .inline-span {
@@ -228,15 +228,14 @@ var pubTemplate = newHTMLTemplate("pub", `
         main section .inline-span {
             display: inline;
         }
-        main section div {
-            padding: 0.5em;
-        }
-        main section div .button, main section p .button {
+        main section .button {
             border-radius: 0.5em;
             background-color: lightblue;
             padding: 0.5em;
             border: lightgrey solid 1px;
-            text-decoration: none; 
+            text-decoration: none;
+            margin: 1em auto;
+            display: inline-block;
         }
         main section ul {
             list-style: none;
@@ -251,6 +250,7 @@ var pubTemplate = newHTMLTemplate("pub", `
             right: 0;
             background-color: white;
             border-top: solid black 2px;
+            word-break: break-all;
         }
         footer ul {
             list-style: none;
@@ -261,7 +261,7 @@ var pubTemplate = newHTMLTemplate("pub", `
         footer ul li {
             display: inline;
         }
-        .logos {
+        main section .logos {
             list-style: none;
             display: flex;
             padding: 0;
@@ -269,12 +269,12 @@ var pubTemplate = newHTMLTemplate("pub", `
             flex-flow: row wrap;
             justify-content: center;
         }
-        .logos li {
+        main section .logos li {
             display: block;
             float: left;
             margin: 1em;
         }
-        .logos li img {
+        main section .logos li img {
             width: 96px;
         }
         main section div.container {
@@ -298,12 +298,16 @@ var pubTemplate = newHTMLTemplate("pub", `
         main section div.container .container-desc h4 {
             margin: 0px;
         }
-        .slot {
+        main section .slot {
             position: relative;
             font-family: Arial;
-            width:389px;
+            width: 100%;
+            max-width: 389px;
         }
-        .slot .tooltip {
+        main section .slot img {
+            width: 100%;
+        }
+        main section .slot .tooltip {
             position: absolute;
             top: 20px;
             right: 20px;
@@ -314,7 +318,7 @@ var pubTemplate = newHTMLTemplate("pub", `
             padding-left: 15px;
             padding-right: 15px;
         }
-        .slot .tooltip .tooltiptext {
+        main section .slot .tooltip .tooltiptext {
             visibility: hidden;
             width: 240px;
             background-color: black;
@@ -327,7 +331,7 @@ var pubTemplate = newHTMLTemplate("pub", `
             top: -5px;
             right: 105%;
         }
-        .slot .tooltip:hover .tooltiptext {
+        main section .slot .tooltip:hover .tooltiptext {
             visibility: visible;
         }
     </style>
@@ -456,7 +460,7 @@ var pubTemplate = newHTMLTemplate("pub", `
         <p>Anyone can confirm that this ID was created by <span class="inline-span"><script>creator(document.scripts[document.scripts.length - 1].parentNode, '{{ .CBID.CreatorURL }}');</script></span> using this link.</p>
         <pre>{{ .CBID.VerifyURL }}</pre>
         <p>Go on. Tap the following button to check it's good.</p>
-        <div><a class="button" onclick="verify(this, '{{ .CBID.VerifyURL }}')">Verify</a></div>
+        <p><a class="button" onclick="verify(this, '{{ .CBID.VerifyURL }}')">Verify</a></p>
         <p>This shows that the domain <span class="inline-span">{{ .CBID.AsOWID.Domain }}</span> generated this ID on <span class="inline-span">{{ .CBID.AsOWID.Date }}</span>.</p>
         <p>The domain <span class="inline-span">{{ .CBID.AsOWID.Domain }}</span> used the following signature.</p>
         <pre>{{ .CBID.AsOWID.Signature }}</pre>
