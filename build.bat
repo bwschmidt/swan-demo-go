@@ -12,4 +12,4 @@ set GOOS=linux
 go build -o ./application ./src/server.go
 
 # Create a zip file with the application and the settings file
-bin\build-lambda-zip.exe -o aws-eb-swan-demo.zip application appsettings.json Procfile .ebextensions/.config
+bin\build-lambda-zip.exe -o aws-eb-swan-demo.zip application appsettings.json Procfile .ebextensions/.config images/190811762.jpeg images/221406343.jpeg images/234657570.jpeg
