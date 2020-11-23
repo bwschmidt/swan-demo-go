@@ -4,8 +4,9 @@ Secured Web Accountable Network (SWAN) - Demo in go of SWAN, SWIFT and OWID
 The SWAN demo implements the concepts explained in 
 [SWAN](https://github.com/51degrees/swan)
 
-The deployment guide later on is an example with multiple swioft nodes, 
-publishers and marketers but every SWAN needs at least the following:
+The deployment guide later on in this readme shows you how to set up example 
+with multiple SWIFT nodes, publishers and marketers but every SWAN needs at 
+least the following:
 
 * 5x SWIFT Nodes
 * 1x SWAN Node
@@ -230,13 +231,13 @@ line.
 
 ### Steps
 
-* Having cloned the repository, configure the appsettings.dev.json file.
+* Having cloned the repository, configure the `appsettings.dev.json` file.
 
   ```
   cp appsettings.dev.json.rename appsettings.dev.json
   ```
 
-* Configure your hosts file to point urls to localhost, see 
+* Configure your hosts file to point URLs to localhost, see 
 (Environments)[#environments] section in this readme for platform specifics. 
 The following host resolutions are used in the sample configuration:
 
@@ -262,7 +263,7 @@ The following host resolutions are used in the sample configuration:
   ```
 
 * Run either the `./build.sh` file if you are on Linux or run the `./build.bat` file 
-if you are on windows.
+if you are on Windows.
 
 * Run the server:
 
@@ -297,7 +298,7 @@ records from these steps will be visible in the ``swiftnodes`` and
   ```
   http://5.51d.uk:5000/swift/register
   ```
-* Now browse to one of the publisher URLs, you should be prompted to set your 
+* Now browse to one of the publisher URLs, you will be prompted to set your 
 preferences:
 
   ```
