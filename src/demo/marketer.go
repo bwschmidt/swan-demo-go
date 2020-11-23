@@ -35,7 +35,7 @@ func (m *marketer) BackgroundColor() string {
 	return getBackgroundColor(m.request.Host)
 }
 func (m *marketer) JSON() string {
-	sd, err := base64.StdEncoding.DecodeString(m.bid)
+	sd, err := base64.URLEncoding.DecodeString(m.bid)
 	if err != nil {
 		fmt.Println(err)
 		return ""
