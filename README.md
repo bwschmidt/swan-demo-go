@@ -41,6 +41,16 @@ Marketer     | cool-cars.uk |  | cool-bikes.uk |  | cool-creams.uk | ... etc
 ```
 # Deployment
 
+The demo currently supports the following environements:
+
+* AWS Elastic Beanstalk
+* Local Go SDK
+
+And the follwing sotrage solutions:
+
+* AWS Dynamo DB
+* Azure Storage Tables
+
 ### Get the code
 
 This demo uses submodules, to clone the repository and the submodules at the 
