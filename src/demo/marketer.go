@@ -61,6 +61,17 @@ func handlerMarketer(c *Configuration) http.HandlerFunc {
 			return
 		}
 
+		// See if this is a request to update preferences.
+		if r.Form.Get("privacy") == "update" {
+			n, err := createUpdateURL(c, r)
+			if err != nil {
+				returnServerError(c, w, err)
+				return
+			}
+			http.Redirect(w, r, n, 303)
+			return
+		}
+
 		bid := r.FormValue("bid")
 		m.bid = bid
 

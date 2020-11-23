@@ -8,10 +8,6 @@
     "progressColor": "darkgreen",
     "scheme": "http",
     "nodeCount": 10,
-    "azureAccessKey": "[ADD YOUR AZURE STORAGE KEY OR DELETE]",
-    "azureAccount": "[ADD YOUR AZURE STORAGE ACCOUNT OR DELETE]",
-    "useDynamoDB": [SET TRUE OR FALSE],
-    "awsRegion": "[SET IF 'useDynamoDB' IS TRUE]",
     "swanNetwork": "swan-dev",
     "debug": false,
     "demo-pubs": [

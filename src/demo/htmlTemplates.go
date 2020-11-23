@@ -170,7 +170,7 @@ Promise.all(urls.map(u=>fetch(u))).then(responses =>
             {{ range $val := .Results }}
             <li>{{ $val.Key }}: {{ $val.Value }} | </li>
             {{ end }}
-            <li><a href="{{ .SWANURL }}">Privacy Preferences</a></li>
+            <li><a href="?privacy=update">Privacy Preferences</a></li>
         </ul>
     </footer>
     <script>
