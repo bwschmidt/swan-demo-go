@@ -345,6 +345,7 @@ var pubTemplate = newHTMLTemplate("pub", `
         var preferences = {{ .JSON }};
         console.log(preferences);
         {{ end }}
+        // Verify the CBID on request
         function verify(e, u) {
             fetch(u)
                 .then(response => response.json())
@@ -358,27 +359,21 @@ var pubTemplate = newHTMLTemplate("pub", `
                     }
                 }).catch(() => e.style.backgroundColor = "red");
         }
-        function creator(e, u) {
-            fetch(u)
-                .then(response => response.json())
-                .then(data => {
-                    e.innerText = data["name"];
-                });
-        }        
-        function publicKey(e, u) {
-            fetch(u)
-                .then(response => response.json())
-                .then(data => {
-                    e.innerText = data["public-key"];
-                });
-        }    
-        function text(e, u) {
-            fetch(u)
-                .then(response => response.text())
-                .then(data => {
-                    e.innerText = data;
-                });
-        }
+
+        // Get the details for the CBID and the SID and populate page elements.
+        Promise.all([
+            fetch({{ .CBID.CreatorURL }}),
+            fetch({{ .SID.DecodeAndVerifyURL }}),
+        ])
+            .then(([cbidresp, sidresp]) => Promise.all([cbidresp.json(), sidresp.text()]), 
+                (reject) => console.log(reject))
+            .then(([cbiddata, sidresp]) => {
+                document.getElementById("creator").innerHTML = cbiddata["name"];
+                document.getElementById("public-key").innerHTML = cbiddata["public-key"];
+                document.getElementById("sid").innerHTML = sidresp;
+            }, (reject) => console.log(reject));
+
+        // Send the offer to the ssp
         let url = "//{{ .Title }}/ssp/bid?" + 
             "cbid=" + encodeURIComponent("{{ .CBID.Value }}") +
             "&sid=" + encodeURIComponent("{{ .SID.Value }}") +
@@ -387,6 +382,7 @@ var pubTemplate = newHTMLTemplate("pub", `
         fetch(url)
             .then(response => response.json())
             .then(data => {
+                // Create the ad element in the slot.
                 let bid = btoa(JSON.stringify(data));
                 let img = document.createElement("img");
                 img.setAttribute("src", data["bid"]["creativeURL"]);
@@ -396,8 +392,9 @@ var pubTemplate = newHTMLTemplate("pub", `
                 link.appendChild(img)
                 document.getElementById("slot1").appendChild(link);
         
+                // Get the details of the organisation involved in serving this
+                // ad.
                 let urls = []
-        
                 for(let property in data['ids']) {
                     let host = data['ids'][property].host;
                     let owid = data['ids'][property].owid;
@@ -405,7 +402,7 @@ var pubTemplate = newHTMLTemplate("pub", `
                         urls.push('//' + host + '/owid/api/v1/decode-and-verify?owid=' + encodeURIComponent(owid));
                     }
                 }
-            
+                
                 Promise.all(urls.map(u=>fetch(u))).then(responses =>
                     Promise.all(responses.map(res => res.json()))
                 ).then(data => {
@@ -465,7 +462,7 @@ var pubTemplate = newHTMLTemplate("pub", `
         <p><a class="button" href="?privacy=update">My preferences</a></p>
         <p>SWAN secures your ID to ensure you can have an accountable audit log. Here's the secured version:<p>
         <pre>{{ .CBID.Value }}</pre>
-        <p>Anyone can confirm that this ID was created by <span class="inline-span"><script>creator(document.scripts[document.scripts.length - 1].parentNode, '{{ .CBID.CreatorURL }}');</script></span> using this link.</p>
+        <p>Anyone can confirm that this ID was created by <span class="inline-span" id="creator"></span> using this link.</p>
         <pre>{{ .CBID.VerifyURL }}</pre>
         <p>Go on. Tap the following button to check it's good.</p>
         <p><a class="button" onclick="verify(this, '{{ .CBID.VerifyURL }}')">Verify</a></p>
@@ -473,7 +470,7 @@ var pubTemplate = newHTMLTemplate("pub", `
         <p>The domain <span class="inline-span">{{ .CBID.AsOWID.Domain }}</span> used the following signature.</p>
         <pre>{{ .CBID.AsOWID.Signature }}</pre>
         <p>Because your online experience matters this publisher uses their public signing key so anyone can verify in microseconds.</p>
-        <pre><script>publicKey(document.scripts[document.scripts.length - 1].parentNode, '{{ .CBID.CreatorURL }}');</script></pre>
+        <pre id="public-key"></pre>
     </section>
     {{ end }}
     {{ if .SID }}
@@ -484,7 +481,7 @@ var pubTemplate = newHTMLTemplate("pub", `
         <p>Just like CBID it's secured to make it verifiable. Here's the longer version.</p>
         <pre>{{ .SID.Value }}</pre>
         <p>When all of this is decoded and verified it looks like this.</p>
-        <pre><script>text(document.scripts[document.scripts.length - 1].parentNode, '{{ .SID.DecodeAndVerifyURL }}');</script></pre>
+        <pre id="sid"></pre>
         <p>SID and CBID are all implemented in SWAN using the Open Web ID schema. It's open source and you can find out more <a href="https://github.com/51degrees/owid">here</a>.</p>
     </section>
     {{ end }}
