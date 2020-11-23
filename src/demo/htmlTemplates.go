@@ -461,7 +461,8 @@ var pubTemplate = newHTMLTemplate("pub", `
         <h3>Common Browser ID (CBID)</h3>
         <p>SWAN provides a Common Browser ID that you can easily reset at any time. Here's the SWAN CBID for this browser.<p>
         <pre>{{ .CBID.AsOWID.PayloadAsString }}</pre>
-        <p>You can reset this ID by clicking the reset button: [reset]</p>
+        <p>You can reset this ID by clicking the My preferences button and then clicking 'reset' above the Common Browser Id: </p>
+        <p><a class="button" href="?privacy=update">My preferences</a></p>
         <p>SWAN secures your ID to ensure you can have an accountable audit log. Here's the secured version:<p>
         <pre>{{ .CBID.Value }}</pre>
         <p>Anyone can confirm that this ID was created by <span class="inline-span"><script>creator(document.scripts[document.scripts.length - 1].parentNode, '{{ .CBID.CreatorURL }}');</script></span> using this link.</p>
