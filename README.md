@@ -12,6 +12,7 @@ publishers and marketers but every SWAN needs at least the following:
 * 1x Publisher
 * 1x Marketer
 
+An example of nodes and their domain names:
 ```
              +-----------+  +-----------+  +-----------+
              |           |  |           |  |           |
@@ -27,15 +28,15 @@ Swan Nodes   | 51d.uk |
 
              +--------------+  +-------------+
              |              |  |             |
-Publisher    | swift-pub.uk |  | swan-pub.uk |
+Publisher    | swift-pub.uk |  | swan-pub.uk | ... etc
              |              |  |             |
              +--------------+  +-------------+
 
-             +--------------+
-             |              |
-Marketer     | cool-cars.uk |
-             |              |
-             +--------------+
+             +--------------+  +---------------+  +----------------+
+             |              |  |               |  |                |
+Marketer     | cool-cars.uk |  | cool-bikes.uk |  | cool-creams.uk | ... etc
+             |              |  |               |  |                |
+             +--------------+  +---------------+  +----------------+
 ```
 # Deployment
 
@@ -188,6 +189,18 @@ is displayed.
 ## Azure App Service
 
 TODO
+
+### Azure CosmosDB / Table Storage
+
+TODO: Use environment variables
+
+Modify these two lines in the `appsettings.json` file where the `azureAccount`
+is your storage account name and `azureAccessKey` is your azure storage 
+access key.
+```
+    "azureAccessKey": "[ADD YOUR AZURE STORAGE KEY OR DELETE]",
+    "azureAccount": "[ADD YOUR AZURE STORAGE ACCOUNT OR DELETE]",
+```
 
 # Files
 
