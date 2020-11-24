@@ -10,3 +10,4 @@ appsettings.dev.json
 application
 *.zip
 .config
+.vscode/launch.json
