@@ -11,8 +11,16 @@
             "mode": "debug",
             "program": "${workspaceFolder}/src/server.go",
             "cwd": "${workspaceFolder}",
-            "env": {"PORT":"5000", "GOPATH":"${workspaceFolder}"},
-            "args": ["${workspaceFolder}/appsettings.dev.json"],
+            "env": {
+                "PORT":"5000",
+                "GOPATH":"${workspaceFolder}",
+                "AZURE_STORAGE_ACCESS_KEY":"<youraccesskey>",
+                "AZURE_STORAGE_ACCOUNT":"<youraccountname>",
+                "AWS_REGION":"<yourregion>", 
+                "AWS_ACCESS_KEY_ID":"<youraccesskey>", 
+                "AWS_SECRET_ACCESS_KEY":"<yoursecretaccesskey>"
+            },
+            "args": ["${workspaceFolder}/appsettings.dev.json"]
         }
     ]
 }

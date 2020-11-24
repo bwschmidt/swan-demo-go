@@ -35,7 +35,7 @@ func (m *marketer) BackgroundColor() string {
 	return getBackgroundColor(m.request.Host)
 }
 func (m *marketer) JSON() string {
-	sd, err := base64.StdEncoding.DecodeString(m.bid)
+	sd, err := base64.URLEncoding.DecodeString(m.bid)
 	if err != nil {
 		fmt.Println(err)
 		return ""
@@ -58,6 +58,17 @@ func handlerMarketer(c *Configuration) http.HandlerFunc {
 		err := r.ParseForm()
 		if err != nil {
 			returnServerError(c, w, err)
+			return
+		}
+
+		// See if this is a request to update preferences.
+		if r.Form.Get("privacy") == "update" {
+			n, err := createUpdateURL(c, r)
+			if err != nil {
+				returnServerError(c, w, err)
+				return
+			}
+			http.Redirect(w, r, n, 303)
 			return
 		}
 
