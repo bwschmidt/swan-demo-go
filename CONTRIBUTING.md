@@ -48,6 +48,7 @@ types include:
 |TESTS|Regression test or other test files. No code is affected, no need to upgrade.|
 |CONT|Change to published content, e.g webpage, documentation|
 |CONF|Change to tracked configuration files, e.g. appsettings.json...|
+|REF|Change to git submodule or project references|
 
 All commits must be tagged. Additionally, the importance of the patch should be 
 indicated when known. A single upper-case word is preferred.
@@ -78,6 +79,7 @@ expected
 - BUILD/MEDIUM: Added build support for Clang in OSx.
 - OPTIM/MINOR: Changed use of Slices to Arrays
 - REORG/MEDIUM: Moved the go classes into their own package
+- REF: Updated swan-go git submodule reference.
 
 ### Description
 

@@ -41,12 +41,12 @@ Marketer     | cool-cars.uk |  | cool-bikes.uk |  | cool-creams.uk | ... etc
 ```
 # Deployment
 
-The demo currently supports the following environements:
+The demo currently supports the following environments:
 
 * AWS Elastic Beanstalk
 * Local Go SDK
 
-And the follwing sotrage solutions:
+And the following storage solutions:
 
 * AWS Dynamo DB
 * Azure Storage Tables
@@ -325,7 +325,7 @@ executable for web services.
 `build.sh` : builds AWS or Azure packages on Linux ready for manual deployment.
 
 `appsettings.json.rename` : template application settings ready for Azure and AWS 
-storage or DynameDB keys.
+storage or DynamoDB keys.
 
 `appsettings.dev.json.rename` : development app settings template.
 
