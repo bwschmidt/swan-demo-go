@@ -392,7 +392,7 @@ var pubTemplate = newHTMLTemplate("pub", `
                 link.appendChild(img)
                 document.getElementById("slot1").appendChild(link);
         
-                // Get the details of the organisation involved in serving this
+                // Get the details of the organization involved in serving this
                 // ad.
                 let urls = []
                 for(let property in data['ids']) {
@@ -433,7 +433,7 @@ var pubTemplate = newHTMLTemplate("pub", `
     </section>
     <section>
         <h3>What is SWAN?</h3>
-        <p>Shared Web Accountable Network (SWAN) is a secure, privacy-by-design ID that adds accountability to the Open Web. By enabling us to set your temporary SWAN ID, we and other SWAN supporters promise to respect your privacy choices. The SWAN network is a privacy-by-design method of enchancing people's cross-publisher experiences.</p>
+        <p>Shared Web Accountable Network (SWAN) is a secure, privacy-by-design ID that adds accountability to the Open Web. By enabling us to set your temporary SWAN ID, we and other SWAN supporters promise to respect your privacy choices. The SWAN network is a privacy-by-design method of enhancing people's cross-publisher experiences.</p>
         <ul>
         <li><strong>People</strong>: enhanced transparency, persistent personalization and privacy choices, while honoring people’s right to be forgotten.</li>
         <li><strong>Publishers</strong>: effective engagement, optimized advertising yield and accountable auditing to detect misappropriation.</li>

@@ -29,7 +29,7 @@ The subject or single first line of the commit should include:
 
 It's important to make these three criteria easy to spot in the patch's subject, 
 because it's the first (and sometimes the only) thing which is read when 
-reviewing patches to find which ones need to be backported to older versions.
+reviewing patches to find which ones need to be back-ported to older versions.
 
 Specifically, bugs must be clearly easy to spot so that they're never missed. 
 Any patch fixing a bug must have the "BUG" tag in its subject. Most common patch 
@@ -40,8 +40,8 @@ types include:
 |BUG|Fix for a bug. The severity of the bug should also be indicated when known.|
 |CLEANUP|Code cleanup, silence of warnings, etc... theoretically no impact. By nature, a clean-up is always minor.|
 |REORG|Code reorganization. Some blocks may be moved to other places, some important checks might be swapped, etc... These changes always present a risk of regression. For this reason, they should never be mixed with any bug fix nor functional change. Code is only moved as-is. Indicating the risk of breakage is highly recommended.|
-|BUILD|Updates or fixes for build issues. Changes to makefiles, POMs, csproj, etc… also fall into this category. The risk of breakage should be indicated if known. It is also appreciated to indicate what platforms and/or configurations were tested after the change.|
-|OPTIM|Some code was optimised. Sometimes if the regression risk is very low and the gains significant, such patches may be merged in the stable branch. Depending on the amount of code changed or replaced and the level of trust the author has in the change, the risk of regression should be indicated.|
+|BUILD|Updates or fixes for build issues. Changes to make files, POMs, csproj, etc… also fall into this category. The risk of breakage should be indicated if known. It is also appreciated to indicate what platforms and/or configurations were tested after the change.|
+|OPTIM|Some code was optimized. Sometimes if the regression risk is very low and the gains significant, such patches may be merged in the stable branch. Depending on the amount of code changed or replaced and the level of trust the author has in the change, the risk of regression should be indicated.|
 |FEAT|A new feature has been added. The commit should provide a summary of the feature and details of how to find out more about the feature. Such details may appear in auto generated documentation such as Javadocs, Sandcastle, etc… The comments should not attempt to duplicate the developer documentation.|
 |DOC|Documentation updates or fixes. No code is affected, no need to upgrade. These patches can also be sent right after a new feature, to document it where the documentation is part of the repository via Javadocs, Sandcastle, etc…|
 |EXAMPLE|Changes to example files.|
@@ -83,7 +83,7 @@ expected
 
 ### Description
 
-New features included in a release may be summarised in the README.MD or other 
+New features included in a release may be summarized in the README.MD or other 
 high level information. Such summaries should not duplicate the commit 
 description.
 

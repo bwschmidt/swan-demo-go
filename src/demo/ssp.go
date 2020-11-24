@@ -143,11 +143,11 @@ func getAd(
 	rand.Seed(time.Now().UnixNano())
 	randomNum := rand.Intn(len(keys))
 	bidder := keys[randomNum]
-	createive := c.Mars[bidder]
+	creative := c.Mars[bidder]
 
 	bid := Bid{
 		bidder,
-		"//" + bidder + createive,
+		"//" + bidder + creative,
 		"//" + bidder + "/mar/"}
 
 	br := BidResponse{ids, &bid}
