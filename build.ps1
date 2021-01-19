@@ -4,12 +4,12 @@
 # go.exe get -u github.com/aws/aws-lambda-go/cmd/build-lambda-zip
 
 # Set up Go for AWS Elastic Beanstalk (EB) build
-set GOPATH=%CD%
-set GOARCH=amd64
-set GOOS=linux
+$Env:GOPATH=Get-Location
+$Env:GOARCH="amd64"
+$Env:GOOS="linux"
 
 # Build the application
-# go build -o ./application ./src/server.go
+Invoke-Expression "go build -o ./application ./src/server.go"
 
 # Get all the files in the www folder that form the content.
 $files = Get-ChildItem -File -Path ./www -Recurse | Resolve-Path -Relative
