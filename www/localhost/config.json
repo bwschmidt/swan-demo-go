@@ -1,0 +1,15 @@
+{
+   "category": "Publisher",
+   "name": "Localhost",
+   "swanMessage": "There's no place like 127.0.0.1",
+   "swanBackgroundColor": "yellow",
+   "swanMessageColor": "black",
+   "swanProgressColor": "black",
+   "swanHost": "51d.io",
+   "suppliers": [
+      "magnite.swan-demo.uk",
+      "pubmatic.swan-demo.uk",
+      "badssp.swan-demo.uk"
+   ],
+   "swanPrivate": ""
+}

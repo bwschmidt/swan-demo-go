@@ -17,13 +17,13 @@
 package demo
 
 import (
-	"encoding/binary"
 	"fmt"
-	"hash/fnv"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"owid"
+	"path/filepath"
 	"swan"
 	"swift"
 )
@@ -39,29 +39,102 @@ func AddHandlers(settingsFile string) {
 	oa := owid.NewAccessSimple(dc.AccessKeys)
 	swa := swan.NewAccessSimple(dc.AccessKeys)
 
-	// Add the SWAN handlers, with the publisher handler being used for any
-	// malformed storage requests.
-	swan.AddHandlers(settingsFile, swa, swi, oa, handlerPublisher(&dc))
-
-	// Add the SSP handlers
-	http.HandleFunc("/ssp/bid", handlerSSP(&dc))
-
-	// Add a handler for the marketers end point.
-	http.HandleFunc("/mar/", handlerMarketer(&dc))
-	// Add FileServer for marketer images
-	fs := http.FileServer(http.Dir("./images"))
-	http.Handle("/campaign/images/", http.StripPrefix("/campaign/images/", fs))
-
-	// Start the web server on the port provided.
-	log.Printf("Demo scheme: %s\n", dc.Scheme)
-	log.Printf("SWAN access node domain: %s\n", dc.SwanDomain)
-	log.Println("Pub. URLs:")
-	for _, s := range dc.Pubs {
-		log.Println("  ", s)
+	// Get all the domains for the SWAN demo.
+	wd, err := os.Getwd()
+	if err != nil {
+		fmt.Println(err.Error())
+		return
 	}
-	log.Println("Mar. URLs:")
-	for s := range dc.Mars {
-		log.Println("  ", s)
+	domains, err := parseDomains(&dc, filepath.Join(wd, "www"))
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	dc.domains = domains
+
+	// Add the SWAN handlers, with the demo handler being used for any
+	// malformed storage requests.
+	swan.AddHandlers(settingsFile, swa, swi, oa, handler(domains))
+
+	// Output details for information.
+	log.Printf("Demo scheme: %s\n", dc.Scheme)
+	for _, d := range domains {
+		log.Printf("%s:%s:%s", d.Category, d.Host, d.Name)
+	}
+}
+
+// parseDomains returns an array of domains (e.g. swan-demo.uk) with all the
+// information needed to server static, API and HTML requests.
+// c is the general server configuration.
+// path provides the root folder where the child folders are the names of the
+// domains that the demo responds to.
+func parseDomains(c *Configuration, path string) ([]*Domain, error) {
+	var domains []*Domain
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		return nil, err
+	}
+	for _, f := range files {
+
+		// Domains are the directories of the folder provided.
+		if f.IsDir() {
+			domain, err := newDomain(c, filepath.Join(path, f.Name()))
+			if err != nil {
+				return nil, err
+			}
+			domains = append(domains, domain)
+		}
+	}
+	return domains, nil
+}
+
+// handler for all HTTP requests to domains controlled by the demo.
+func handler(d []*Domain) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		// r.Host may include the port number or www prefixes or other charaters
+		// dependent on the environment. Using strings.Contains provides than
+		// than testing for equality eliminates these issues for a demo where
+		// the domain names are not sub strings of one another.
+		for _, domain := range d {
+			if r.Host == domain.Host {
+				handlerDomain(domain, w, r)
+				break
+			}
+		}
+	}
+}
+
+func handlerDomain(d *Domain, w http.ResponseWriter, r *http.Request) {
+
+	// Is this a request for a static resource?
+	found, err := handleStatic(d, w, r)
+	if err != nil {
+		returnServerError(d.config, w, err)
+		return
+	}
+
+	// Is this a request for the privacy preference updates?
+	if found == false {
+		found, err = handlePrivacy(d, w, r)
+		if err != nil {
+			returnServerError(d.config, w, err)
+			return
+		}
+	}
+
+	// Is this a request for an API transaction?
+	if found == false {
+		found, err = handleTransaction(d, w, r)
+		if err != nil {
+			returnServerError(d.config, w, err)
+			return
+		}
+	}
+
+	// If no static content is found then response with HTML.
+	if found == false {
+		handleHTML(d, w, r)
 	}
 }
 
@@ -100,10 +173,6 @@ func returnAPIError(
 	}
 }
 
-func getBackgroundColor(d string) string {
-	h := fnv.New32a()
-	h.Write([]byte(d))
-	b := make([]byte, 4)
-	binary.LittleEndian.PutUint32(b, uint32(h.Sum32()))
-	return fmt.Sprintf("#%x%x%x", b[0], b[1], b[2])
+func getCurrentPage(c *Configuration, r *http.Request) string {
+	return fmt.Sprintf("%s://%s%s", c.Scheme, r.Host, r.URL.Path)
 }

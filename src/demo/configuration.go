@@ -20,30 +20,40 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"owid"
 	"time"
 )
 
 // Configuration maps to the appsettings.json settings file.
 type Configuration struct {
-	AccessKey  string            `json:"accessKey"`     // Key to authenticate with the nodes
-	AccessKeys []string          `json:"accessKeys"`    // Array of keys to authenticate nodes with
-	Pubs       []string          `json:"demo-pubs"`     // Array of publisher URLs
-	Mars       map[string]string `json:"demo-mars"`     // Array of marketers URLs
-	SwanDomain string            `json:"demo-swan"`     // Domain for the SWAN access node
-	Scheme     string            `json:"scheme"`        // The scheme to use for requests
-	Timeout    time.Duration     `json:"cookieTimeout"` // Seconds until the data provided from the CMP expires
-	Debug      bool              `json:"debug"`
+	AccessKey  string        `json:"accessKey"`     // Key to authenticate with the nodes
+	AccessKeys []string      `json:"accessKeys"`    // Array of keys to authenticate nodes with
+	Scheme     string        `json:"scheme"`        // The scheme to use for requests
+	Timeout    time.Duration `json:"cookieTimeout"` // Seconds until the data provided from the CMP expires
+	Debug      bool          `json:"debug"`         // True if debug HTML output should be provided
+	domains    []*Domain     // All the domains that form the demo
+	owid       owid.Store    // The OWID store for use with domains
 }
 
-// NewConfig creates a new instance of configuration from the file provided.
-func newConfig(file string) Configuration {
+// newConfig creates a new instance of configuration from the file provided.
+func newConfig(settingsFile string) Configuration {
 	var c Configuration
-	configFile, err := os.Open(file)
+	configFile, err := os.Open(settingsFile)
 	defer configFile.Close()
 	if err != nil {
 		fmt.Println(err.Error())
 	}
 	jsonParser := json.NewDecoder(configFile)
 	jsonParser.Decode(&c)
+	c.owid = getOWIDStore(settingsFile)
 	return c
+}
+
+func getOWIDStore(settingsFile string) owid.Store {
+	owidConfig := owid.NewConfig(settingsFile)
+	err := owidConfig.Validate()
+	if err != nil {
+		panic(err)
+	}
+	return owid.NewStore(owidConfig)
 }
