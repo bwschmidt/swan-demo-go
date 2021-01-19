@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" class="h-100">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/svg+xml" href="noun_Swan_3263882.svg">
+  <title>Cool Creams | SWAN Demo</title>
+  <link href="bootstrap.min.css" rel="stylesheet">
+  <script src="owid.js" type="text/javascript"></script>
+  <style>
+
+    .bd-placeholder-img {
+      font-size: 1.125rem;
+      text-anchor: middle;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      user-select: none;
+    }
+
+    @media (min-width: 768px) {
+      .bd-placeholder-img-lg {
+        font-size: 3.5rem;
+      }
+    }
+
+    samp {
+      word-break: break-all;
+    }
+  </style>
+  <link href="cover.css" rel="stylesheet">
+</head>
+
+<body class="d-flex h-100 text-center text-white bg-dark">
+
+  <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
+    <header class="mb-auto">
+      <div>
+        <h3 class="float-md-start mb-0">Cool Creams</h3>
+        <nav class="nav nav-masthead justify-content-center float-md-end">
+          <a class="nav-link active" aria-current="page"
+            href="//swan-demo.uk">Home</a>
+          <a class="nav-link" href="//swan-demo.uk">Features</a>
+          <a class="nav-link" href="//swan-demo.uk">Contact</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="px-3">
+      <p class="lead">SWAN knows the suppliers that bring people to advertisers. This increases accountability, transparency and enables audit.</p>
+
+      <div id="accordion">
+        <div class="card bg-dark">
+          <div class="card-header" id="headingOne">
+            <h5 class="mb-0">
+              <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                Winners
+              </button>
+            </h5>
+          </div>
+          <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+            <div class="card-body">
+              {{ .AuditWinnerHTML }}
+            </div>
+          </div>
+        </div>
+        <div class="card bg-dark">
+          <div class="card-header" id="headingTwo">
+            <h5 class="mb-0">
+              <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                SWAN Offer ID
+              </button>
+            </h5>
+          </div>
+          <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+            <div class="card-body">
+              <p>The SWAN Offer ID is used to verify the entire supply chain.</p>
+              <p><samp>{{ .OfferID }}</samp></p>
+              <p>The Offer ID contains all this information.
+              <p>
+                {{ .OfferIDUnpacked }}
+              </p>
+          </div>
+          </div>
+        </div>        
+        <div class="card bg-dark">
+          <div class="card-header" id="headingTwo">
+            <h5 class="mb-0">
+              <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                Full
+              </button>
+            </h5>
+          </div>
+          <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
+            <div class="card-body">
+              {{ .AuditFullHTML }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <footer class="mt-auto text-white-50">
+      <p><a href="//swan-demo.uk" class="text-white">Return to SWAN demo</a></p>
+    </footer>
+  </div>
+
+  <!-- Bootstrap core JavaScript
+    ================================================== -->
+  <!-- Placed at the end of the document so the pages load faster -->
+  <script src="jquery-3.2.1.slim.min.js"
+    integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+    crossorigin="anonymous"></script>
+  <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery-slim.min.js"><\/script>')</script>
+  <script src="popper.min.js"></script>
+  <script src="bootstrap.min.js"></script>
+  <!-- Just to make our placeholder images work. Don't actually copy the next line! -->
+  <script src="holder.min.js"></script>
+
+</body>
+
+</html>

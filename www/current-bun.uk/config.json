@@ -1,0 +1,14 @@
+{
+   "category": "Publisher",
+   "name": "Current Bun",
+   "swanMessage": "Current bun rules. Hang tight while we get things ready!",
+   "swanBackgroundColor": "aliceblue",
+   "swanMessageColor": "#5a5a5a",
+   "swanProgressColor": "#5a5a5a",
+   "swanHost": "51d.io",
+   "suppliers": [
+      "magnite.swan-demo.uk",
+      "pubmatic.swan-demo.uk"
+   ],
+   "swanPrivate": ""
+}

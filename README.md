@@ -1,5 +1,5 @@
 # swan-demo-go
-Secured Web Accountable Network (SWAN) - Demo in go of SWAN, SWIFT and OWID
+Secured Web Addressability Network (SWAN) - Demo in go of SWAN, SWIFT and OWID
 
 The SWAN demo implements the concepts explained in 
 [SWAN](https://github.com/51degrees/swan)

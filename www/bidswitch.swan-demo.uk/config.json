@@ -1,0 +1,12 @@
+{
+   "Category": "Exchange",
+   "Name": "Bidswitch Exchange",
+   "Suppliers": [
+      "centro.swan-demo.uk",
+      "dataxu.swan-demo.uk",
+      "mediamath.swan-demo.uk",
+      "oath.swan-demo.uk",
+      "thetradedesk.swan-demo.uk",
+      "zeta.swan-demo.uk"
+   ]
+}
