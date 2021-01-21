@@ -18,6 +18,7 @@ package demo
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"html/template"
 	"owid"
@@ -33,7 +34,11 @@ func (m *PageModel) OfferID() (string, error) {
 	if t == nil {
 		return "", nil
 	}
-	return t.TreeAsBase64()
+	o, err := t.GetOWID()
+	if t == nil {
+		return "", err
+	}
+	return o.AsString(), nil
 }
 
 // OfferIDUnpacked returns the unpacked Offer ID
@@ -45,7 +50,11 @@ func (m *PageModel) OfferIDUnpacked() (template.HTML, error) {
 	if t == nil {
 		return template.HTML("<p>Advert not source of request.</p>"), nil
 	}
-	s, err := swan.OfferFromOWID(t)
+	o, err := t.GetOWID()
+	if err != nil {
+		return "", err
+	}
+	s, err := swan.OfferFromOWID(o)
 	if err != nil {
 		return "", err
 	}
@@ -58,13 +67,13 @@ func (m *PageModel) OfferIDUnpacked() (template.HTML, error) {
 	html.WriteString("</tr></thead><tbody>")
 	html.WriteString(fmt.Sprintf(
 		"<tr><td>Version</td><td>%d</td></tr>",
-		t.Version))
+		o.Version))
 	html.WriteString(fmt.Sprintf(
 		"<tr><td>Domain</td><td>%s</td></tr>",
-		t.Domain))
+		o.Domain))
 	html.WriteString(fmt.Sprintf(
 		"<tr><td>Signature</td><td style=\"word-break:break-all\">%s</td></tr>",
-		convertToString(t.Signature)))
+		convertToString(o.Signature)))
 	html.WriteString(fmt.Sprintf(
 		"<tr><td>CBID</td><td>%s</td></tr>",
 		s.CBID))
@@ -165,7 +174,7 @@ func htmlAddFooter(html *bytes.Buffer) {
 	html.WriteString("</tbody>\r\n</table>\r\n")
 }
 
-func (m *PageModel) getTransaction() (*owid.OWID, error) {
+func (m *PageModel) getTransaction() (*owid.Node, error) {
 
 	if m.offer == nil {
 
@@ -181,7 +190,12 @@ func (m *PageModel) getTransaction() (*owid.OWID, error) {
 		}
 
 		// Get the transaction from the form data.
-		m.offer, err = owid.TreeFromBase64(m.request.Form.Get("transaction"))
+		d, err := base64.StdEncoding.DecodeString(
+			m.request.Form.Get("transaction"))
+		if err != nil {
+			return nil, err
+		}
+		m.offer, err = owid.NodeFromJSON(d)
 		if err != nil {
 			return nil, err
 		}
@@ -190,8 +204,8 @@ func (m *PageModel) getTransaction() (*owid.OWID, error) {
 	return m.offer, nil
 }
 
-func appendParents(html *bytes.Buffer, w *owid.OWID) error {
-	var n []*owid.OWID
+func appendParents(html *bytes.Buffer, w *owid.Node) error {
+	var n []*owid.Node
 	p := w
 	for p != nil {
 		n = append(n, p)
@@ -210,8 +224,8 @@ func appendParents(html *bytes.Buffer, w *owid.OWID) error {
 
 func appendOWIDAndChildren(
 	html *bytes.Buffer,
-	o *owid.OWID,
-	w *owid.OWID,
+	o *owid.Node,
+	w *owid.Node,
 	level int) error {
 	appendHTML(html, w, o, level)
 	if len(o.Children) > 0 {
@@ -227,8 +241,8 @@ func appendOWIDAndChildren(
 
 func appendHTML(
 	html *bytes.Buffer,
-	w *owid.OWID,
-	o *owid.OWID,
+	w *owid.Node,
+	o *owid.Node,
 	level int) error {
 
 	html.WriteString("<tr>\r\n")
@@ -236,13 +250,19 @@ func appendHTML(
 		"<td style=\"padding-left:%dem;\" class=\"text-left\">\r\n"+
 			"<script>new owid().appendName(document.currentScript.parentNode,\"%s\")</script></td>\r\n",
 		level,
-		o.AsString()))
+		o.GetOWIDAsString()))
+
+	var p string
+	if o.GetParent() != nil {
+		p = o.GetParent().GetOWIDAsString()
+	}
+
 	html.WriteString(fmt.Sprintf(
 		"<td style=\"text-align:center;\">\r\n"+
 			"<script>new owid().appendAuditMark(document.currentScript.parentNode,\"%s\",\"%s\");</script>\r\n"+
 			"<noscript>JavaScript needed to audit</noscript></td>\r\n",
-		o.GetRoot().AsString(),
-		o.AsString()))
+		p,
+		o.GetOWIDAsString()))
 	if w == o {
 		html.WriteString("<td>\r\n<img style=\"width:32px\" src=\"winner.svg\">\r\n</td>")
 	} else {

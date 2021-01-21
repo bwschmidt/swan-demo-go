@@ -29,7 +29,7 @@ type PageModel struct {
 	writer  http.ResponseWriter // The writer for the response
 	request *http.Request       // The request that relates to the page request
 	results []*swan.Pair        // The SWAN data for display
-	offer   *owid.OWID          // The offer and tree associated with the page
+	offer   *owid.Node          // The offer and tree associated with the page
 }
 
 // CBIDAsString Common Browser IDentifier
@@ -96,21 +96,30 @@ func (m *PageModel) WinningBid() (*swan.Bid, error) {
 	if err != nil {
 		return nil, err
 	}
-	return swan.BidFromOWID(w)
+	o, err := w.GetOWID()
+	if err != nil {
+		return nil, err
+	}
+	return swan.BidFromOWID(o)
 }
 
 // Winner gets the winning Processor OWID for the transaction.
-func (m *PageModel) Winner() (*owid.OWID, error) {
-	w := m.offer.Find(func(n *owid.OWID) bool {
-		return len(n.Payload) == 4
+func (m *PageModel) Winner() (*owid.Node, error) {
+	w := m.offer.Find(func(n *owid.Node) bool {
+		_, ok := n.Value.(float64)
+		return ok
 	})
 	if w != nil {
-		for len(w.Payload) == 4 {
-			i := readUint32(w.Payload)
-			if i >= uint32(len(w.Children)) {
-				return nil, fmt.Errorf("Index '%d' out of range", i)
+		for w != nil {
+			i, ok := w.Value.(float64)
+			if ok && int(i) >= len(w.Children) {
+				return nil, fmt.Errorf("Index '%f' out of range", i)
 			}
-			w = w.Children[i]
+			if int(i) < len(w.Children) {
+				w = w.Children[int(i)]
+			} else {
+				break
+			}
 		}
 	}
 	return w, nil

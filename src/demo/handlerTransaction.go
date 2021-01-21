@@ -36,7 +36,7 @@ func handleTransaction(
 	if r.URL.Path == "/demo/api/v1/bid" && r.Method == "POST" && d.owid != nil {
 
 		// Unpack the body of the request to form the bid data structure.
-		o, err := getOffer(r)
+		o, err := getOffer(d, r)
 		if err != nil {
 			return true, err
 		}
@@ -58,11 +58,11 @@ func handleTransaction(
 
 		// The caller already knows about the rest of the tree. Only return this
 		// Processor OWID and the children.
-		b, err := t.TreeAsByteArray()
+		b, err := t.AsJSON()
 		if err != nil {
 			return true, err
 		}
-		w.Header().Set("Content-Type", "application/octet-stream")
+		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Cache-Control", "no-cache")
 		w.Write(b)
 
@@ -71,24 +71,32 @@ func handleTransaction(
 	return false, nil
 }
 
-func changePubDomain(r *owid.OWID, newPubDomain string) error {
-	fake, err := swan.OfferFromOWID(r)
+func changePubDomain(r *owid.Node, newPubDomain string) error {
+	f, err := r.GetOWID()
 	if err != nil {
 		return err
 	}
-	fake.PubDomain = newPubDomain
-	r.Payload, err = fake.AsByteArray()
+	o, err := swan.OfferFromOWID(f)
+	if err != nil {
+		return err
+	}
+	o.PubDomain = newPubDomain
+	f.Payload, err = o.AsByteArray()
+	if err != nil {
+		return err
+	}
+	r.OWID, err = f.AsByteArray()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func handleBid(d *Domain, o *owid.OWID) (*owid.OWID, error) {
+func handleBid(d *Domain, n *owid.Node) (*owid.Node, error) {
 
 	// The single leaf is the parent Processor OWID. If there isn't a single
 	// leaf then too much information has been sent from the caller.
-	parent, err := o.GetLeaf()
+	parent, err := n.GetLeaf()
 	if err != nil {
 		return nil, err
 	}
@@ -112,61 +120,64 @@ func handleBid(d *Domain, o *owid.OWID) (*owid.OWID, error) {
 		}
 	}
 
-	// Add this Processor OWID to the children of the parent.
-	_, err = parent.AddChild(t)
+	// Sign the Processor OWID with the root OWID now that it's part of the
+	// tree. This can be used by down stream suppliers to verify that this
+	// processor was involved in the transaction.
+	r, err := n.GetOWID()
+	if err != nil {
+		return nil, err
+	}
+	err = d.owid.Sign(t, r)
 	if err != nil {
 		return nil, err
 	}
 
-	// Sign the Processor OWID now that it's part of the tree. This can be used
-	// by down stream suppliers to verify that this processor was involved in
-	// the transaction.
-	err = d.owid.Sign(t)
+	// Add this signed Processor OWID to the children of the parent.
+	n, err = parent.AddOWID(t)
 	if err != nil {
 		return nil, err
 	}
 
 	// Call all the suppliers adding them to this Processor OWID's child
 	// transactions.
-	c := make([]*owid.OWID, len(d.Suppliers))
+	c := make([]*owid.Node, len(d.Suppliers))
 	for i, s := range d.Suppliers {
-		c[i], err = sendToSupplier(d.config.Scheme+"://"+s, o)
+		c[i], err = sendToSupplier(d.config.Scheme+"://"+s, n)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	// Merge the results from the suppliers.
-	t.AddChildren(c)
+	n.AddChildren(c)
 
 	// If there are children then pick one at random for the payload of
 	// this processor. Used to determine the winner when the transaction
 	// is complete. This also demonstrates how the payload can be changed
 	// after the response has been received.
-	if len(t.Children) > 0 {
-		w := rand.Intn(len(t.Children))
-		writeUint32(t, uint32(w))
-		err = d.owid.Sign(t)
-		if err != nil {
-			return nil, err
-		}
+	if len(n.Children) > 0 {
+		n.Value = rand.Intn(len(n.Children))
 	}
 
-	return t, nil
+	return n, nil
 }
 
-func getOffer(r *http.Request) (*owid.OWID, error) {
+func getOffer(d *Domain, r *http.Request) (*owid.Node, error) {
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
 	}
-	return owid.TreeFromByteArray(b)
+	if d.config.Debug {
+		fmt.Println(d.Host)
+		fmt.Println(string(b))
+	}
+	return owid.NodeFromJSON(b)
 }
 
-func sendToSupplier(u string, o *owid.OWID) (*owid.OWID, error) {
+func sendToSupplier(u string, n *owid.Node) (*owid.Node, error) {
 
-	// Turn the Offer OWID into a byte array.
-	d, err := o.TreeAsByteArray()
+	// Turn the node into a byte array.
+	d, err := n.GetRoot().AsJSON()
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +186,7 @@ func sendToSupplier(u string, o *owid.OWID) (*owid.OWID, error) {
 	up := u + "/demo/api/v1/bid"
 	res, err := http.Post(
 		up,
-		"application/octet-stream",
+		"application/json",
 		bytes.NewBuffer(d))
 	if err != nil {
 		return nil, err
@@ -190,8 +201,8 @@ func sendToSupplier(u string, o *owid.OWID) (*owid.OWID, error) {
 		return nil, err
 	}
 
-	// Convert the byte array to a response OWID.
-	s, err := owid.TreeFromByteArray(b)
+	// Convert the byte array to a tree.
+	s, err := owid.NodeFromJSON(b)
 	if err != nil {
 		fmt.Println(string(b))
 		return nil, fmt.Errorf("Invalid response from '%s'", up)

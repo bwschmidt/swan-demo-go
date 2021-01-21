@@ -156,11 +156,11 @@ owid = function() {
         }
 
         // Use the well known end point for the alleged OWID creator. 
-        function verifyOWIDWithAPI(r, t) {
+        function verifyOWIDWithAPI(p, t) {
             var o = parse(t)
             return fetch("//" + o.domain +
                 "/owid/api/v" + o.version + "/verify" +
-                "?root=" + encodeURIComponent(r) + 
+                "?parent=" + encodeURIComponent(p) + 
                 "&owid=" + encodeURIComponent(t),
                 { method: "GET", mode: "cors", cache: "no-cache" })
                 .then(r => r.json())

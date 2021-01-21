@@ -18,6 +18,7 @@ package demo
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -48,7 +49,7 @@ func (m *PageModel) NewAdvertHTML(placement string) (template.HTML, error) {
 	}
 
 	// Get the OWID tree as a base 64 string.
-	e, err := m.offer.TreeAsBase64()
+	e, err := m.offer.AsJSON()
 	if err != nil {
 		return template.HTML("<p>" + err.Error() + "</p>"), nil
 	}
@@ -70,13 +71,13 @@ func (m *PageModel) NewAdvertHTML(placement string) (template.HTML, error) {
 			"</button>"+
 			"</form>",
 		w.AdvertiserURL,
-		e,
+		base64.StdEncoding.EncodeToString(e),
 		w.MediaURL))
 	return template.HTML(html.String()), nil
 }
 
-// NewOfferID returns a new Offer ID from the SWAN network.
-func (m *PageModel) NewOfferID(placement string) (*owid.OWID, error) {
+// NewOfferID returns a new Offer OWID Node from the SWAN network.
+func (m *PageModel) NewOfferID(placement string) (*owid.Node, error) {
 
 	u, err := url.Parse(
 		m.Config().Scheme + "://" + m.Domain.SwanHost +
@@ -121,5 +122,7 @@ func (m *PageModel) NewOfferID(placement string) (*owid.OWID, error) {
 		return nil, err
 	}
 
-	return owid.TreeFromByteArray(body)
+	var n owid.Node
+	n.OWID = body
+	return &n, nil
 }
