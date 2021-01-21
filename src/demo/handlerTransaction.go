@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"owid"
 	"swan"
+	"sync"
 )
 
 // handleTransaction is responsible for a real time transaction for advertising.
@@ -140,16 +141,23 @@ func handleBid(d *Domain, n *owid.Node) (*owid.Node, error) {
 
 	// Call all the suppliers adding them to this Processor OWID's child
 	// transactions.
+	var wg sync.WaitGroup
+	wg.Add(len(d.Suppliers))
 	c := make([]*owid.Node, len(d.Suppliers))
 	for i, s := range d.Suppliers {
-		c[i], err = sendToSupplier(d.config.Scheme+"://"+s, n)
-		if err != nil {
-			return nil, err
-		}
+		go func(i int, s string) {
+			defer wg.Done()
+			c[i], _ = sendToSupplier(d.config.Scheme+"://"+s, n)
+		}(i, s)
 	}
+	wg.Wait()
 
 	// Merge the results from the suppliers.
-	n.AddChildren(c)
+	for _, s := range c {
+		if s != nil {
+			n.AddChild(s)
+		}
+	}
 
 	// If there are children then pick one at random for the payload of
 	// this processor. Used to determine the winner when the transaction

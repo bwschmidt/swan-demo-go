@@ -41,6 +41,24 @@ func (m PageModel) SIDAsString() string { return asPrintable(m.sid()) }
 // AllowAsString true if personalized marketing allowed, otherwise false
 func (m PageModel) AllowAsString() string { return asString(m.allow()) }
 
+// CBIDDomain returns the domain that created the CBID OWID
+func (m PageModel) CBIDDomain() string { return owidDomain(m.cbid()) }
+
+// SIDDomain returns the domain that created the SID OWID
+func (m PageModel) SIDDomain() string { return owidDomain(m.sid()) }
+
+// AllowDomain returns the domain that created the Allow OWID
+func (m PageModel) AllowDomain() string { return owidDomain(m.allow()) }
+
+// CBIDDate returns the date CBID OWID was created
+func (m PageModel) CBIDDate() string { return owidDate(m.cbid()) }
+
+// SIDDate returns the date SID OWID was created
+func (m PageModel) SIDDate() string { return owidDate(m.sid()) }
+
+// AllowDate returns the date Allow OWID was created
+func (m PageModel) AllowDate() string { return owidDate(m.allow()) }
+
 // Allow returns a boolean to indicate if personalized marketing is enabled.
 func (m PageModel) Allow() bool { return m.AllowAsString() == "on" }
 
@@ -52,6 +70,30 @@ func (m PageModel) sid() *swan.Pair { return m.findResult("sid") }
 
 // Allow true if personalized marketing allowed, otherwise false
 func (m PageModel) allow() *swan.Pair { return m.findResult("allow") }
+
+// Returns the creator domain of the ID.
+func owidDate(p *swan.Pair) string {
+	if p == nil {
+		return ""
+	}
+	o, err := p.AsOWID()
+	if err != nil || o == nil {
+		return ""
+	}
+	return o.Date.Format("2006-01-02")
+}
+
+// Returns the creator domain of the ID.
+func owidDomain(p *swan.Pair) string {
+	if p == nil {
+		return ""
+	}
+	o, err := p.AsOWID()
+	if err != nil || o == nil {
+		return ""
+	}
+	return o.Domain
+}
 
 // Gets the value of the pair as string for display.
 func asString(p *swan.Pair) string {

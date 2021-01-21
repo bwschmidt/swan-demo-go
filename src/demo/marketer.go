@@ -252,16 +252,16 @@ func appendHTML(
 		level,
 		o.GetOWIDAsString()))
 
-	var p string
-	if o.GetParent() != nil {
-		p = o.GetParent().GetOWIDAsString()
+	var r string
+	if o.GetRoot() != o {
+		r = o.GetRoot().GetOWIDAsString()
 	}
 
 	html.WriteString(fmt.Sprintf(
 		"<td style=\"text-align:center;\">\r\n"+
 			"<script>new owid().appendAuditMark(document.currentScript.parentNode,\"%s\",\"%s\");</script>\r\n"+
 			"<noscript>JavaScript needed to audit</noscript></td>\r\n",
-		p,
+		r,
 		o.GetOWIDAsString()))
 	if w == o {
 		html.WriteString("<td>\r\n<img style=\"width:32px\" src=\"winner.svg\">\r\n</td>")

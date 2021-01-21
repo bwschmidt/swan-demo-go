@@ -136,19 +136,25 @@
               </thead>
               <tbody>
                 <tr>
-                  <th scope="row">CBID</th>
-                  <td style="word-break: break-all;">{{ .CBIDAsString }}</td>
+                  <th>CBID</th>
+                  <td style="word-break: break-all;" tabindex="0" data-toggle="tooltip" title="{{ .CBIDDomain }} {{ .CBIDDate }}">{{ .CBIDAsString }}</td>
                 </tr>
                 <tr>
-                  <th scope="row">SID</th>
-                  <td style="word-break: break-all;">{{ .SIDAsString }}</td>
+                  <th>SID</th>
+                  <td style="word-break: break-all;" tabindex="0" data-toggle="tooltip" title="{{ .SIDDomain }} {{ .SIDDate }}">{{ .SIDAsString }}</td>
                 </tr>
                 <tr>
-                  <th scope="row">Allow</th>
-                  <td style="word-break: break-all;">{{ .AllowAsString }}</td>
+                  <th>Allow</th>
+                  <td style="word-break: break-all;" tabindex="0" data-toggle="tooltip" title="{{ .AllowDomain }} {{ .AllowDate }}">{{ .AllowAsString }}</td>
                 </tr>
               </tbody>
             </table>
+            <div class="tooltip bs-tooltip-top" role="tooltip">
+              <div class="arrow"></div>
+              <div class="tooltip-inner">
+                Some tooltip text!
+              </div>
+            </div>
             <p>
               <a href="/privacy">Update Privacy Preferences</a>
             </p>
@@ -211,6 +217,11 @@
       fg: '#eceeef',
       text: 'Thumbnail'
     });
+  </script>
+  <script>
+    $(function () {
+      $('[data-toggle="tooltip"]').tooltip()
+    })
   </script>
 
 
