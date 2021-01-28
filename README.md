@@ -27,11 +27,11 @@ Swan Nodes   | 51d.io |
              |        |
              +--------+
 
-             +--------------+  +-------------+
-             |              |  |             |
-Publisher    | swift-pub.uk |  | swan-pub.uk | ... etc
-             |              |  |             |
-             +--------------+  +-------------+
+             +-------------------+  +----------------+
+             |                   |  |                |
+Publisher    | new-pork-limes.uk |  | current-bun.uk | ... etc
+             |                   |  |                |
+             +-------------------+  +----------------+
 
              +--------------+  +---------------+  +----------------+
              |              |  |               |  |                |
@@ -58,6 +58,157 @@ same time, run:
 
 ```
 git clone --recurse-submodules https://github.com/51degrees/swan-demo-go
+```
+
+## Local Installation
+
+### Prerequisites 
+
+* Local Go version 1.15 or greater installation sufficient to run the Go command
+line.
+
+* Specified a storage option, the demo supports:
+  * Azure Storage Tables
+  * AWS DynamoDB
+
+* For AWS, specify region and credentials in either environment variables or in 
+`~/.aws/credentials` and `~/.aws/config` files. See 
+[Configuring AWS SDK for Go](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html) to set up your environment. Make sure to set the 
+`AWS_REGION`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` as a minimum.
+
+* OR, for Azure Storage:
+  
+  Linux:
+  ```bash
+  export AZURE_STORAGE_ACCOUNT="<youraccountname>"
+  export AZURE_STORAGE_ACCESS_KEY="<youraccountkey>"
+  ```
+  Windows:
+  ```bat
+  setx AZURE_STORAGE_ACCOUNT "<youraccountname>"
+  setx AZURE_STORAGE_ACCESS_KEY "<youraccountkey>"
+  ```
+
+### Steps
+
+* Having cloned the repository, configure the `appsettings.dev.json` file.
+
+  ```
+  cp appsettings.dev.json.rename appsettings.dev.json
+  ```
+
+* Configure your hosts file to point URLs to localhost, see 
+(Environments)[#environments] section in this readme for platform specifics. 
+The following host resolutions are used in the sample configuration:
+
+  ```
+  # domains from the www folder
+  127.0.0.1 badssp.swan-demo.uk
+  127.0.0.1 bidswitch.san-demo.uk
+  127.0.0.1 centro.swan-demo.uk
+  127.0.0.1 cool-bikes.uk
+  127.0.0.1 cool-cars.uk
+  127.0.0.1 cool-creams.uk
+  127.0.0.1 current-bun.uk
+  127.0.0.1 dataxu.swan-demo.uk
+  127.0.0.1 liveintent.swan-demo.uk
+  127.0.0.1 liveramp.swan-demo.uk
+  127.0.0.1 magnite.swan-demo.uk
+  127.0.0.1 mediamath.swan-demo.uk
+  127.0.0.1 new-pork-limes.uk
+  127.0.0.1 oath.swan-demo.uk
+  127.0.0.1 pop-up.swan-demo.uk
+  127.0.0.1 pubmatic.swan-demo.uk
+  127.0.0.1 smaato.swan-demo.uk
+  127.0.0.1 swan-demo.uk
+  127.0.0.1 thetradedesk.swan-demo.uk
+  127.0.0.1 zeta.swan-demo.u
+  # swift nodes
+  127.0.0.1	1.51d.uk
+  127.0.0.1	2.51d.uk
+  127.0.0.1	3.51d.uk
+  127.0.0.1	4.51d.uk
+  127.0.0.1	5.51d.uk
+  ```
+
+* Run either the `./build.sh` file if you are on Linux or run the `./build.ps1` file 
+if you are on Windows.
+
+* Run the server:
+
+  ```
+  ./src/server appsettings.dev.json
+  ```
+
+* The SWAN access domain will be used to sign all the outgoing Open Web IDs and
+also to capture people's preferences. Register this domain with the following
+URL and entering any of the details requested. This will create a record in the 
+``owidcreators`` table for the domain which will contain randomly generated 
+public and private signing keys.
+
+  ```
+  http://51d.io:5000/owid/register
+  ```
+
+* For each of the storage nodes that will be used for the SWIFT component of the
+demo register these using the following URL. Enter the network as "swan" (no 
+quotes) to match the value provided in the ``appsettings.json`` in the 
+``swanNetwork`` field. Leave the others as default.
+
+  ```
+  http://1.51d.uk:5000/swift/register
+  ```
+
+* At least one SWIFT access node is required. Repeat the previous process but 
+select the "Access Node" option rather than the default "Storage Node". The 
+records from these steps will be visible in the ``swiftnodes`` and 
+``swiftsecrets`` tables.
+
+  ```
+  http://5.51d.uk:5000/swift/register
+  ```
+* Now browse to one of the publisher URLs, you will be prompted to set your 
+preferences:
+
+  ```
+  http://swan-pub.uk:5000
+  ```
+
+# Files
+
+`Procfile` : needed by AWS Elastic Beanstalk to indicate the application 
+executable for web services.
+
+`build.ps1` : builds AWS or Azure packages on Windows ready for manual deployment.
+
+`build.sh` : builds AWS or Azure packages on Linux ready for manual deployment.
+
+`appsettings.json.rename` : template application settings ready for Azure and AWS 
+storage or DynamoDB keys.
+
+`appsettings.dev.json.rename` : development app settings template.
+
+`.ebextensions/.config.rename` : AWS Elastic Beanstalk .config template ready for
+additional SSL certificates.
+
+Note: `.gitignore` will ignore `appsettings.json`, `appsettings.dev.json`, and
+`.ebextensions/.config` to limit the risk of commits containing access keys.
+
+# Environments
+
+This demo makes extensive use of multiple domains. For development purposes 
+setup local domains to resolve to 127.0.0.1.
+
+## Windows 
+
+```
+notepad C:\Windows\System32\drivers\etc\hosts
+```
+
+## Linux
+
+```
+vi /etc/hosts
 ```
 
 ## AWS Elastic Beanstalk - without docker
@@ -93,26 +244,25 @@ following roles.
 [Certificate Manager](https://console.aws.amazon.com/acm/) 
 for each of the domains.
 
+#### Windows
+
+* Set powershell unstricted execution policy to enable `build.ps1` to execute.
+  Use the following command with administrator privileges.
+
+  `Set-ExecutionPolicy Unrestricted`
+
 ### Steps
 
-* Add the domains to the ``appsettings.json`` fields for ``demo-pubs``, 
-``demo-mars``, and ``demo-swan``. ``Demo-swan`` is a single domain for the 
-access point domain. ``Demo-pubs`` and ``demo-mars`` are a list of multiple 
-domains for publishers and marketers respectively.
+* Get all the dependencies needed by the Go application.
 
-  ```
-  {
-      "demo-pubs": [
-          "swan-pub.uk",
-          "swift-pub.uk" 
-      ],
-      "demo-mars": [
-          "cool-bikes.uk",
-          "cool-creams.uk"
-      ],
-      "demo-swan": "51d.io"
-  }
-  ```
+  `go get -d ./...`
+
+* Add the demo domain names as folder names to the www folder. For example; the
+domain `domain.com` would appear as `www/domain.com`. Alter the `config.json` 
+content in each folder to indicate the purpose of the domain. This aspect of 
+the demo is changing and domain examples provided with the should be reviewed 
+along with the demo source code and comments to understand how multiple domains
+are supported within a single demo application.
 
 * You may need to support multiple SSL certificates if the demo deployment 
 should respond to five or more domains. 
@@ -146,11 +296,13 @@ following entries.
           - CertificateArn: "C"
   ```
 
-* Run the build.bat (Windows) or build.sh (Linux) to create the 
+* Run the build.ps1 (Windows) or build.sh (Linux) to create the 
 ``aws-eb-swan-demo.zip`` bundle. The bundle should contain the ``application`` 
 executable compiled for Linux 64 bit, ``Procfile`` to tell Elastic Beanstalk how 
-to start the application, and ``.ebextensions/.config`` to configure additional
-HTTPS listeners for additional domains and SSL certificates.
+to start the application, ``.ebextensions/.config`` to configure additional
+HTTPS listeners for additional domains and SSL certificates, and the ``www`` 
+folder with directories for all the domains the demo will respond to. Note the
+SWIFT domains used for storage do not need to be present in the www folder.
 
 * Create a new Elastic Beanstalk Application and Environment using the 
 [AWS document](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/create_deploy_go.html).
@@ -208,149 +360,6 @@ running the demo:
 
 If configuring an Azure App Service then see: 
 [Configure an App Service app in the Azure portal](https://docs.microsoft.com/en-us/azure/app-service/configure-common#configure-app-settings)
-
-## Local Installation
-
-### Prerequisites 
-
-* Local Go version 1.15 or greater installation sufficient to run the Go command
-line.
-
-* Specified a storage option, the demo supports:
-  * Azure Storage Tables
-  * AWS DynamoDB
-
-
-* For AWS, specify region and credentials in either environment variables or in 
-`~/.aws/credentials` and `~/.aws/config` files. See 
-[Configuring AWS SDK for Go](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html) to set up your environment. Make sure to set the 
-`AWS_REGION`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` as a minimum.
-
-* OR, for Azure Storage:
-  
-  Linux:
-  ```bash
-  export AZURE_STORAGE_ACCOUNT="<youraccountname>"
-  export AZURE_STORAGE_ACCESS_KEY="<youraccountkey>"
-  ```
-  Windows:
-  ```bat
-  setx AZURE_STORAGE_ACCOUNT "<youraccountname>"
-  setx AZURE_STORAGE_ACCESS_KEY "<youraccountkey>"
-  ```
-
-### Steps
-
-* Having cloned the repository, configure the `appsettings.dev.json` file.
-
-  ```
-  cp appsettings.dev.json.rename appsettings.dev.json
-  ```
-
-* Configure your hosts file to point URLs to localhost, see 
-(Environments)[#environments] section in this readme for platform specifics. 
-The following host resolutions are used in the sample configuration:
-
-  ```
-  # publishers
-  127.0.0.1	new-pork-limes.uk
-  127.0.0.1	current-bun.uk
-  127.0.0.1	swan-pub.uk
-  127.0.0.1	swallow-pub.uk
-  127.0.0.1	swift-pub.uk
-  # marketers
-  127.0.0.1	cool-bikes.uk
-  127.0.0.1	cool-cars.uk
-  127.0.0.1	cool-creams.uk
-  # swan node
-  127.0.0.1	51d.io
-  # swift nodes
-  127.0.0.1	1.51d.uk
-  127.0.0.1	2.51d.uk
-  127.0.0.1	3.51d.uk
-  127.0.0.1	4.51d.uk
-  127.0.0.1	5.51d.uk
-  ```
-
-* Run either the `./build.sh` file if you are on Linux or run the `./build.bat` file 
-if you are on Windows.
-
-* Run the server:
-
-  ```
-  ./src/server appsettings.dev.json
-  ```
-
-* The SWAN access domain will be used to sign all the outgoing Open Web IDs and
-also to capture people's preferences. Register this domain with the following
-URL and entering any of the details requested. This will create a record in the 
-``owidcreators`` table for the domain which will contain randomly generated 
-public and private signing keys.
-
-  ```
-  http://51d.io:5000/owid/register
-  ```
-
-* For each of the storage nodes that will be used for the SWIFT component of the
-demo register these using the following URL. Enter the network as "swan" (no 
-quotes) to match the value provided in the ``appsettings.json`` in the 
-``swanNetwork`` field. Leave the others as default.
-
-  ```
-  http://1.51d.uk:5000/swift/register
-  ```
-
-* At least one SWIFT access node is required. Repeat the previous process but 
-select the "Access Node" option rather than the default "Storage Node". The 
-records from these steps will be visible in the ``swiftnodes`` and 
-``swiftsecrets`` tables.
-
-  ```
-  http://5.51d.uk:5000/swift/register
-  ```
-* Now browse to one of the publisher URLs, you will be prompted to set your 
-preferences:
-
-  ```
-  http://swan-pub.uk:5000
-  ```
-
-# Files
-
-`Procfile` : needed by AWS Elastic Beanstalk to indicate the application 
-executable for web services.
-
-`build.bat` : builds AWS or Azure packages on Windows ready for manual deployment.
-
-`build.sh` : builds AWS or Azure packages on Linux ready for manual deployment.
-
-`appsettings.json.rename` : template application settings ready for Azure and AWS 
-storage or DynamoDB keys.
-
-`appsettings.dev.json.rename` : development app settings template.
-
-`.ebextensions/.config.rename` : AWS Elastic Beanstalk .config template ready for
-additional SSL certificates.
-
-Note: `.gitignore` will ignore `appsettings.json` and `appsettings.dev.json` to limit
-the risk of commits containing access keys.
-
-# Environments
-
-This demo makes extensive use of multiple domains. For development purposes 
-setup local domains to resolve to 127.0.0.1.
-
-## Windows 
-
-```
-notepad C:\Windows\System32\drivers\etc\hosts
-```
-
-## Linux
-
-```
-vi /etc/hosts
-```
 
 ## Visual Studio Code
 
