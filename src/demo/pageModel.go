@@ -17,7 +17,6 @@
 package demo
 
 import (
-	"fmt"
 	"net/http"
 	"owid"
 	"swan"
@@ -31,6 +30,9 @@ type PageModel struct {
 	results []*swan.Pair        // The SWAN data for display
 	offer   *owid.Node          // The offer and tree associated with the page
 }
+
+// IsCrawler returns true if the browser is a crawler, otherwise false.
+func (m PageModel) IsCrawler() (bool, error) { return getDeviceFrom51Degrees(m.request) }
 
 // CBIDAsString Common Browser IDentifier
 func (m PageModel) CBIDAsString() string { return asString(m.cbid()) }
@@ -148,16 +150,13 @@ func (m *PageModel) WinningBid() (*swan.Bid, error) {
 // Winner gets the winning Processor OWID for the transaction.
 func (m *PageModel) Winner() (*owid.Node, error) {
 	w := m.offer.Find(func(n *owid.Node) bool {
-		_, ok := n.Value.(float64)
-		return ok
+		v, ok := n.Value.(float64)
+		return ok && v >= 0
 	})
 	if w != nil {
 		for w != nil {
 			i, ok := w.Value.(float64)
-			if ok && int(i) >= len(w.Children) {
-				return nil, fmt.Errorf("Index '%f' out of range", i)
-			}
-			if int(i) < len(w.Children) {
+			if ok && int(i) < len(w.Children) && int(i) >= 0 {
 				w = w.Children[int(i)]
 			} else {
 				break

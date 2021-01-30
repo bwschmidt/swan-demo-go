@@ -92,10 +92,10 @@ func parseDomains(c *Configuration, path string) ([]*Domain, error) {
 func handler(d []*Domain) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		// r.Host may include the port number or www prefixes or other charaters
-		// dependent on the environment. Using strings.Contains provides than
-		// than testing for equality eliminates these issues for a demo where
-		// the domain names are not sub strings of one another.
+		// r.Host may include the port number or www prefixes or other
+		// charaters dependent on the environment. Using strings.Contains
+		// rather than testing for equality eliminates these issues for a demo
+		// where the domain names are not sub strings of one another.
 		for _, domain := range d {
 			if r.Host == domain.Host {
 				handlerDomain(domain, w, r)
@@ -127,6 +127,7 @@ func handlerDomain(d *Domain, w http.ResponseWriter, r *http.Request) {
 	if found == false {
 		found, err = handleTransaction(d, w, r)
 		if err != nil {
+			fmt.Println(err.Error())
 			returnServerError(d.config, w, err)
 			return
 		}
@@ -148,11 +149,10 @@ func newResponseError(url string, resp *http.Response) error {
 }
 
 func returnServerError(c *Configuration, w http.ResponseWriter, err error) {
-	w.Header().Set("Cache-Control", "no-cache")
 	if c.Debug {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
-		http.Error(w, "", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	if c.Debug {
 		println(err.Error())

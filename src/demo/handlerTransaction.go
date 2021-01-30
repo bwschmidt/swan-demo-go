@@ -65,11 +65,27 @@ func handleTransaction(
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Cache-Control", "no-cache")
-		w.Write(b)
+		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(b)))
+		_, err = w.Write(b)
+		if err != nil {
+			return true, err
+		}
 
 		return true, err
 	}
 	return false, nil
+}
+
+func getSWANOffer(r *owid.Node) (*swan.Offer, error) {
+	f, err := r.GetOWID()
+	if err != nil {
+		return nil, err
+	}
+	o, err := swan.OfferFromOWID(f)
+	if err != nil {
+		return nil, err
+	}
+	return o, nil
 }
 
 func changePubDomain(r *owid.Node, newPubDomain string) error {
@@ -144,19 +160,25 @@ func handleBid(d *Domain, n *owid.Node) (*owid.Node, error) {
 	var wg sync.WaitGroup
 	wg.Add(len(d.Suppliers))
 	c := make([]*owid.Node, len(d.Suppliers))
+	e := make([]error, len(d.Suppliers))
 	for i, s := range d.Suppliers {
 		go func(i int, s string) {
 			defer wg.Done()
-			c[i], _ = sendToSupplier(d.config.Scheme+"://"+s, n)
+			c[i], e[i] = sendToSupplier(d.config.Scheme+"://"+s, n)
 		}(i, s)
 	}
 	wg.Wait()
 
 	// Merge the results from the suppliers.
-	for _, s := range c {
-		if s != nil {
-			n.AddChild(s)
+	i := 0
+	for i < len(d.Suppliers) {
+		if e[i] != nil {
+			return nil, e[i]
 		}
+		if c[i] != nil {
+			n.AddChild(c[i])
+		}
+		i++
 	}
 
 	// If there are children then pick one at random for the payload of
@@ -164,10 +186,60 @@ func handleBid(d *Domain, n *owid.Node) (*owid.Node, error) {
 	// is complete. This also demonstrates how the payload can be changed
 	// after the response has been received.
 	if len(n.Children) > 0 {
-		n.Value = rand.Intn(len(n.Children))
+		n.Value, err = chooseWinner(n)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return n, nil
+}
+
+func chooseWinner(n *owid.Node) (int, error) {
+	w := -1
+	e := 0
+	o := make([]bool, len(n.Children))
+	for i, c := range n.Children {
+		b, err := isBid(c)
+		if err != nil {
+			return -1, err
+		}
+		if b {
+			o[i] = true
+			e++
+		}
+	}
+	if e > 0 {
+		for w < 0 {
+			i := rand.Intn(len(o))
+			if o[i] {
+				w = i
+			}
+		}
+	}
+	return w, nil
+}
+
+// isBid returns true if the node is related to an eligible bid, otherwise
+// false. Eligible bids nodes are either ones that contain bid information
+// or the Value of the node is a number that is greater than or equal to 0 and
+// there are children.
+func isBid(n *owid.Node) (bool, error) {
+	if n.Value != nil && n.Value.(float64) >= 0 && len(n.Children) > 0 {
+		return true, nil
+	}
+	o, err := n.GetOWID()
+	if err != nil {
+		return false, err
+	}
+	if len(o.Payload) == 0 {
+		return false, nil
+	}
+	b, err := swan.BidFromOWID(o)
+	if err != nil {
+		return false, err
+	}
+	return b.AdvertiserURL != "" && b.MediaURL != "", nil
 }
 
 func getOffer(d *Domain, r *http.Request) (*owid.Node, error) {

@@ -37,7 +37,7 @@ func (m *PageModel) NewAdvertHTML(placement string) (template.HTML, error) {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	// Use the SWAN network to generate the Offer ID.
-	m.offer, err = m.NewOfferID(placement)
+	m.offer, err = m.newOfferID(placement)
 	if err != nil {
 		return "", err
 	}
@@ -76,8 +76,8 @@ func (m *PageModel) NewAdvertHTML(placement string) (template.HTML, error) {
 	return template.HTML(html.String()), nil
 }
 
-// NewOfferID returns a new Offer OWID Node from the SWAN network.
-func (m *PageModel) NewOfferID(placement string) (*owid.Node, error) {
+// newOfferID returns a new Offer OWID Node from the SWAN network.
+func (m *PageModel) newOfferID(placement string) (*owid.Node, error) {
 
 	u, err := url.Parse(
 		m.Config().Scheme + "://" + m.Domain.SwanHost +
