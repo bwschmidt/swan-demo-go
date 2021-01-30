@@ -54,7 +54,11 @@
     <div class="jumbotron p-3 p-md-5 text-white rounded bg-light">
       <div class="col-md-12 px-0 text-center">
         <figure class="figure">
+          {{ if eq .IsCrawler false }}
           {{ .NewAdvertHTML "Heading1" }}
+          {{ else }}
+          <p>Adverts not displayed to crawlers.</p>
+          {{ end }}
           <figcaption class="figure-caption">advert</figcaption>
         </figure>
       </div>

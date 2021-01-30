@@ -68,7 +68,7 @@ func handleSWAN(d *Domain, w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		p, err = newSWANDataFromPath(d, r)
 		if err != nil {
-			returnServerError(d.config, w, err)
+			http.NotFound(w, r)
 			return
 		}
 		if p != nil {
@@ -81,6 +81,17 @@ func handleSWAN(d *Domain, w http.ResponseWriter, r *http.Request) {
 	// cookies.
 	if p == nil {
 		p = newSWANDataFromCookies(r)
+	}
+
+	// If the request is from a crawler than ignore SWAN.
+	c, err := getDeviceFrom51Degrees(r)
+	if err != nil {
+		returnServerError(d.config, w, err)
+		return
+	}
+	if c {
+		handlePage(d, w, r, p)
+		return
 	}
 
 	// If there is valid SWAN data then display the page using the page handler.
@@ -224,6 +235,10 @@ func decode(d *Domain, v string) ([]byte, error) {
 	return ioutil.ReadAll(res.Body)
 }
 
+// The expires member of the cookie is not set so that it becomes a session
+// cookie. This will ensure that the value is fetched from SWAN after the
+// session expires. The value might have changed if the user visits another web
+// site and changes their preferences.
 func setCookies(r *http.Request, w http.ResponseWriter, p []*swan.Pair) {
 	for _, i := range p {
 		c := http.Cookie{
@@ -231,8 +246,7 @@ func setCookies(r *http.Request, w http.ResponseWriter, p []*swan.Pair) {
 			Domain:   getDomain(r.Host),
 			Value:    i.Value,
 			SameSite: http.SameSiteLaxMode,
-			HttpOnly: true,
-			Expires:  i.Expires}
+			HttpOnly: true}
 		http.SetCookie(w, &c)
 	}
 }

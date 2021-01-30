@@ -51,10 +51,14 @@
       </nav>
     </div>
 
-    <div class="jumbotron p-3 p-md-5 text-white rounded bg-light">
+    <div class="jumbotron p-3 p-md-5 rounded bg-light">
       <div class="col-md-12 px-0 text-center">
         <figure class="figure">
+          {{ if eq .IsCrawler false }}
           {{ .NewAdvertHTML "Heading1" }}
+          {{ else }}
+          <p>Adverts not displayed to crawlers.</p>
+          {{ end }}
           <figcaption class="figure-caption">advert</figcaption>
         </figure>
       </div>
@@ -149,12 +153,6 @@
                 </tr>
               </tbody>
             </table>
-            <div class="tooltip bs-tooltip-top" role="tooltip">
-              <div class="arrow"></div>
-              <div class="tooltip-inner">
-                Some tooltip text!
-              </div>
-            </div>
             <p>
               <a href="/privacy">Update Privacy Preferences</a>
             </p>

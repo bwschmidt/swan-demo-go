@@ -78,8 +78,14 @@
           <div class="container">
             <div class="carousel-caption">
               <figure class="figure">
-                {{ if .Allow }}
-                {{ .NewAdvertHTML "Heading1" }}
+                {{ if eq .IsCrawler false }}
+                  {{ if .Allow }}
+                  {{ .NewAdvertHTML "Heading1" }}
+                  {{ else }}
+                  <p>Personalization needed to show adverts.</p>
+                  {{ end }}
+                {{ else }}
+                  <p>Adverts not displayed to crawlers.</p>
                 {{ end }}
                 <figcaption class="figure-caption text-white">advert</figcaption>
               </figure>
