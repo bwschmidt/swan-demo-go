@@ -21,18 +21,16 @@ import (
 	"fmt"
 	"os"
 	"owid"
-	"time"
 )
 
 // Configuration maps to the appsettings.json settings file.
 type Configuration struct {
-	AccessKey  string        `json:"accessKey"`     // Key to authenticate with the nodes
-	AccessKeys []string      `json:"accessKeys"`    // Array of keys to authenticate nodes with
-	Scheme     string        `json:"scheme"`        // The scheme to use for requests
-	Timeout    time.Duration `json:"cookieTimeout"` // Seconds until the data provided from the CMP expires
-	Debug      bool          `json:"debug"`         // True if debug HTML output should be provided
-	domains    []*Domain     // All the domains that form the demo
-	owid       owid.Store    // The OWID store for use with domains
+	AccessKey  string     `json:"accessKey"`  // Key to authenticate with the nodes
+	AccessKeys []string   `json:"accessKeys"` // Array of keys to authenticate nodes with
+	Scheme     string     `json:"scheme"`     // The scheme to use for requests
+	Debug      bool       `json:"debug"`      // True if debug HTML output should be provided
+	domains    []*Domain  // All the domains that form the demo
+	owid       owid.Store // The OWID store for use with domains
 }
 
 // newConfig creates a new instance of configuration from the file provided.
