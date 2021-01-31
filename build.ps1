@@ -22,7 +22,7 @@ $Env:GOOS="linux"
 Invoke-Expression "go build -o ./application ./src/server.go"
 
 # Get all the files in the www folder that form the content.
-$www = Get-ChildItem -File -Path ./www -Recurse | Resolve-Path -Relative
+$www = Get-ChildItem -File -Path ./www -Recurse | Resolve-Path -Relative | % { $a = $_ -replace '"', '""'; "`"$a`"" }
 
 # Create the zip command with all the files.
 if (Test-Path "application")
