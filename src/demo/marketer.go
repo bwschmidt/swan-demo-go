@@ -269,13 +269,16 @@ func appendHTML(
 		r,
 		o.GetOWIDAsString()))
 	if w == o {
-		html.WriteString("<td>\r\n<img style=\"width:32px\" src=\"winner.svg\">\r\n</td>")
+		html.WriteString("<td>\r\n<img style=\"width:32px\" src=\"noun_rosette_470370.svg\">\r\n</td>\r\n")
 	} else {
-		f, ok := s.(*swan.Failed)
-		if ok {
-			html.WriteString(fmt.Sprintf("<td>\r\n<p>%s</p><p>%s</p></td>\r\n",
+		f, fok := s.(*swan.Failed)
+		_, bok := s.(*swan.Bid)
+		if fok {
+			html.WriteString(fmt.Sprintf("<td style=\"color:lightpink\">\r\n%s&nbsp;%s</td>\r\n",
 				f.Host,
 				f.Error))
+		} else if bok {
+			html.WriteString("<td>\r\n<img style=\"width:32px\" src=\"noun_movie ticket_1807397.svg\">\r\n</td>\r\n")
 		} else {
 			html.WriteString("<td>\r\n</td>\r\n")
 		}
