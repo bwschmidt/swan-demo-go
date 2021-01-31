@@ -245,6 +245,11 @@ func appendHTML(
 	o *owid.Node,
 	level int) error {
 
+	s, err := swan.FromNode(o)
+	if err != nil {
+		return err
+	}
+
 	html.WriteString("<tr>\r\n")
 	html.WriteString(fmt.Sprintf(
 		"<td style=\"padding-left:%dem;\" class=\"text-left\">\r\n"+
@@ -266,8 +271,16 @@ func appendHTML(
 	if w == o {
 		html.WriteString("<td>\r\n<img style=\"width:32px\" src=\"winner.svg\">\r\n</td>")
 	} else {
-		html.WriteString("<td>\r\n</td>\r\n")
+		f, ok := s.(*swan.Failed)
+		if ok {
+			html.WriteString(fmt.Sprintf("<td>\r\n<p>%s</p><p>%s</p></td>\r\n",
+				f.Host,
+				f.Error))
+		} else {
+			html.WriteString("<td>\r\n</td>\r\n")
+		}
 	}
+
 	html.WriteString("</tr>\r\n")
 	return nil
 }

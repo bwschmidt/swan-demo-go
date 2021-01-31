@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"owid"
 	"swan"
 	"sync"
@@ -119,6 +120,7 @@ func handleBid(d *Domain, n *owid.Node) (*owid.Node, error) {
 	}
 
 	// Create an OWID for this processor.
+
 	t := d.owid.CreateOWID(nil)
 	if t == nil {
 		return nil, fmt.Errorf("Could not create new OWID")
@@ -132,9 +134,12 @@ func handleBid(d *Domain, n *owid.Node) (*owid.Node, error) {
 		b.AdvertiserURL = w.AdvertiserURL
 		b.MediaURL = w.MediaURL
 		t.Payload, err = b.AsByteArray()
-		if err != nil {
-			return nil, err
-		}
+	} else {
+		var e swan.Empty
+		t.Payload, err = e.AsByteArray()
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	// Sign the Processor OWID with the root OWID now that it's part of the
@@ -164,7 +169,7 @@ func handleBid(d *Domain, n *owid.Node) (*owid.Node, error) {
 	for i, s := range d.Suppliers {
 		go func(i int, s string) {
 			defer wg.Done()
-			c[i], e[i] = sendToSupplier(d.config.Scheme+"://"+s, n)
+			c[i], e[i] = sendToSupplier(d, s, n)
 		}(i, s)
 	}
 	wg.Wait()
@@ -228,18 +233,12 @@ func isBid(n *owid.Node) (bool, error) {
 	if n.Value != nil && n.Value.(float64) >= 0 && len(n.Children) > 0 {
 		return true, nil
 	}
-	o, err := n.GetOWID()
+	b, err := swan.FromNode(n)
 	if err != nil {
 		return false, err
 	}
-	if len(o.Payload) == 0 {
-		return false, nil
-	}
-	b, err := swan.BidFromOWID(o)
-	if err != nil {
-		return false, err
-	}
-	return b.AdvertiserURL != "" && b.MediaURL != "", nil
+	_, ok := b.(*swan.Bid)
+	return ok, nil
 }
 
 func getOffer(d *Domain, r *http.Request) (*owid.Node, error) {
@@ -254,25 +253,28 @@ func getOffer(d *Domain, r *http.Request) (*owid.Node, error) {
 	return owid.NodeFromJSON(b)
 }
 
-func sendToSupplier(u string, n *owid.Node) (*owid.Node, error) {
+func sendToSupplier(d *Domain, s string, n *owid.Node) (*owid.Node, error) {
 
 	// Turn the node into a byte array.
-	d, err := n.GetRoot().AsJSON()
+	j, err := n.GetRoot().AsJSON()
 	if err != nil {
 		return nil, err
 	}
 
 	// POST the bid to the supplier.
-	up := u + "/demo/api/v1/bid"
+	var up url.URL
+	up.Scheme = d.config.Scheme
+	up.Host = s
+	up.Path = "/demo/api/v1/bid"
 	res, err := http.Post(
-		up,
+		up.String(),
 		"application/json",
-		bytes.NewBuffer(d))
+		bytes.NewBuffer(j))
 	if err != nil {
 		return nil, err
 	}
 	if res.StatusCode != http.StatusOK {
-		return nil, newResponseError(u, res)
+		return createFailed(d, n, &up, res)
 	}
 
 	// Read the response as a byte array.
@@ -281,12 +283,34 @@ func sendToSupplier(u string, n *owid.Node) (*owid.Node, error) {
 		return nil, err
 	}
 
-	// Convert the byte array to a tree.
-	s, err := owid.NodeFromJSON(b)
+	// Convert the byte array to a tree to append as a child to the current
+	// Processor's children
+	c, err := owid.NodeFromJSON(b)
 	if err != nil {
-		fmt.Println(string(b))
-		return nil, fmt.Errorf("Invalid response from '%s'", up)
+		return nil, err
 	}
 
-	return s, nil
+	return c, nil
+}
+
+func createFailed(d *Domain, n *owid.Node, u *url.URL, res *http.Response) (*owid.Node, error) {
+	var f swan.Failed
+	f.Host = u.Host
+	f.Error = fmt.Sprintf("%d", res.StatusCode)
+	b, err := f.AsByteArray()
+	if err != nil {
+		return nil, err
+	}
+	r, err := n.GetRoot().GetOWID()
+	if err != nil {
+		return nil, err
+	}
+	t := d.owid.CreateOWID(b)
+	err = d.owid.Sign(t, r)
+	var c owid.Node
+	c.OWID, err = t.AsByteArray()
+	if err != nil {
+		return nil, err
+	}
+	return &c, nil
 }

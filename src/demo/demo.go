@@ -139,13 +139,15 @@ func handlerDomain(d *Domain, w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func newResponseError(url string, resp *http.Response) error {
+func newResponseError(resp *http.Response) error {
 	in, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
 	return fmt.Errorf("API call '%s' returned '%d' and '%s'",
-		url, resp.StatusCode, in)
+		resp.Request.Host,
+		resp.StatusCode,
+		in)
 }
 
 func returnServerError(c *Configuration, w http.ResponseWriter, err error) {

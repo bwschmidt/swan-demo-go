@@ -169,7 +169,7 @@ func (d *Domain) createSWANActionURL(
 		return "", err
 	}
 	if res.StatusCode != http.StatusOK {
-		return "", newResponseError(u.String(), res)
+		return "", newResponseError(res)
 	}
 
 	// Read the response as a string.

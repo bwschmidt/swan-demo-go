@@ -17,6 +17,7 @@
 package demo
 
 import (
+	"fmt"
 	"net/http"
 	"owid"
 	"swan"
@@ -139,6 +140,9 @@ func (m *PageModel) WinningBid() (*swan.Bid, error) {
 	w, err := m.Winner()
 	if err != nil {
 		return nil, err
+	}
+	if w == nil {
+		return nil, fmt.Errorf("No winning bid")
 	}
 	o, err := w.GetOWID()
 	if err != nil {

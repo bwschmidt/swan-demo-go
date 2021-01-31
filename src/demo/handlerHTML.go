@@ -230,7 +230,7 @@ func decode(d *Domain, v string) ([]byte, error) {
 		return nil, err
 	}
 	if res.StatusCode != http.StatusOK {
-		return nil, newResponseError(u.String(), res)
+		return nil, newResponseError(res)
 	}
 	return ioutil.ReadAll(res.Body)
 }
