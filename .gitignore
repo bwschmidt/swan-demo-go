@@ -5,8 +5,6 @@ pkg/
 bin/
 src/github.com
 src/golang.org
-appsettings.json
-appsettings.dev.json
 application
 *.zip
 .config
