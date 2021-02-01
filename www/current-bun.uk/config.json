@@ -5,7 +5,7 @@
    "swanBackgroundColor": "aliceblue",
    "swanMessageColor": "#5a5a5a",
    "swanProgressColor": "#5a5a5a",
-   "swanHost": "51d.io",
+   "swanHost": "liveramp.swan-demo.uk",
    "suppliers": [
       "magnite.swan-demo.uk",
       "pubmatic.swan-demo.uk"
