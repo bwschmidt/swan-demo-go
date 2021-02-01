@@ -52,9 +52,26 @@ func AddHandlers(settingsFile string) {
 	}
 	dc.domains = domains
 
+	// Read the CMP HTML template. For the demo all CMPs use the same template.
+	cmpTemplate, err := ioutil.ReadFile("www/cmp.html")
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
 	// Add the SWAN handlers, with the demo handler being used for any
 	// malformed storage requests.
-	swan.AddHandlers(settingsFile, swa, swi, oa, handler(domains))
+	err = swan.AddHandlers(
+		settingsFile,
+		swa,
+		swi,
+		oa,
+		string(cmpTemplate),
+		handler(domains))
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
 
 	// Output details for information.
 	log.Printf("Demo scheme: %s\n", dc.Scheme)
