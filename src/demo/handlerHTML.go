@@ -241,13 +241,24 @@ func decode(d *Domain, v string) ([]byte, error) {
 // session expires. The value might have changed if the user visits another web
 // site and changes their preferences.
 func setCookies(r *http.Request, w http.ResponseWriter, p []*swan.Pair) {
+	var s bool
+	if r.URL.Scheme == "https" {
+		s = true
+	} else {
+		s = false
+	}
 	for _, i := range p {
 		c := http.Cookie{
 			Name:     i.Key,
-			Domain:   getDomain(r.Host),
-			Value:    i.Value,
-			SameSite: http.SameSiteLaxMode,
-			HttpOnly: true}
+			Domain:   getDomain(r.Host),    // Specifically to this domain
+			Value:    i.Value,              // The OWID value
+			SameSite: http.SameSiteLaxMode, // Available to all paths
+			// The cookie never needs to be read from JavaScript so always true
+			HttpOnly: true,
+			Secure:   s, // Secure if HTTPs, otherwise false.
+			// Set the cookie expiry time to the same as the SWAN pair.
+			Expires: i.Expires,
+		}
 		http.SetCookie(w, &c)
 	}
 }
