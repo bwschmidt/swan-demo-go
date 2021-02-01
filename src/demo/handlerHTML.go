@@ -103,6 +103,7 @@ func handleSWAN(d *Domain, w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		redirectToSWAN(d, w, r, "update")
+		return
 	}
 
 	// If the SWAN data is not present or invalid then redirect to SWAN to
