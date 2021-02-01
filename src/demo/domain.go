@@ -25,6 +25,7 @@ import (
 	"os"
 	"owid"
 	"path/filepath"
+	"swift"
 )
 
 // Domain represents the information held in the domain configuration file
@@ -112,14 +113,11 @@ func (d *Domain) setCommon(r *http.Request, q *url.Values) {
 	// Set the access key
 	q.Set("accessKey", d.config.AccessKey)
 
-	// Set the remote address and X-FORWARDED-FOR header.
-	if r.Header.Get("X-FORWARDED-FOR") != "" {
-		q.Set("X-FORWARDED-FOR", r.Header.Get("X-FORWARDED-FOR"))
-	}
-	q.Set("remoteAddr", r.RemoteAddr)
-
 	// Set the user interface title, message and colours.
-	q.Set("title", "SWAN demo preferences")
+	q.Set("title", "Your consent choices")
+
+	// Add the headers that are relevant to the home node calculation.
+	swift.SetHomeNodeHeaders(r, q)
 }
 
 func (d *Domain) createSWANActionURL(
@@ -128,11 +126,10 @@ func (d *Domain) createSWANActionURL(
 	action string) (string, error) {
 
 	// Build a new URL to request the first storage operation URL.
-	u, err := url.Parse(
-		d.config.Scheme + "://" + d.SwanHost + "/swan/api/v1/" + action)
-	if err != nil {
-		return "", err
-	}
+	var u url.URL
+	u.Scheme = d.config.Scheme
+	u.Host = d.SwanHost
+	u.Path = "/swan/api/v1/" + action
 
 	// Add the query string paramters for the SWAN operation starting with the
 	// common ones that are the same for every request from this demo.
