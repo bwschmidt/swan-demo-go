@@ -25,6 +25,25 @@ import (
 	"swan"
 )
 
+// TreeAsJSON return the transaction as JSON.
+func (m *PageModel) TreeAsJSON() (template.HTML, error) {
+	t, err := m.getTransaction()
+	if err != nil {
+		return "", err
+	}
+
+	b, err := t.AsJSON()
+	if err != nil {
+		return "", err
+	}
+
+	var html bytes.Buffer
+	html.WriteString("<p style=\"word-break:break-all\">")
+	html.WriteString(string(b))
+	html.WriteString("</p>")
+	return template.HTML(html.String()), nil
+}
+
 // OfferID returns the offer ID string for the advert.
 func (m *PageModel) OfferID() (string, error) {
 	t, err := m.getTransaction()
