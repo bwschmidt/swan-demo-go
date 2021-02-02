@@ -114,7 +114,7 @@ func (d *Domain) setCommon(r *http.Request, q *url.Values) {
 	q.Set("accessKey", d.config.AccessKey)
 
 	// Set the user interface title, message and colours.
-	q.Set("title", "Your consent choices")
+	q.Set("title", "Your Preference Management")
 
 	// Add the headers that are relevant to the home node calculation.
 	swift.SetHomeNodeHeaders(r, q)
