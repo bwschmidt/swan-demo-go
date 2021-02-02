@@ -71,21 +71,42 @@ owid = function() {
         return r;
     }
 
-    function getRoot(o) {
-        var p = o;
-        while (p) {
-            o = p;
-            p = p.parent;
-        }
-        return o;
-    }
+    function getByteArray(t) {
 
-    function getOWIDFromIndex(t, i) {
-        var p = t;
-        i.forEach(v => {
-            p = p.children[v];
-        })
-        return p;
+        function writeByte(b, v) {
+            b.push(v);
+        }
+
+        function writeString(b, v) {
+            for (var i = 0; i < v.length; i++) {
+                b.push(v.charCodeAt(i));
+            }
+            b.push(0);
+        }
+
+        function writeDate(b, v) {
+            b.push(v.h);
+            b.push(v.l);
+        }
+
+        function writeByteArray(b, v) {
+            var a = new ArrayBuffer(4);
+            var d = new DataView(a);
+            d.setUint32(0, v.length, true);
+            for (var i = 0; i < 4; i++) {
+                b.push(d.getUint8(i));
+            }
+            v.forEach(e => b.push(e));
+        }
+
+        if (t.version && t.domain && t.date && t.payload) {
+            var buf = [];
+            writeByte(buf, t.version);
+            writeString(buf, t.domain);
+            writeDate(buf, t.date);
+            writeByteArray(buf, t.payload);
+            return new Uint8Array(buf);
+        }
     }
 
     this.appendName = function(e, s) {
@@ -129,15 +150,6 @@ owid = function() {
             );
         }
 
-        // Return the payload and the two date bytes as a byte array.
-        function hashData(o) {
-            var a = new Uint8Array(o.payload.length + 2);
-            a.set(o.payload);
-            a[a.length - 2] = o.date.h;
-            a[a.length - 1] = o.date.l;
-            return a;
-        }
-
         // Append a failure HTML element.
         function returnFailed(e) {
             var t = document.createTextNode("Failed");
@@ -171,16 +183,16 @@ owid = function() {
         // OWID.
         function verifyOWIDWithPublicKey(r, t) {
             var o = parse(t)
-            var a = Uint8Array.from(atob(r), c => c.charCodeAt(0));
-            var b = Uint8Array.from(atob(t), c => c.charCodeAt(0));
-            var m = new Int8Array(a.length + b.length);
+            var a = getByteArray(o);
+            var b = Uint8Array.from(atob(r), c => c.charCodeAt(0));
+            var m = new Uint8Array(a.length + b.length);
             m.set(a);
             m.set(b, a.length);
             return fetch("//" + o.domain + "/owid/api/v1/creator",
                 { mode: "cors", cache: "default" })
                 .then(response => response.json())
                 .then(c => importRsaKey(c.publicKeySPKI))
-                .then(k => window.crypto.subtle.verify(
+                .then(k => crypto.subtle.verify(
                     "RSASSA-PKCS1-v1_5",
                     k,
                     o.signature,
@@ -188,21 +200,23 @@ owid = function() {
         }
 
         // Valid the OWID against the creators public key OR if crypto not 
-        // supported the well known end point for OWID creators.
-        // if (window.crypto.subtle) {
-        //     verifyOWIDWithPublicKey(r, t)
-        //         .then(v => addAuditMark(e, v[0] && v[1]))
-        //         .catch(x => {
-        //             console.log(x);
-        //             returnFailed(e);
-        //         })
-        // } else {
+        // supported the well known end point for OWID creators. OWID providers
+        // are not required to operate an end point for verifying OWIDs so these
+        // calls might fail to return a result.
+        if (window.crypto.subtle) {
+            verifyOWIDWithPublicKey(r, t)
+                .then(r => addAuditMark(e, r))
+                .catch(x => {
+                    console.log(x);
+                    returnFailed(e);
+                })
+        } else {
             verifyOWIDWithAPI(r, t)
                 .then(r => addAuditMark(e, r))
                 .catch(x => {
                     console.log(x);
                     returnFailed(e);
                 });
-        // }
+        }
     }
 }
