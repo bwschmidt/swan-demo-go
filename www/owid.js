@@ -37,15 +37,20 @@ owid = function() {
             return {h, l};
         }
 
+        function readSignature(b) {
+            var c = 64; // The OWID signature is always 64 bytes.
+            var r = b.array.slice(b.index, b.index + c)
+            b.index += c;
+            return r;
+        }
+
         function readOWID(b) {
             var o = Object();
             o.version = readByte(b);
             o.domain = readString(b);
             o.date = readDate(b);
             o.payload = readByteArray(b);
-            o.signature = readByteArray(b);
-            o.count = readUint32(b)
-            o.children = []
+            o.signature = readSignature(b);
             return o
         }
 
