@@ -100,7 +100,7 @@ line.
   ```
 
 * Configure your hosts file to point URLs to localhost, see 
-(Environments)[#environments] section in this readme for platform specifics. 
+[Environments](#environments) section in this readme for platform specifics. 
 The following host resolutions are used in the sample configuration:
 
   ```
