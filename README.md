@@ -1,5 +1,7 @@
-# swan-demo-go
-Secured Web Addressability Network (SWAN) - Demo in go of SWAN, SWIFT and OWID
+# ![Secured Web Addressability Network](https://raw.githubusercontent.com/51Degrees/swan/main/images/swan.512.pxls.100.dpi.png)
+
+# Secured Web Addressability Network (SWAN) 
+Demo in go of SWAN, SWIFT and OWID
 
 The SWAN demo implements the concepts explained in 
 [SWAN](https://github.com/51degrees/swan)
@@ -103,26 +105,29 @@ The following host resolutions are used in the sample configuration:
 
   ```
   # domains from the www folder
-  127.0.0.1 badssp.swan-demo.uk
-  127.0.0.1 bidswitch.san-demo.uk
-  127.0.0.1 centro.swan-demo.uk
-  127.0.0.1 cool-bikes.uk
-  127.0.0.1 cool-cars.uk
-  127.0.0.1 cool-creams.uk
-  127.0.0.1 current-bun.uk
-  127.0.0.1 dataxu.swan-demo.uk
-  127.0.0.1 liveintent.swan-demo.uk
-  127.0.0.1 liveramp.swan-demo.uk
-  127.0.0.1 magnite.swan-demo.uk
-  127.0.0.1 mediamath.swan-demo.uk
-  127.0.0.1 new-pork-limes.uk
-  127.0.0.1 oath.swan-demo.uk
-  127.0.0.1 pop-up.swan-demo.uk
-  127.0.0.1 pubmatic.swan-demo.uk
-  127.0.0.1 smaato.swan-demo.uk
-  127.0.0.1 swan-demo.uk
-  127.0.0.1 thetradedesk.swan-demo.uk
-  127.0.0.1 zeta.swan-demo.u
+  127.0.0.1	new-pork-limes.uk
+  127.0.0.1	current-bun.uk
+  127.0.0.1	cool-bikes.uk
+  127.0.0.1	cool-cars.uk
+  127.0.0.1	cool-creams.uk
+  127.0.0.1	cmp.swan-demo.uk
+  127.0.0.1	swan-demo.uk
+  127.0.0.1	pop-up.swan-demo.uk
+  127.0.0.1	badssp.swan-demo.uk
+  127.0.0.1	bidswitch.swan-demo.uk
+  127.0.0.1	centro.swan-demo.uk
+  127.0.0.1	dataxu.swan-demo.uk
+  127.0.0.1	liveintent.swan-demo.uk
+  127.0.0.1	magnite.swan-demo.uk
+  127.0.0.1	mediamath.swan-demo.uk
+  127.0.0.1	oath.swan-demo.uk
+  127.0.0.1	pubmatic.swan-demo.uk
+  127.0.0.1	smaato.swan-demo.uk
+  127.0.0.1	thetradedesk.swan-demo.uk
+  127.0.0.1	zeta.swan-demo.uk
+  127.0.0.1	liveramp.swan-demo.uk
+  127.0.0.1	quantcast.swan-demo.uk
+  127.0.0.1	swiftap.swan-demo.uk
   # swift nodes
   127.0.0.1	1.51d.uk
   127.0.0.1	2.51d.uk
@@ -131,8 +136,8 @@ The following host resolutions are used in the sample configuration:
   127.0.0.1	5.51d.uk
   ```
 
-* Run either the `./build.sh` file if you are on Linux or run the `./build.ps1` file 
-if you are on Windows.
+* Run either the `./build.sh` file if you are on Linux or run the `./build.ps1` 
+file if you are on Windows.
 
 * Run the server:
 
@@ -352,6 +357,10 @@ is displayed.
 
 TODO - prerequisites and steps to set up the demo in an Azure environment
 
+## Google Cloud Platform 
+
+TODO - prerequisites and steps to set up the demo on GCP environment
+
 ### Azure CosmosDB / Table Storage
 
 If you are using Azure Storage Tables, this demo requires your storage account 
@@ -363,4 +372,5 @@ If configuring an Azure App Service then see:
 
 ## Visual Studio Code
 
-Use the Command Palette (Ctrl + Shift + P) to running the `Go: Install/Update Tools` to install `gopkgs`, `dlv` and `gopls`.
+Use the Command Palette (Ctrl + Shift + P) to running the 
+`Go: Install/Update Tools` to install `gopkgs`, `dlv` and `gopls`.
