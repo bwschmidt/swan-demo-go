@@ -1,4 +1,4 @@
-# ![Secured Web Addressability Network](https://raw.githubusercontent.com/51Degrees/swan/main/images/swan.512.pxls.100.dpi.png)
+# ![Secured Web Addressability Network](https://raw.githubusercontent.com/51Degrees/swan/main/images/swan.128.pxls.100.dpi.png)
 
 # Secured Web Addressability Network (SWAN) 
 Demo in go of SWAN, SWIFT and OWID
