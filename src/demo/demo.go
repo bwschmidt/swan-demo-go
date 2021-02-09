@@ -119,6 +119,10 @@ func handler(d []*Domain) http.HandlerFunc {
 				break
 			}
 		}
+
+		// All handlers have been tried and nothing has been found. Return not
+		// found.
+		http.NotFound(w, r)
 	}
 }
 
