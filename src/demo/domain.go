@@ -18,6 +18,7 @@ package demo
 
 import (
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io/ioutil"
 	"net/http"
@@ -46,6 +47,7 @@ type Domain struct {
 	folder              string             // Location of the directory
 	templates           *template.Template // HTML templates
 	owid                *owid.Creator      // The OWID creator associated with the domain if any
+	owidStore           owid.Store         // The connection to the OWID store
 }
 
 // newDomain creates a new instance of domain information from the file
@@ -70,10 +72,7 @@ func newDomain(c *Configuration, folder string) (*Domain, error) {
 	if err != nil {
 		return nil, err
 	}
-	d.owid, err = c.owid.GetCreator(d.Host)
-	if err != nil {
-		return nil, err
-	}
+	d.owidStore = c.owid
 
 	return &d, nil
 }
@@ -176,4 +175,22 @@ func (d *Domain) createSWANActionURL(
 	}
 
 	return string(b), nil
+}
+
+func (d *Domain) getOWID() (*owid.Creator, error) {
+	var err error
+	if d.owid == nil {
+		d.owid, err = d.owidStore.GetCreator(d.Host)
+		if err != nil {
+			return nil, err
+		}
+		if d.owid == nil {
+			return nil, fmt.Errorf(
+				"Domain '%s' is not a registered OWID creator. Register the "+
+					"domain for the SWAN demo using http[s]://%s/owid/register",
+				d.Host,
+				d.Host)
+		}
+	}
+	return d.owid, nil
 }
