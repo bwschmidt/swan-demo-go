@@ -1,0 +1,13 @@
+{
+   "category": "Publisher",
+   "name": "Liveintent publisher",
+   "swanMessage": "Getting things ready...",
+   "swanBackgroundColor": "#fff",
+   "swanMessageColor": "#343a40",
+   "swanProgressColor": "#6c757d",   
+   "swanHost": "swanson.bln.liveintent.com",
+   "suppliers": [
+      "magnite.swan-demo.uk",
+      "pubmatic.swan-demo.uk"
+   ]
+}
