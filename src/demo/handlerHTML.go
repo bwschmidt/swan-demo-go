@@ -68,7 +68,7 @@ func handleSWAN(d *Domain, w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		p, err = newSWANDataFromPath(d, r)
 		if err != nil {
-			http.NotFound(w, r)
+			returnServerError(d.config, w, err)
 			return
 		}
 		if p != nil {
@@ -231,7 +231,7 @@ func decode(d *Domain, v string) ([]byte, error) {
 		return nil, err
 	}
 	if res.StatusCode != http.StatusOK {
-		return nil, newResponseError(res)
+		return nil, newResponseError(d.config, res)
 	}
 	return ioutil.ReadAll(res.Body)
 }
