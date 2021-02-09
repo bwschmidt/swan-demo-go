@@ -112,6 +112,15 @@ func changePubDomain(r *owid.Node, newPubDomain string) error {
 
 func handleBid(d *Domain, n *owid.Node) (*owid.Node, error) {
 
+	// Check to see if the domain has been registered as an OWID provider.
+	if d.owid == nil {
+		return nil, fmt.Errorf(
+			"Domain '%s' is not a registered OWID creator. Register the "+
+				"domain for the SWAN demo using http[s]://%s/owid/register",
+			d.Host,
+			d.Host)
+	}
+
 	// The single leaf is the parent Processor OWID. If there isn't a single
 	// leaf then too much information has been sent from the caller.
 	parent, err := n.GetLeaf()
@@ -120,7 +129,6 @@ func handleBid(d *Domain, n *owid.Node) (*owid.Node, error) {
 	}
 
 	// Create an OWID for this processor.
-
 	t := d.owid.CreateOWID(nil)
 	if t == nil {
 		return nil, fmt.Errorf("Could not create new OWID")

@@ -24,6 +24,7 @@ import (
 	"os"
 	"owid"
 	"path/filepath"
+	"strings"
 	"swan"
 	"swift"
 )
@@ -109,6 +110,9 @@ func parseDomains(c *Configuration, path string) ([]*Domain, error) {
 func handler(d []*Domain) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
+		// Set to true if a domain is found and handled.
+		found := false
+
 		// r.Host may include the port number or www prefixes or other
 		// charaters dependent on the environment. Using strings.Contains
 		// rather than testing for equality eliminates these issues for a demo
@@ -116,8 +120,15 @@ func handler(d []*Domain) http.HandlerFunc {
 		for _, domain := range d {
 			if r.Host == domain.Host {
 				handlerDomain(domain, w, r)
+				found = true
 				break
 			}
+		}
+
+		// All handlers have been tried and nothing has been found. Return not
+		// found.
+		if found == false {
+			http.NotFound(w, r)
 		}
 	}
 }
@@ -156,15 +167,21 @@ func handlerDomain(d *Domain, w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func newResponseError(resp *http.Response) error {
-	in, err := ioutil.ReadAll(resp.Body)
+func newResponseError(c *Configuration, r *http.Response) error {
+	in, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return err
 	}
+	var u string
+	if c.Debug {
+		u = r.Request.URL.String()
+	} else {
+		u = r.Request.Host
+	}
 	return fmt.Errorf("API call '%s' returned '%d' and '%s'",
-		resp.Request.Host,
-		resp.StatusCode,
-		in)
+		u,
+		r.StatusCode,
+		strings.TrimSpace(string(in)))
 }
 
 func returnServerError(c *Configuration, w http.ResponseWriter, err error) {
