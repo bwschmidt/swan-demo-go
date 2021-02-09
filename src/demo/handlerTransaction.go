@@ -35,7 +35,8 @@ func handleTransaction(
 	d *Domain,
 	w http.ResponseWriter,
 	r *http.Request) (bool, error) {
-	if r.URL.Path == "/demo/api/v1/bid" && r.Method == "POST" && d.owid != nil {
+
+	if r.URL.Path == "/demo/api/v1/bid" && r.Method == "POST" {
 
 		// Unpack the body of the request to form the bid data structure.
 		o, err := getOffer(d, r)
@@ -112,13 +113,10 @@ func changePubDomain(r *owid.Node, newPubDomain string) error {
 
 func handleBid(d *Domain, n *owid.Node) (*owid.Node, error) {
 
-	// Check to see if the domain has been registered as an OWID provider.
-	if d.owid == nil {
-		return nil, fmt.Errorf(
-			"Domain '%s' is not a registered OWID creator. Register the "+
-				"domain for the SWAN demo using http[s]://%s/owid/register",
-			d.Host,
-			d.Host)
+	// Get the OWID.
+	_, err := d.getOWID()
+	if err != nil {
+		return nil, err
 	}
 
 	// The single leaf is the parent Processor OWID. If there isn't a single
@@ -310,6 +308,10 @@ func createFailed(d *Domain, n *owid.Node, u *url.URL, res *http.Response) (*owi
 		return nil, err
 	}
 	r, err := n.GetRoot().GetOWID()
+	if err != nil {
+		return nil, err
+	}
+	_, err = d.getOWID()
 	if err != nil {
 		return nil, err
 	}
