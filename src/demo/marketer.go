@@ -95,13 +95,13 @@ func (m *PageModel) OfferIDUnpacked() (template.HTML, error) {
 		convertToString(o.Signature)))
 	html.WriteString(fmt.Sprintf(
 		"<tr><td>CBID</td><td>%s</td></tr>",
-		s.CBID))
+		s.CBIDAsString()))
 	html.WriteString(fmt.Sprintf(
 		"<tr><td>Allow</td><td>%s</td></tr>",
-		s.Preferences))
+		s.PreferencesAsString()))
 	html.WriteString(fmt.Sprintf(
 		"<tr><td>SID</td><td>%s</td></tr>",
-		s.SID))
+		s.SIDAsString()))
 	html.WriteString(fmt.Sprintf(
 		"<tr><td>Pub. domain</td><td>%s</td></tr>",
 		s.PubDomain))
@@ -185,6 +185,7 @@ func htmlAddHeader(html *bytes.Buffer) {
 	html.WriteString("<thead>\r\n<tr>\r\n")
 	html.WriteString("<th>Organization</th>\r\n")
 	html.WriteString("<th>Audit Result</th>\r\n")
+	html.WriteString("<th>\r\n</th>\r\n")
 	html.WriteString("<th>\r\n</th>\r\n")
 	html.WriteString("</tr>\r\n</thead>\r\n<tbody>\r\n")
 }
@@ -303,6 +304,16 @@ func appendHTML(
 		}
 	}
 
+	if o != nil && r != "" {
+		html.WriteString(fmt.Sprintf(
+			"<td style=\"text-align:center;\">\r\n"+
+				"<script>new owid().appendComplaintEmail(document.currentScript.parentNode,\"%s\",\"%s\", \"noun_complaint_376466.svg\");</script>\r\n"+
+				"<noscript>JavaScript needed to audit</noscript></td>\r\n",
+			r,
+			o.GetOWIDAsString()))
+	} else {
+		html.WriteString("<td>\r\n</td>\r\n")
+	}
 	html.WriteString("</tr>\r\n")
 	return nil
 }
