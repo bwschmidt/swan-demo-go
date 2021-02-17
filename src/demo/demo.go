@@ -151,6 +151,15 @@ func handlerDomain(d *Domain, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Is this request for the stop update?
+	if found == false {
+		found, err = handleStop(d, w, r)
+		if err != nil {
+			returnServerError(d.config, w, err)
+			return
+		}
+	}
+
 	// Is this a request for an API transaction?
 	if found == false {
 		found, err = handleTransaction(d, w, r)

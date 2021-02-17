@@ -28,6 +28,8 @@ import (
 	"sync"
 )
 
+var empty swan.Empty // Used for empty responses
+
 // handleTransaction is responsible for a real time transaction for advertising.
 // The body of the request must contain a JSON array of Processor IDs which
 // contain the signature of the last entry in the list.
@@ -113,8 +115,9 @@ func changePubDomain(r *owid.Node, newPubDomain string) error {
 
 func handleBid(d *Domain, n *owid.Node) (*owid.Node, error) {
 
-	// Get the OWID.
-	_, err := d.getOWID()
+	// Verify that this domain can create OWIDs. Failure to register a domain
+	// as an OWID creator is a common setup mistake.
+	_, err := d.getOWIDCreator()
 	if err != nil {
 		return nil, err
 	}
@@ -134,15 +137,33 @@ func handleBid(d *Domain, n *owid.Node) (*owid.Node, error) {
 
 	// If this domain has adverts then choose one at random. Get a random
 	// byte array to use as the payload from the Processor OWID.
+
 	if len(d.Adverts) > 0 {
-		w := d.Adverts[rand.Intn(len(d.Adverts))]
+
+		// The root node must be the Offer.
+		offer, err := swan.OfferFromNode(n.GetRoot())
+		if err != nil {
+			return nil, err
+		}
+
+		// Get a random advert checking that it is not on the stopped list.
 		var b swan.Bid
-		b.AdvertiserURL = w.AdvertiserURL
-		b.MediaURL = w.MediaURL
-		t.Payload, err = b.AsByteArray()
+		i := 10
+		for i > 0 {
+			w := d.Adverts[rand.Intn(len(d.Adverts))]
+			if offer.IsStopped(w.AdvertiserURL) == false {
+				b.AdvertiserURL = w.AdvertiserURL
+				b.MediaURL = w.MediaURL
+				t.Payload, err = b.AsByteArray()
+				break
+			}
+			i--
+		}
+		if i == 0 {
+			t.Payload, err = empty.AsByteArray()
+		}
 	} else {
-		var e swan.Empty
-		t.Payload, err = e.AsByteArray()
+		t.Payload, err = empty.AsByteArray()
 	}
 	if err != nil {
 		return nil, err
@@ -311,7 +332,7 @@ func createFailed(d *Domain, n *owid.Node, u *url.URL, res *http.Response) (*owi
 	if err != nil {
 		return nil, err
 	}
-	_, err = d.getOWID()
+	_, err = d.getOWIDCreator()
 	if err != nil {
 		return nil, err
 	}

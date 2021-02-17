@@ -8,6 +8,7 @@
   <title>Current Bun | SWAN Demo</title>
   <link href="bootstrap.min.css" rel="stylesheet">
   <link href="carousel.css" rel="stylesheet">
+  <link href="advert.css" rel="stylesheet">
   <style>
     .featurette {
       background-color: white;
@@ -169,6 +170,14 @@
               <tr>
                 <th>Allow</th>
                 <td style="word-break: break-all;" tabindex="0" data-toggle="tooltip" title="{{ .AllowDomain }} {{ .AllowDate }}">{{ .AllowAsString }}</td>
+              </tr>
+              <tr>
+                <th>Stopped Ads.</th>
+                <td>
+                  {{range .Stopped}}
+                  <span>{{.}}</span>
+                  {{end}}
+                </td>
               </tr>
             </tbody>
           </table>

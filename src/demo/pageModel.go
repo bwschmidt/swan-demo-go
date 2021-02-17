@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"owid"
+	"strings"
 	"swan"
 )
 
@@ -65,6 +66,11 @@ func (m PageModel) AllowDate() string { return owidDate(m.allow()) }
 // Allow returns a boolean to indicate if personalized marketing is enabled.
 func (m PageModel) Allow() bool { return m.AllowAsString() == "on" }
 
+// Stopped returns a list of the domains that have been stopped for advertising.
+func (m PageModel) Stopped() []string {
+	return strings.Split(asString(m.stopped()), "\r\n")
+}
+
 // CBID Common Browser IDentifier
 func (m PageModel) cbid() *swan.Pair { return m.findResult("cbid") }
 
@@ -73,6 +79,9 @@ func (m PageModel) sid() *swan.Pair { return m.findResult("sid") }
 
 // Allow true if personalized marketing allowed, otherwise false
 func (m PageModel) allow() *swan.Pair { return m.findResult("allow") }
+
+// Stop the list of domains that should not have adverts displayed form.
+func (m PageModel) stopped() *swan.Pair { return m.findResult("stop") }
 
 // Returns the creator domain of the ID.
 func owidDate(p *swan.Pair) string {
@@ -153,7 +162,11 @@ func (m *PageModel) WinningBid() (*swan.Bid, error) {
 
 // Winner gets the winning Processor OWID for the transaction.
 func (m *PageModel) Winner() (*owid.Node, error) {
-	w := m.offer.Find(func(n *owid.Node) bool {
+	o, err := m.getTransaction()
+	if err != nil {
+		return nil, err
+	}
+	w := o.Find(func(n *owid.Node) bool {
 		v, ok := n.Value.(float64)
 		return ok && v >= 0
 	})

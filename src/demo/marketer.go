@@ -22,8 +22,25 @@ import (
 	"fmt"
 	"html/template"
 	"owid"
+	"strings"
 	"swan"
 )
+
+// Stop returns true if the request includes the key Stop to indicate that the
+// advert should no longer be displayed.
+func (m *PageModel) Stop() bool {
+	// Parse the form data.
+	err := m.request.ParseForm()
+	if err != nil {
+		return false
+	}
+	for k := range m.request.Form {
+		if k == "stop" {
+			return true
+		}
+	}
+	return false
+}
 
 // TreeAsJSON return the transaction as JSON.
 func (m *PageModel) TreeAsJSON() (template.HTML, error) {
@@ -111,6 +128,9 @@ func (m *PageModel) OfferIDUnpacked() (template.HTML, error) {
 	html.WriteString(fmt.Sprintf(
 		"<tr><td>Unique</td><td style=\"word-break:break-all\">%s</td></tr>",
 		convertToString(s.UUID)))
+	html.WriteString(fmt.Sprintf(
+		"<tr><td>Stopped Ads.</td><td style=\"word-break:break-all\">%s</td></tr>",
+		strings.Join(s.StoppedAsArray(), ",")))
 	htmlAddFooter(&html)
 	return template.HTML(html.String()), nil
 }

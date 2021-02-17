@@ -8,6 +8,7 @@
   <title>New Pork Limes | SWAN Demo</title>
   <link href="bootstrap.min.css" rel="stylesheet">
   <link href="blog.css" rel="stylesheet">
+  <link href="advert.css" rel="stylesheet">
 </head>
 
 <body>
@@ -150,6 +151,14 @@
                 <tr>
                   <th>Allow</th>
                   <td style="word-break: break-all;" tabindex="0" data-toggle="tooltip" title="{{ .AllowDomain }} {{ .AllowDate }}">{{ .AllowAsString }}</td>
+                </tr>
+                <tr>
+                  <th>Stopped Ads.</th>
+                  <td>
+                    {{range .Stopped}}
+                    <span>{{.}}</span>
+                    {{end}}
+                  </td>
                 </tr>
               </tbody>
             </table>

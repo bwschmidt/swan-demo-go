@@ -17,31 +17,43 @@
 package demo
 
 import (
+	"fmt"
 	"net/http"
-	"strings"
+	"net/url"
 )
 
-// handlePrivacy matches the path /privacy and redirects the response to the
-// SWAN update preferences URL.
-func handlePrivacy(
+// handleStop matches the path /stop and redirects the response to the
+// SWAN stop preferences URL where the parameters include the host that should
+// be stopped from displaying adverts on the browser.
+func handleStop(
 	d *Domain,
 	w http.ResponseWriter,
 	r *http.Request) (bool, error) {
-	if r.URL.Path == "/privacy" {
-		u, err := d.createSWANActionURL(r, getReferer(r), "update", nil)
+	if r.URL.Path == "/stop" {
+		err := r.ParseForm()
 		if err != nil {
 			return true, err
 		}
-		http.Redirect(w, r, u, 303)
-		return true, nil
+		if r.Form.Get("host") != "" {
+			u, err := d.createSWANActionURL(
+				r,
+				getReferer(r),
+				"stop",
+				func(q *url.Values) {
+					q.Set("host", r.Form.Get("host"))
+					// Demonstrate the publisher can control the nodes used.
+					q.Set("bounces", "30")
+					// Demonstrate the publisher can set all messages.
+					q.Set("message", fmt.Sprintf(
+						"Bye, bye %s. Thanks for letting us know.",
+						r.Form.Get("host")))
+				})
+			if err != nil {
+				return true, err
+			}
+			http.Redirect(w, r, u, 303)
+			return true, nil
+		}
 	}
 	return false, nil
-}
-
-func getReferer(r *http.Request) string {
-	u := r.Header.Get("Referer")
-	if strings.HasSuffix(u, "/") == false {
-		u += "/"
-	}
-	return u
 }

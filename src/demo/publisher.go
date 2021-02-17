@@ -63,16 +63,20 @@ func (m *PageModel) NewAdvertHTML(placement string) (template.HTML, error) {
 	// Return a FORM HTML element with a button for the advert. The OWID tree
 	// is a base 64 string added as a hidden field to the form.
 	var html bytes.Buffer
-	html.WriteString(fmt.Sprintf(
-		"<form method=\"POST\" action=\"//%s\">"+
-			"<input type=\"hidden\" id=\"transaction\" name=\"transaction\" value=\"%s\">"+
-			"<button type=\"submit\" style=\"border:none;padding:0;margin:0;\">"+
-			"<img style=\"height:240px;max-width:100%%\" src=\"//%s\">"+
-			"</button>"+
-			"</form>",
+	html.WriteString(fmt.Sprintf("<form method=\"POST\" action=\"//%s\">"+
+		"<input type=\"hidden\" id=\"transaction\" name=\"transaction\" value=\"%s\">"+
+		"<button type=\"submit\" id=\"view\" name=\"view\" class=\"advert-button\">"+
+		"<img src=\"//%s\">"+
+		"</button>"+
+		"<a href=\"stop?host=%s\" class=\"advert-stop\" title=\"Stop seeing this advert\">"+
+		"<img src=\"%s\">"+
+		"</a>"+
+		"</form>",
 		w.AdvertiserURL,
 		base64.StdEncoding.EncodeToString(e),
-		w.MediaURL))
+		w.MediaURL,
+		w.AdvertiserURL,
+		"noun_Stop_3139559.svg"))
 	return template.HTML(html.String()), nil
 }
 
@@ -105,6 +109,11 @@ func (m *PageModel) newOfferID(placement string) (*owid.Node, error) {
 		return nil, err
 	}
 	q.Add("preferences", allow)
+	stopped, err := m.stopped().AsBase64()
+	if err != nil {
+		return nil, err
+	}
+	q.Add("stopped", stopped)
 	u.RawQuery = q.Encode()
 
 	resp, err := http.Get(u.String())

@@ -122,7 +122,8 @@ func (d *Domain) setCommon(r *http.Request, q *url.Values) {
 func (d *Domain) createSWANActionURL(
 	r *http.Request,
 	returnURL string,
-	action string) (string, error) {
+	action string,
+	addParams func(*url.Values)) (string, error) {
 
 	// Build a new URL to request the first storage operation URL.
 	var u url.URL
@@ -130,7 +131,7 @@ func (d *Domain) createSWANActionURL(
 	u.Host = d.SwanHost
 	u.Path = "/swan/api/v1/" + action
 
-	// Add the query string paramters for the SWAN operation starting with the
+	// Add the query string parameters for the SWAN operation starting with the
 	// common ones that are the same for every request from this demo.
 	q := u.Query()
 	d.setCommon(r, &q)
@@ -157,9 +158,16 @@ func (d *Domain) createSWANActionURL(
 	if d.SwanMessageColor != "" {
 		q.Set("messageColor", d.SwanMessageColor)
 	}
+
+	// Add any additional parameters needed by the action if a function was
+	// provided.
+	if addParams != nil {
+		addParams(&q)
+	}
+
 	u.RawQuery = q.Encode()
 
-	// Get the link to SWAN to use for the fetch operation.
+	// Get the link to SWAN to use for the operation.
 	res, err := http.Get(u.String())
 	if err != nil {
 		return "", err
@@ -177,7 +185,7 @@ func (d *Domain) createSWANActionURL(
 	return string(b), nil
 }
 
-func (d *Domain) getOWID() (*owid.Creator, error) {
+func (d *Domain) getOWIDCreator() (*owid.Creator, error) {
 	var err error
 	if d.owid == nil {
 		d.owid, err = d.owidStore.GetCreator(d.Host)

@@ -133,7 +133,7 @@ func redirectToSWAN(
 	w http.ResponseWriter,
 	r *http.Request,
 	action string) {
-	u, err := d.createSWANActionURL(r, "", action)
+	u, err := d.createSWANActionURL(r, "", action, nil)
 	if err != nil {
 		returnServerError(d.config, w, err)
 		return
@@ -153,7 +153,8 @@ func find(a []string, v string) bool {
 func newSWANDataFromCookies(r *http.Request) []*swan.Pair {
 	var p []*swan.Pair
 	for _, c := range r.Cookies() {
-		if c.Name == "cbid" || c.Name == "sid" || c.Name == "allow" {
+		if c.Name == "cbid" || c.Name == "sid" ||
+			c.Name == "allow" || c.Name == "stop" {
 			var s swan.Pair
 			s.Key = c.Name
 			s.Value = string(c.Value)

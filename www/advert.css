@@ -1,0 +1,19 @@
+.advert-stop {
+  display: inline-block;
+  vertical-align: top;
+  position: relative;
+  right: 24px;
+  width: 24px;
+  height: 24px;
+}
+
+.advert-button {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.advert-button img {
+  height: 240px;
+  max-width: 100%
+}
