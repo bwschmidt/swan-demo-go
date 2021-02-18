@@ -1,8 +1,12 @@
-.advert-stop {
-  display: inline-block;
-  vertical-align: top;
+.form-group {
   position: relative;
-  right: 24px;
+}
+
+.advert-stop {
+  display: block;
+  position: absolute;
+  top: 0px;
+  right: 0px;
   width: 24px;
   height: 24px;
 }

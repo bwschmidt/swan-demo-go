@@ -64,6 +64,7 @@ func (m *PageModel) NewAdvertHTML(placement string) (template.HTML, error) {
 	// is a base 64 string added as a hidden field to the form.
 	var html bytes.Buffer
 	html.WriteString(fmt.Sprintf("<form method=\"POST\" action=\"//%s\">"+
+		"<div class=\"form-group\">"+
 		"<input type=\"hidden\" id=\"transaction\" name=\"transaction\" value=\"%s\">"+
 		"<button type=\"submit\" id=\"view\" name=\"view\" class=\"advert-button\">"+
 		"<img src=\"//%s\">"+
@@ -71,6 +72,7 @@ func (m *PageModel) NewAdvertHTML(placement string) (template.HTML, error) {
 		"<a href=\"stop?host=%s\" class=\"advert-stop\" title=\"Stop seeing this advert\">"+
 		"<img src=\"%s\">"+
 		"</a>"+
+		"</div>"+
 		"</form>",
 		w.AdvertiserURL,
 		base64.StdEncoding.EncodeToString(e),
