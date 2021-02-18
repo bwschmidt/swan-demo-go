@@ -54,11 +54,30 @@ func (m *PageModel) NewAdvertHTML(placement string) (template.HTML, error) {
 		return template.HTML("<p>" + err.Error() + "</p>"), nil
 	}
 
-	// Get the winning big.
-	w, err := m.WinningBid()
+	// Get the winning bid node.
+	w, err := m.WinningNode()
 	if err != nil {
 		return template.HTML("<p>" + err.Error() + "</p>"), nil
 	}
+
+	// Get the winning bid.
+	b, err := m.WinningBid()
+	if err != nil {
+		return template.HTML("<p>" + err.Error() + "</p>"), nil
+	}
+
+	// Get the URL for the info icon.
+	var i url.URL
+	i.Scheme = m.Config().Scheme
+	i.Host = m.Domain.SwanHost
+	i.Path = "/swan/info"
+	q := i.Query()
+	o := w
+	for o != nil {
+		q.Add("owid", o.GetOWIDAsString())
+		o = o.GetParent()
+	}
+	i.RawQuery = q.Encode()
 
 	// Return a FORM HTML element with a button for the advert. The OWID tree
 	// is a base 64 string added as a hidden field to the form.
@@ -69,16 +88,16 @@ func (m *PageModel) NewAdvertHTML(placement string) (template.HTML, error) {
 		"<button type=\"submit\" id=\"view\" name=\"view\" class=\"advert-button\">"+
 		"<img src=\"//%s\">"+
 		"</button>"+
-		"<a href=\"stop?host=%s\" class=\"advert-stop\" title=\"Stop seeing this advert\">"+
+		"<a href=\"%s\" class=\"advert-stop\" title=\"Info about this advert\">"+
 		"<img src=\"%s\">"+
 		"</a>"+
 		"</div>"+
 		"</form>",
-		w.AdvertiserURL,
+		b.AdvertiserURL,
 		base64.StdEncoding.EncodeToString(e),
-		w.MediaURL,
-		w.AdvertiserURL,
-		"noun_Stop_3139559.svg"))
+		b.MediaURL,
+		i.String(),
+		"noun_Info_1582932.svg"))
 	return template.HTML(html.String()), nil
 }
 

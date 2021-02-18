@@ -18,7 +18,6 @@ package demo
 
 import (
 	"net/http"
-	"strings"
 )
 
 // handlePrivacy matches the path /privacy and redirects the response to the
@@ -28,7 +27,11 @@ func handlePrivacy(
 	w http.ResponseWriter,
 	r *http.Request) (bool, error) {
 	if r.URL.Path == "/privacy" {
-		u, err := d.createSWANActionURL(r, getReferer(r), "update", nil)
+		i, err := getReferer(r)
+		if err != nil {
+			return true, err
+		}
+		u, err := d.createSWANActionURL(r, i, "update", nil)
 		if err != nil {
 			return true, err
 		}
@@ -36,12 +39,4 @@ func handlePrivacy(
 		return true, nil
 	}
 	return false, nil
-}
-
-func getReferer(r *http.Request) string {
-	u := r.Header.Get("Referer")
-	if strings.HasSuffix(u, "/") == false {
-		u += "/"
-	}
-	return u
 }

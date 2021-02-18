@@ -65,16 +65,14 @@ func handleSWAN(d *Domain, w http.ResponseWriter, r *http.Request) {
 	var p []*swan.Pair // Key value pairs of SWAN data
 
 	// Try the URL path for the preference values.
-	if r.URL.Path != "/" {
-		p, err = newSWANDataFromPath(d, r)
-		if err != nil {
-			returnServerError(d.config, w, err)
-			return
-		}
-		if p != nil {
-			redirectToCleanURL(d.config, w, r, p)
-			return
-		}
+	p, err = newSWANDataFromPath(d, r)
+	if err != nil {
+		returnServerError(d.config, w, err)
+		return
+	}
+	if p != nil {
+		redirectToCleanURL(d.config, w, r, p)
+		return
 	}
 
 	// If the path does not contain any values then get them from the
@@ -119,13 +117,16 @@ func redirectToCleanURL(
 	w http.ResponseWriter,
 	r *http.Request,
 	p []*swan.Pair) {
-	n := c.Scheme + "://" + r.Host + strings.ReplaceAll(
-		r.URL.Path, getSWANString(r), "")
+	var n url.URL
+	n.Scheme = c.Scheme
+	n.Host = r.Host
+	n.Path = strings.ReplaceAll(r.URL.Path, getSWANString(r), "")
+	n.RawQuery = ""
 	if c.Debug {
-		log.Printf("Redirecting to '%s'\n", n)
+		log.Printf("Redirecting to '%s'\n", n.String())
 	}
 	setCookies(r, w, p)
-	http.Redirect(w, r, n, 303)
+	http.Redirect(w, r, n.String(), 303)
 }
 
 func redirectToSWAN(
@@ -167,8 +168,14 @@ func newSWANDataFromCookies(r *http.Request) []*swan.Pair {
 func newSWANDataFromPath(d *Domain, r *http.Request) ([]*swan.Pair, error) {
 	var p []*swan.Pair
 
+	// Get the section of the URL that has the SWAN data.
+	b := getSWANString(r)
+	if b == "" {
+		return nil, nil
+	}
+
 	// Decrypt the SWAN data string.
-	in, err := decode(d, getSWANString(r))
+	in, err := decode(d, b)
 	if err != nil {
 		return nil, err
 	}

@@ -114,6 +114,17 @@ owid = function() {
         }
     }
 
+    this.stop = function(s, d, r) {
+        fetch("//" + parse(s).domain + "/swan/api/v1/stop?" +
+            "host=" + encodeURIComponent(d) + "&" +
+            "returnUrl=" + encodeURIComponent(r))
+            .then(r => r.text())
+            .then(m => window.location.href = m)
+            .catch(x => {
+                console.log(x);
+            });
+    }
+
     this.appendComplaintEmail = function(e, o, s, g) {
         fetch("//" + parse(s).domain + "/swan/api/v1/complaint-email?" +
             "offerid=" + encodeURIComponent(o) + "&" +
@@ -187,9 +198,9 @@ owid = function() {
         function addAuditMark(e, r) {
             var t = document.createElement("img");
             if (r) {
-                t.src = "green.svg";
+                t.src = "/green.svg";
             } else {
-                t.src = "red.svg";
+                t.src = "/red.svg";
             }
             e.appendChild(t);
         }

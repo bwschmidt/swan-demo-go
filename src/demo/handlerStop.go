@@ -35,9 +35,13 @@ func handleStop(
 			return true, err
 		}
 		if r.Form.Get("host") != "" {
+			i, err := getReferer(r)
+			if err != nil {
+				return true, err
+			}
 			u, err := d.createSWANActionURL(
 				r,
-				getReferer(r),
+				i,
 				"stop",
 				func(q *url.Values) {
 					q.Set("host", r.Form.Get("host"))

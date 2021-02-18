@@ -157,7 +157,7 @@ func (m *PageModel) AuditWinnerHTML() (template.HTML, error) {
 		return template.HTML("<p>Advert not source of request.</p>"), nil
 	}
 
-	w, err := m.Winner()
+	w, err := m.WinningNode()
 	if err != nil {
 		return "", nil
 	}
@@ -185,7 +185,7 @@ func (m *PageModel) AuditFullHTML() (template.HTML, error) {
 		return template.HTML("<p>Advert not source of request.</p>"), nil
 	}
 
-	w, err := m.Winner()
+	w, err := m.WinningNode()
 	if err != nil {
 		return "", err
 	}

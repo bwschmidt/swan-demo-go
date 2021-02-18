@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"owid"
 	"path/filepath"
@@ -60,6 +61,13 @@ func AddHandlers(settingsFile string) {
 		return
 	}
 
+	// Read the Info HTML template. For the demo all CMPs use the same template.
+	infoTemplate, err := ioutil.ReadFile("www/info.html")
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
 	// Add the SWAN handlers, with the demo handler being used for any
 	// malformed storage requests.
 	err = swan.AddHandlers(
@@ -68,6 +76,7 @@ func AddHandlers(settingsFile string) {
 		swi,
 		oa,
 		string(cmpTemplate),
+		string(infoTemplate),
 		handler(domains))
 	if err != nil {
 		fmt.Println(err.Error())
@@ -219,5 +228,18 @@ func returnAPIError(
 }
 
 func getCurrentPage(c *Configuration, r *http.Request) string {
-	return fmt.Sprintf("%s://%s%s", c.Scheme, r.Host, r.URL.Path)
+	var u url.URL
+	u.Scheme = c.Scheme
+	u.Host = r.Host
+	u.Path = r.URL.Path
+	return u.String()
+}
+
+func getReferer(r *http.Request) (string, error) {
+	u, err := url.Parse(r.Header.Get("Referer"))
+	if err != nil {
+		return "", err
+	}
+	u.RawQuery = ""
+	return u.String(), nil
 }

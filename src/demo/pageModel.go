@@ -144,24 +144,29 @@ func (m PageModel) DomainsByCategory(category string) []*Domain {
 // Config returns the domain configuration.
 func (m *PageModel) Config() *Configuration { return m.Domain.config }
 
-// WinningBid gets the winning bid from the winner's Processor OWID.
-func (m *PageModel) WinningBid() (*swan.Bid, error) {
-	w, err := m.Winner()
+// WinningOWID gets the winning OWID.
+func (m *PageModel) WinningOWID() (*owid.OWID, error) {
+	w, err := m.WinningNode()
 	if err != nil {
 		return nil, err
 	}
 	if w == nil {
 		return nil, fmt.Errorf("No winning bid")
 	}
-	o, err := w.GetOWID()
+	return w.GetOWID()
+}
+
+// WinningBid gets the winning bid from the winner's Processor OWID.
+func (m *PageModel) WinningBid() (*swan.Bid, error) {
+	o, err := m.WinningOWID()
 	if err != nil {
 		return nil, err
 	}
 	return swan.BidFromOWID(o)
 }
 
-// Winner gets the winning Processor OWID for the transaction.
-func (m *PageModel) Winner() (*owid.Node, error) {
+// WinningNode gets the winning Processor OWID node for the transaction.
+func (m *PageModel) WinningNode() (*owid.Node, error) {
 	o, err := m.getTransaction()
 	if err != nil {
 		return nil, err
