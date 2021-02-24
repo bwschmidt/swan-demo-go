@@ -63,7 +63,6 @@
                         <p>{{ $value.Host }} {{ $value.Error }}</p>
                         {{ end }}
                     </td>
-                    {{ if eq $personalize false }}
                     <td class="text-center">
                         <script>new owid().appendComplaintEmail(
                                 document.currentScript.parentNode,
@@ -73,7 +72,6 @@
                         </script>
                         <noscript>JavaScript needed for complaint email</noscript>
                     </td>
-                    {{ end }}
                 </tr>
                 {{ end }}
             </tbody>
