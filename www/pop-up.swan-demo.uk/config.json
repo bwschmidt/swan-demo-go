@@ -1,7 +1,8 @@
 {
    "category": "Publisher",
    "name": "Pop Up Site",
-   "swanHost": "quantcast.swan-demo.uk",
+   "cmp": "quantcast.swan-demo.uk",
+   "SWANAccessNode": "swanap.swan-demo.uk",
    "suppliers": [
       "badssp.swan-demo.uk"
    ]

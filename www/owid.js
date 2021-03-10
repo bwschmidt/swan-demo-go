@@ -115,21 +115,24 @@ owid = function() {
     }
 
     this.stop = function(s, d, r) {
-        fetch("//" + parse(s).domain + "/swan/api/v1/stop?" +
+        fetch("/stop?" +
             "host=" + encodeURIComponent(d) + "&" +
             "returnUrl=" + encodeURIComponent(r))
-            .then(r => r.text())
-            .then(m => window.location.href = m)
+            .then(r => r.text() )
+            .then(m => {
+                console.log(m);
+                window.location.href = m;
+            })
             .catch(x => {
                 console.log(x);
             });
     }
 
     this.appendComplaintEmail = function(e, o, s, g) {
-        fetch("//" + parse(s).domain + "/swan/api/v1/complaint-email?" +
+        fetch("/complain?" +
             "offerid=" + encodeURIComponent(o) + "&" +
             "swanowid=" + encodeURIComponent(s))
-            .then(r => r.text())
+            .then(r => r.text() )
             .then(m => {
                 var a = document.createElement("a");
                 a.href = m;

@@ -14,7 +14,7 @@
  * under the License.
  * ***************************************************************************/
 
-package demo
+package common
 
 import (
 	"encoding/json"
@@ -29,12 +29,12 @@ type Configuration struct {
 	AccessKeys []string   `json:"accessKeys"` // Array of keys to authenticate nodes with
 	Scheme     string     `json:"scheme"`     // The scheme to use for requests
 	Debug      bool       `json:"debug"`      // True if debug HTML output should be provided
-	domains    []*Domain  // All the domains that form the demo
+	Domains    []*Domain  // All the domains that form the demo
 	owid       owid.Store // The OWID store for use with domains
 }
 
-// newConfig creates a new instance of configuration from the file provided.
-func newConfig(settingsFile string) Configuration {
+// NewConfig creates a new instance of configuration from the file provided.
+func NewConfig(settingsFile string) Configuration {
 	var c Configuration
 	configFile, err := os.Open(settingsFile)
 	defer configFile.Close()

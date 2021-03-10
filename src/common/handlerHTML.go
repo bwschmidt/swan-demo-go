@@ -14,29 +14,31 @@
  * under the License.
  * ***************************************************************************/
 
-package demo
+package common
 
 import (
+	"compress/gzip"
 	"net/http"
 )
 
-// handlePrivacy matches the path /privacy and redirects the response to the
-// SWAN update preferences URL.
-func handlePrivacy(
-	d *Domain,
-	w http.ResponseWriter,
-	r *http.Request) (bool, error) {
-	if r.URL.Path == "/privacy" {
-		i, err := getReferer(r)
-		if err != nil {
-			return true, err
-		}
-		u, err := d.createSWANActionURL(r, i, "update", nil)
-		if err != nil {
-			return true, err
-		}
-		http.Redirect(w, r, u, 303)
-		return true, nil
+// HandlerHTML returns HTML that does not require a model for the template.
+func HandlerHTML(d *Domain, w http.ResponseWriter, r *http.Request) {
+
+	// Get the template for the URL path.
+	t := d.LookupHTML(r.URL.Path)
+	if t == nil {
+		http.NotFound(w, r)
+		return
 	}
-	return false, nil
+
+	// Execute the template without a model.
+	g := gzip.NewWriter(w)
+	defer g.Close()
+	w.Header().Set("Content-Encoding", "gzip")
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache")
+	err := t.Execute(g, nil)
+	if err != nil {
+		ReturnServerError(d.Config, w, err)
+	}
 }

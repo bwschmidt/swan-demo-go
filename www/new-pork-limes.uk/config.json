@@ -4,8 +4,9 @@
    "swanMessage": "Getting things ready. New Pork Limes rocks!",
    "swanBackgroundColor": "#fff",
    "swanMessageColor": "#343a40",
-   "swanProgressColor": "#6c757d",   
-   "swanHost": "cmp.swan-demo.uk",
+   "swanProgressColor": "#6c757d", 
+   "cmp": "cmp.swan-demo.uk",
+   "SWANAccessNode": "swanap.swan-demo.uk",
    "suppliers": [
       "magnite.swan-demo.uk",
       "pubmatic.swan-demo.uk"

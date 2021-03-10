@@ -17,28 +17,26 @@
 package demo
 
 import (
+	"cmp"
+	"common"
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
-	"net/url"
+	"marketer"
+	"openrtb"
 	"os"
-	"owid"
 	"path/filepath"
-	"strings"
+	"publisher"
 	"swan"
-	"swift"
 )
 
 // AddHandlers and outputs configuration information.
 func AddHandlers(settingsFile string) {
 
 	// Get the demo configuration.
-	dc := newConfig(settingsFile)
+	dc := common.NewConfig(settingsFile)
 
 	// Get the example simple access control implementations.
-	swi := swift.NewAccessSimple(dc.AccessKeys)
-	oa := owid.NewAccessSimple(dc.AccessKeys)
 	swa := swan.NewAccessSimple(dc.AccessKeys)
 
 	// Get all the domains for the SWAN demo.
@@ -52,32 +50,14 @@ func AddHandlers(settingsFile string) {
 		fmt.Println(err.Error())
 		return
 	}
-	dc.domains = domains
-
-	// Read the CMP HTML template. For the demo all CMPs use the same template.
-	cmpTemplate, err := ioutil.ReadFile("www/cmp.html")
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	// Read the Info HTML template. For the demo all CMPs use the same template.
-	infoTemplate, err := ioutil.ReadFile("www/info.html")
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
+	dc.Domains = domains
 
 	// Add the SWAN handlers, with the demo handler being used for any
 	// malformed storage requests.
 	err = swan.AddHandlers(
 		settingsFile,
 		swa,
-		swi,
-		oa,
-		string(cmpTemplate),
-		string(infoTemplate),
-		handler(domains))
+		common.Handler(domains))
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -95,8 +75,10 @@ func AddHandlers(settingsFile string) {
 // c is the general server configuration.
 // path provides the root folder where the child folders are the names of the
 // domains that the demo responds to.
-func parseDomains(c *Configuration, path string) ([]*Domain, error) {
-	var domains []*Domain
+func parseDomains(
+	c *common.Configuration,
+	path string) ([]*common.Domain, error) {
+	var domains []*common.Domain
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
 		return nil, err
@@ -105,7 +87,11 @@ func parseDomains(c *Configuration, path string) ([]*Domain, error) {
 
 		// Domains are the directories of the folder provided.
 		if f.IsDir() {
-			domain, err := newDomain(c, filepath.Join(path, f.Name()))
+			domain, err := common.NewDomain(c, filepath.Join(path, f.Name()))
+			if err != nil {
+				return nil, err
+			}
+			err = addHandler(domain)
 			if err != nil {
 				return nil, err
 			}
@@ -115,131 +101,37 @@ func parseDomains(c *Configuration, path string) ([]*Domain, error) {
 	return domains, nil
 }
 
-// handler for all HTTP requests to domains controlled by the demo.
-func handler(d []*Domain) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		// Set to true if a domain is found and handled.
-		found := false
-
-		// r.Host may include the port number or www prefixes or other
-		// charaters dependent on the environment. Using strings.Contains
-		// rather than testing for equality eliminates these issues for a demo
-		// where the domain names are not sub strings of one another.
-		for _, domain := range d {
-			if r.Host == domain.Host {
-				handlerDomain(domain, w, r)
-				found = true
-				break
-			}
-		}
-
-		// All handlers have been tried and nothing has been found. Return not
-		// found.
-		if found == false {
-			http.NotFound(w, r)
-		}
+// Set the HTTP handler for the domain.
+func addHandler(d *common.Domain) error {
+	switch d.Category {
+	case "CMP":
+		d.SetHandler(cmp.Handler)
+		break
+	case "Publisher":
+		d.SetHandler(publisher.Handler)
+		break
+	case "Advertiser":
+		d.SetHandler(marketer.Handler)
+		break
+	case "DSP":
+		d.SetHandler(openrtb.Handler)
+		break
+	case "SSP":
+		d.SetHandler(openrtb.Handler)
+		break
+	case "DMP":
+		d.SetHandler(openrtb.Handler)
+		break
+	case "Exchange":
+		d.SetHandler(openrtb.Handler)
+		break
+	case "Demo":
+		d.SetHandler(common.HandlerHTML)
+		break
+	default:
+		return fmt.Errorf("Category '%s' invalid for domain '%s'",
+			d.Category,
+			d.Host)
 	}
-}
-
-func handlerDomain(d *Domain, w http.ResponseWriter, r *http.Request) {
-
-	// Is this a request for a static resource?
-	found, err := handleStatic(d, w, r)
-	if err != nil {
-		returnServerError(d.config, w, err)
-		return
-	}
-
-	// Is this a request for the privacy preference updates?
-	if found == false {
-		found, err = handlePrivacy(d, w, r)
-		if err != nil {
-			returnServerError(d.config, w, err)
-			return
-		}
-	}
-
-	// Is this request for the stop update?
-	if found == false {
-		found, err = handleStop(d, w, r)
-		if err != nil {
-			returnServerError(d.config, w, err)
-			return
-		}
-	}
-
-	// Is this a request for an API transaction?
-	if found == false {
-		found, err = handleTransaction(d, w, r)
-		if err != nil {
-			fmt.Println(err.Error())
-			returnServerError(d.config, w, err)
-			return
-		}
-	}
-
-	// If no static content is found then response with HTML.
-	if found == false {
-		handleHTML(d, w, r)
-	}
-}
-
-func newResponseError(c *Configuration, r *http.Response) error {
-	in, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return err
-	}
-	var u string
-	if c.Debug {
-		u = r.Request.URL.String()
-	} else {
-		u = r.Request.Host
-	}
-	return fmt.Errorf("API call '%s' returned '%d' and '%s'",
-		u,
-		r.StatusCode,
-		strings.TrimSpace(string(in)))
-}
-
-func returnServerError(c *Configuration, w http.ResponseWriter, err error) {
-	if c.Debug {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	} else {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	if c.Debug {
-		println(err.Error())
-	}
-}
-
-func returnAPIError(
-	c *Configuration,
-	w http.ResponseWriter,
-	err error,
-	code int) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	http.Error(w, err.Error(), code)
-	if c.Debug {
-		println(err.Error())
-	}
-}
-
-func getCurrentPage(c *Configuration, r *http.Request) string {
-	var u url.URL
-	u.Scheme = c.Scheme
-	u.Host = r.Host
-	u.Path = r.URL.Path
-	return u.String()
-}
-
-func getReferer(r *http.Request) (string, error) {
-	u, err := url.Parse(r.Header.Get("Referer"))
-	if err != nil {
-		return "", err
-	}
-	u.RawQuery = ""
-	return u.String(), nil
+	return nil
 }

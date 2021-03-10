@@ -1,0 +1,286 @@
+/* ****************************************************************************
+ * Copyright 2020 51 Degrees Mobile Experts Limited (51degrees.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ * ***************************************************************************/
+
+package publisher
+
+import (
+	"common"
+	"compress/gzip"
+	"encoding/json"
+	"fod"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"net/url"
+	"strings"
+	"swan"
+)
+
+// Handler for publisher web pages.
+func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
+	var err error
+	var p []*swan.Pair // Key value pairs of SWAN data
+
+	// If this is the privacy path then redirect to the CMP.
+	if strings.EqualFold(r.URL.Path, "/privacy") {
+		redirectToCMPDialog(d, w, r)
+		return
+	}
+
+	// Try the URL path for the preference values.
+	p, err = newSWANDataFromPath(d, r)
+	if err != nil {
+		common.ReturnServerError(d.Config, w, err)
+		return
+	}
+	if p != nil {
+		redirectToCleanURL(d.Config, w, r, p)
+		return
+	}
+
+	// If the path does not contain any values then get them from the
+	// cookies.
+	if p == nil {
+		p = newSWANDataFromCookies(r)
+	}
+
+	// If the request is from a crawler than ignore SWAN.
+	c, err := fod.GetCrawlerFrom51Degrees(r)
+	if err != nil {
+		common.ReturnServerError(d.Config, w, err)
+		return
+	}
+	if c {
+		handlerPublisherPage(d, w, r, p)
+		return
+	}
+
+	// If there is valid SWAN data then display the page using the page handler.
+	// If the SWAN data is not complete or valid then ask the user to verify
+	// or add the required data via the update redirect action.
+	// If the SWAN data is not present or invalid then redirect to SWAN to
+	// get the latest data.
+	if p != nil && len(p) > 0 {
+		if isSet(p) {
+			handlerPublisherPage(d, w, r, p)
+		} else {
+			redirectToCMPDialog(d, w, r)
+		}
+	} else {
+		redirectToSWANFetch(d, w, r)
+	}
+}
+
+func handlerPublisherPage(
+	d *common.Domain,
+	w http.ResponseWriter,
+	r *http.Request,
+	p []*swan.Pair) {
+	t := d.LookupHTML(r.URL.Path)
+	if t == nil {
+		http.NotFound(w, r)
+		return
+	}
+	var m Model
+	m.Domain = d
+	m.Request = r
+	m.results = p
+	g := gzip.NewWriter(w)
+	defer g.Close()
+	w.Header().Set("Content-Encoding", "gzip")
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache")
+	err := t.Execute(g, &m)
+	if err != nil {
+		common.ReturnServerError(d.Config, w, err)
+	}
+}
+
+func newSWANDataFromCookies(r *http.Request) []*swan.Pair {
+	var p []*swan.Pair
+	for _, c := range r.Cookies() {
+		if c.Name == "cbid" || c.Name == "sid" ||
+			c.Name == "allow" || c.Name == "stop" {
+			var s swan.Pair
+			s.Key = c.Name
+			s.Value = string(c.Value)
+			p = append(p, &s)
+		}
+	}
+	return p
+}
+
+func newSWANDataFromPath(
+	d *common.Domain,
+	r *http.Request) ([]*swan.Pair, error) {
+	var p []*swan.Pair
+
+	// Get the section of the URL that has the SWAN data.
+	b := common.GetSWANDataFromRequest(r)
+	if b == "" {
+		return nil, nil
+	}
+
+	// Decrypt the SWAN data string.
+	in, err := decode(d, b)
+	if err != nil {
+		return nil, err
+	}
+
+	// If debug is enabled then output the JSON.
+	if d.Config.Debug {
+		log.Println(string(in))
+	}
+
+	// Get the results.
+	err = json.Unmarshal(in, &p)
+	if err != nil {
+		return nil, err
+	}
+
+	return p, nil
+}
+
+// SWAN data could be obtained from the URL. Remove the SWAN data string from
+// the URL and redirect back to the page. Set cookies in the redirect so that
+// the data is persisted.
+func redirectToCleanURL(
+	c *common.Configuration,
+	w http.ResponseWriter,
+	r *http.Request,
+	p []*swan.Pair) {
+	u := getCleanURL(c, r).String()
+	if c.Debug {
+		log.Printf("Redirecting to '%s'\n", u)
+	}
+	setCookies(r, w, p)
+	http.Redirect(w, r, u, 303)
+}
+
+func redirectToCMPDialog(
+	d *common.Domain,
+	w http.ResponseWriter,
+	r *http.Request) {
+	u, err := d.CreateSWANURL(
+		r,
+		getCleanURL(d.Config, r).String(),
+		"dialog",
+		func(q *url.Values) {
+			var u url.URL
+			u.Scheme = d.Config.Scheme
+			u.Host = d.CMP
+			u.Path = "/preferences/"
+			q.Set("dialogUrl", u.String())
+		})
+	if err != nil {
+		common.ReturnServerError(d.Config, w, err)
+		return
+	}
+	http.Redirect(w, r, u, 303)
+}
+
+func getCleanURL(c *common.Configuration, r *http.Request) *url.URL {
+	var u url.URL
+	u.Scheme = c.Scheme
+	u.Host = r.Host
+	u.Path = strings.ReplaceAll(
+		r.URL.Path,
+		common.GetSWANDataFromRequest(r),
+		"")
+	u.RawQuery = ""
+	return &u
+}
+
+func redirectToSWANFetch(
+	d *common.Domain,
+	w http.ResponseWriter,
+	r *http.Request) {
+	u, err := d.CreateSWANURL(r, "", "fetch", nil)
+	if err != nil {
+		common.ReturnServerError(d.Config, w, err)
+		return
+	}
+	http.Redirect(w, r, u, 303)
+}
+
+func setCookies(r *http.Request, w http.ResponseWriter, p []*swan.Pair) {
+	var s bool
+	if r.URL.Scheme == "https" {
+		s = true
+	} else {
+		s = false
+	}
+	for _, i := range p {
+		c := http.Cookie{
+			Name:     i.Key,
+			Domain:   getDomain(r.Host),    // Specifically to this domain
+			Value:    i.Value,              // The OWID value
+			SameSite: http.SameSiteLaxMode, // Available to all paths
+			// The cookie never needs to be read from JavaScript so always true
+			HttpOnly: true,
+			Secure:   s, // Secure if HTTPs, otherwise false.
+			// Set the cookie expiry time to the same as the SWAN pair.
+			Expires: i.Expires,
+		}
+		http.SetCookie(w, &c)
+	}
+}
+
+func getDomain(h string) string {
+	s := strings.Split(h, ":")
+	return s[0]
+}
+
+// isSet returns true if all three of the values are present in the results and
+// are valid OWIDs.
+func isSet(d []*swan.Pair) bool {
+	c := 0
+	for _, e := range d {
+		if e.Key == "allow" || e.Key == "cbid" || e.Key == "sid" {
+			o, err := e.AsOWID()
+			if err != nil {
+				return false
+			}
+			if len(o.Payload) > 0 {
+				c++
+			}
+		}
+	}
+	return c == 3
+}
+
+func decode(d *common.Domain, v string) ([]byte, error) {
+
+	// Combine it with the access node to decrypt the result.
+	var u url.URL
+	u.Scheme = d.Config.Scheme
+	u.Host = d.SWANAccessNode
+	u.Path = "/swan/api/v1/values-as-json"
+	q := u.Query()
+	q.Set("data", v)
+	q.Set("accessKey", d.Config.AccessKey)
+	u.RawQuery = q.Encode()
+
+	// Call the URL and unpack the results if they're available.
+	res, err := http.Get(u.String())
+	if err != nil {
+		return nil, err
+	}
+	if res.StatusCode != http.StatusOK {
+		return nil, common.NewResponseError(d.Config, res)
+	}
+	return ioutil.ReadAll(res.Body)
+}

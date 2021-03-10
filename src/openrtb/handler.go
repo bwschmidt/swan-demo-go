@@ -14,10 +14,12 @@
  * under the License.
  * ***************************************************************************/
 
-package demo
+package openrtb
 
 import (
 	"bytes"
+	"common"
+	"compress/gzip"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -30,20 +32,20 @@ import (
 
 var empty swan.Empty // Used for empty responses
 
-// handleTransaction is responsible for a real time transaction for advertising.
-// The body of the request must contain a JSON array of Processor IDs which
-// contain the signature of the last entry in the list.
-func handleTransaction(
-	d *Domain,
-	w http.ResponseWriter,
-	r *http.Request) (bool, error) {
+const openRTBPath = "/demo/api/v1/bid" // The path for this handler
 
-	if r.URL.Path == "/demo/api/v1/bid" && r.Method == "POST" {
+// Handler is responsible for a real time transaction for advertising.
+// The body of the request must contain a JSON array of Processor IDs which
+// contain the signature of the last entry in the list of Processors.
+func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
+
+	if r.URL.Path == openRTBPath && r.Method == "POST" {
 
 		// Unpack the body of the request to form the bid data structure.
 		o, err := getOffer(d, r)
 		if err != nil {
-			return true, err
+			common.ReturnAPIError(d.Config, w, err, http.StatusBadRequest)
+			return
 		}
 
 		// If this domain is a bad actor then change the publisher's domain to
@@ -51,33 +53,43 @@ func handleTransaction(
 		if d.Bad {
 			err = changePubDomain(o, "high-value-pub.com")
 			if err != nil {
-				return true, err
+				common.ReturnAPIError(
+					d.Config,
+					w,
+					err,
+					http.StatusInternalServerError)
+				return
 			}
 		}
 
 		// Handle the bid and return if the URL was found.
-		t, err := handleBid(d, o)
+		t, err := HandleTransaction(d, o)
 		if err != nil {
-			return true, err
+			common.ReturnAPIError(d.Config, w, err, http.StatusInternalServerError)
+			return
 		}
 
 		// The caller already knows about the rest of the tree. Only return this
 		// Processor OWID and the children.
 		b, err := t.AsJSON()
 		if err != nil {
-			return true, err
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(b)))
-		_, err = w.Write(b)
-		if err != nil {
-			return true, err
+			common.ReturnAPIError(d.Config, w, err, http.StatusInternalServerError)
+			return
 		}
 
-		return true, err
+		g := gzip.NewWriter(w)
+		defer g.Close()
+		w.Header().Set("Content-Encoding", "gzip")
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "no-cache")
+		_, err = g.Write(b)
+		if err != nil {
+			common.ReturnAPIError(d.Config, w, err, http.StatusInternalServerError)
+			return
+		}
+	} else {
+		http.NotFound(w, r)
 	}
-	return false, nil
 }
 
 func getSWANOffer(r *owid.Node) (*swan.Offer, error) {
@@ -113,11 +125,12 @@ func changePubDomain(r *owid.Node, newPubDomain string) error {
 	return nil
 }
 
-func handleBid(d *Domain, n *owid.Node) (*owid.Node, error) {
+// HandleTransaction processes an OpenRTB transaction.
+func HandleTransaction(d *common.Domain, n *owid.Node) (*owid.Node, error) {
 
 	// Verify that this domain can create OWIDs. Failure to register a domain
 	// as an OWID creator is a common setup mistake.
-	_, err := d.getOWIDCreator()
+	_, err := d.GetOWIDCreator()
 	if err != nil {
 		return nil, err
 	}
@@ -130,14 +143,13 @@ func handleBid(d *Domain, n *owid.Node) (*owid.Node, error) {
 	}
 
 	// Create an OWID for this processor.
-	t := d.owid.CreateOWID(nil)
+	t := d.OWID.CreateOWID(nil)
 	if t == nil {
 		return nil, fmt.Errorf("Could not create new OWID")
 	}
 
 	// If this domain has adverts then choose one at random. Get a random
 	// byte array to use as the payload from the Processor OWID.
-
 	if len(d.Adverts) > 0 {
 
 		// The root node must be the Offer.
@@ -176,7 +188,7 @@ func handleBid(d *Domain, n *owid.Node) (*owid.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = d.owid.Sign(t, r)
+	err = d.OWID.Sign(t, r)
 	if err != nil {
 		return nil, err
 	}
@@ -268,19 +280,22 @@ func isBid(n *owid.Node) (bool, error) {
 	return ok, nil
 }
 
-func getOffer(d *Domain, r *http.Request) (*owid.Node, error) {
+func getOffer(d *common.Domain, r *http.Request) (*owid.Node, error) {
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
 	}
-	if d.config.Debug {
+	if d.Config.Debug {
 		fmt.Println(d.Host)
 		fmt.Println(string(b))
 	}
 	return owid.NodeFromJSON(b)
 }
 
-func sendToSupplier(d *Domain, s string, n *owid.Node) (*owid.Node, error) {
+func sendToSupplier(
+	d *common.Domain,
+	s string,
+	n *owid.Node) (*owid.Node, error) {
 
 	// Turn the node into a byte array.
 	j, err := n.GetRoot().AsJSON()
@@ -290,9 +305,9 @@ func sendToSupplier(d *Domain, s string, n *owid.Node) (*owid.Node, error) {
 
 	// POST the bid to the supplier.
 	var up url.URL
-	up.Scheme = d.config.Scheme
+	up.Scheme = d.Config.Scheme
 	up.Host = s
-	up.Path = "/demo/api/v1/bid"
+	up.Path = openRTBPath
 	res, err := http.Post(
 		up.String(),
 		"application/json",
@@ -320,7 +335,11 @@ func sendToSupplier(d *Domain, s string, n *owid.Node) (*owid.Node, error) {
 	return c, nil
 }
 
-func createFailed(d *Domain, n *owid.Node, u *url.URL, res *http.Response) (*owid.Node, error) {
+func createFailed(
+	d *common.Domain,
+	n *owid.Node,
+	u *url.URL,
+	res *http.Response) (*owid.Node, error) {
 	var f swan.Failed
 	f.Host = u.Host
 	f.Error = fmt.Sprintf("%d", res.StatusCode)
@@ -332,12 +351,12 @@ func createFailed(d *Domain, n *owid.Node, u *url.URL, res *http.Response) (*owi
 	if err != nil {
 		return nil, err
 	}
-	_, err = d.getOWIDCreator()
+	_, err = d.GetOWIDCreator()
 	if err != nil {
 		return nil, err
 	}
-	t := d.owid.CreateOWID(b)
-	err = d.owid.Sign(t, r)
+	t := d.OWID.CreateOWID(b)
+	err = d.OWID.Sign(t, r)
 	var c owid.Node
 	c.OWID, err = t.AsByteArray()
 	if err != nil {

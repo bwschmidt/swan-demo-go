@@ -1,4 +1,5 @@
 {
    "Category": "CMP",
-   "Name": "SWAN CMP"
+   "Name": "SWAN CMP",
+   "SWANAccessNode": "swanap.swan-demo.uk"
 }

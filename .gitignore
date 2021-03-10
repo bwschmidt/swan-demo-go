@@ -5,6 +5,10 @@ pkg/
 bin/
 src/github.com
 src/golang.org
+src/cloud.google.com
+src/firebase.google.com
+src/go.opencensus.io
+src/google.golang.org
 application
 *.zip
 .config

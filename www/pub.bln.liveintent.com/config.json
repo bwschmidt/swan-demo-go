@@ -5,7 +5,8 @@
    "swanBackgroundColor": "#fff",
    "swanMessageColor": "#343a40",
    "swanProgressColor": "#6c757d",   
-   "swanHost": "swanson.bln.liveintent.com",
+   "cmp": "swanson.bln.liveintent.com",
+   "SWANAccessNode": "swanap.swan-demo.uk",
    "suppliers": [
       "magnite.swan-demo.uk",
       "pubmatic.swan-demo.uk"

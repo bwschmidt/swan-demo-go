@@ -8,5 +8,8 @@ $cmd = "go get " +
     "github.com/aws/aws-sdk-go/service/dynamodb " +
     "github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute " +
     "github.com/aws/aws-sdk-go/service/dynamodb/expression " +
-    "github.com/google/uuid"
+    "github.com/google/uuid " +
+    "cloud.google.com/go/firestore " +
+    "firebase.google.com/go " +
+    "google.golang.org/api/iterator"
 Invoke-Expression $cmd

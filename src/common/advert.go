@@ -14,7 +14,7 @@
  * under the License.
  * ***************************************************************************/
 
-package demo
+package common
 
 // Advert represents an advert to display on a publishers web page.
 type Advert struct {

@@ -262,6 +262,9 @@ for each of the domains.
 
   `go get -d ./...`
 
+  `dep.ps1` can also be used in Powershell to explicitly get the dependencies 
+  for this Go application.
+
 * Add the demo domain names as folder names to the www folder. For example; the
 domain `domain.com` would appear as `www/domain.com`. Alter the `config.json` 
 content in each folder to indicate the purpose of the domain. This aspect of 

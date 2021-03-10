@@ -14,11 +14,11 @@
  * under the License.
  * ***************************************************************************/
 
-package demo
+package marketer
 
 import (
 	"bytes"
-	"encoding/base64"
+	"common"
 	"fmt"
 	"html/template"
 	"owid"
@@ -26,15 +26,16 @@ import (
 	"swan"
 )
 
+// MarketerModel used with HTML templates.
+type MarketerModel struct {
+	common.PageModel
+	offer *owid.Node // The offer and tree associated with the page
+}
+
 // Stop returns true if the request includes the key Stop to indicate that the
 // advert should no longer be displayed.
-func (m *PageModel) Stop() bool {
-	// Parse the form data.
-	err := m.request.ParseForm()
-	if err != nil {
-		return false
-	}
-	for k := range m.request.Form {
+func (m *MarketerModel) Stop() bool {
+	for k := range m.Request.Form {
 		if k == "stop" {
 			return true
 		}
@@ -43,13 +44,12 @@ func (m *PageModel) Stop() bool {
 }
 
 // TreeAsJSON return the transaction as JSON.
-func (m *PageModel) TreeAsJSON() (template.HTML, error) {
-	t, err := m.getTransaction()
-	if err != nil {
-		return "", err
+func (m *MarketerModel) TreeAsJSON() (template.HTML, error) {
+	if m.offer == nil {
+		return template.HTML("<p>Advert not source of request.</p>"), nil
 	}
 
-	b, err := t.AsJSON()
+	b, err := m.offer.AsJSON()
 	if err != nil {
 		return "", err
 	}
@@ -62,37 +62,29 @@ func (m *PageModel) TreeAsJSON() (template.HTML, error) {
 }
 
 // OfferID returns the offer ID string for the advert.
-func (m *PageModel) OfferID() (string, error) {
-	t, err := m.getTransaction()
-	if err != nil {
-		return "", err
-	}
-	if t == nil {
+func (m *MarketerModel) OfferID() (string, error) {
+	if m.offer == nil {
 		return "", nil
 	}
-	o, err := t.GetOWID()
-	if t == nil {
+	o, err := m.offer.GetOWID()
+	if err != nil {
 		return "", err
 	}
 	return o.AsString(), nil
 }
 
 // OfferIDUnpacked returns the unpacked Offer ID
-func (m *PageModel) OfferIDUnpacked() (template.HTML, error) {
-	t, err := m.getTransaction()
-	if err != nil {
-		return "", err
-	}
-	if t == nil {
+func (m *MarketerModel) OfferIDUnpacked() (template.HTML, error) {
+	if m.offer == nil {
 		return template.HTML("<p>Advert not source of request.</p>"), nil
 	}
-	o, err := t.GetOWID()
+	o, err := m.offer.GetOWID()
 	if err != nil {
-		return "", err
+		return template.HTML("<p>" + err.Error() + "</p>"), nil
 	}
 	s, err := swan.OfferFromOWID(o)
 	if err != nil {
-		return "", err
+		return template.HTML("<p>" + err.Error() + "</p>"), nil
 	}
 
 	var html bytes.Buffer
@@ -135,29 +127,15 @@ func (m *PageModel) OfferIDUnpacked() (template.HTML, error) {
 	return template.HTML(html.String()), nil
 }
 
-func convertToString(b []byte) string {
-	return fmt.Sprintf("%x", b)
-}
-
 // AuditWinnerHTML returns the audit information from the bid used in the advert
 // that resulted in the request to this page.
-func (m *PageModel) AuditWinnerHTML() (template.HTML, error) {
+func (m *MarketerModel) AuditWinnerHTML() (template.HTML, error) {
 	var html bytes.Buffer
-	t, err := m.getTransaction()
-	if err != nil {
-		if m.Config().Debug {
-			html.WriteString(fmt.Sprintf(
-				"<p class=\"warning\">%s</p>",
-				err.Error()))
-		}
-		html.WriteString("<p>Advert not source of request.</p>")
-		return template.HTML(html.String()), nil
-	}
-	if t == nil {
+	if m.offer == nil {
 		return template.HTML("<p>Advert not source of request.</p>"), nil
 	}
 
-	w, err := m.WinningNode()
+	w, err := swan.WinningNode(m.offer)
 	if err != nil {
 		return "", nil
 	}
@@ -176,28 +154,28 @@ func (m *PageModel) AuditWinnerHTML() (template.HTML, error) {
 
 // AuditFullHTML returns the audit information from the bid used in the advert
 // that resulted in the request to this page.
-func (m *PageModel) AuditFullHTML() (template.HTML, error) {
-	t, err := m.getTransaction()
-	if err != nil {
-		return "", err
-	}
-	if t == nil {
+func (m *MarketerModel) AuditFullHTML() (template.HTML, error) {
+	if m.offer == nil {
 		return template.HTML("<p>Advert not source of request.</p>"), nil
 	}
 
-	w, err := m.WinningNode()
+	w, err := swan.WinningNode(m.offer)
 	if err != nil {
 		return "", err
 	}
 
 	var html bytes.Buffer
 	htmlAddHeader(&html)
-	err = appendOWIDAndChildren(&html, t, w, 0)
+	err = appendOWIDAndChildren(&html, m.offer, w, 0)
 	if err != nil {
 		return template.HTML("<p>" + err.Error() + "</p>"), nil
 	}
 	htmlAddFooter(&html)
 	return template.HTML(html.String()), nil
+}
+
+func convertToString(b []byte) string {
+	return fmt.Sprintf("%x", b)
 }
 
 func htmlAddHeader(html *bytes.Buffer) {
@@ -212,36 +190,6 @@ func htmlAddHeader(html *bytes.Buffer) {
 
 func htmlAddFooter(html *bytes.Buffer) {
 	html.WriteString("</tbody>\r\n</table>\r\n")
-}
-
-func (m *PageModel) getTransaction() (*owid.Node, error) {
-
-	if m.offer == nil {
-
-		// Parse the form data.
-		err := m.request.ParseForm()
-		if err != nil {
-			return nil, err
-		}
-
-		// If the bid data does not exist return warning.
-		if m.request.Form.Get("transaction") == "" {
-			return nil, nil
-		}
-
-		// Get the transaction from the form data.
-		d, err := base64.StdEncoding.DecodeString(
-			m.request.Form.Get("transaction"))
-		if err != nil {
-			return nil, err
-		}
-		m.offer, err = owid.NodeFromJSON(d)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return m.offer, nil
 }
 
 func appendParents(html *bytes.Buffer, w *owid.Node) error {

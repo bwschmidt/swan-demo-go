@@ -14,7 +14,7 @@
  * under the License.
  * ***************************************************************************/
 
-package demo
+package common
 
 import (
 	"io/ioutil"
@@ -23,9 +23,9 @@ import (
 	"strings"
 )
 
-// handleStatic locates and returns static content if relevant to the HTTP
+// handlerStatic locates and returns static content if relevant to the HTTP
 // request. True is returned if static content was returned, otherwise false.
-func handleStatic(
+func handlerStatic(
 	d *Domain,
 	w http.ResponseWriter,
 	r *http.Request) (bool, error) {
