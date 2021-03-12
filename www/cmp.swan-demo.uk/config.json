@@ -1,5 +1,6 @@
 {
    "Category": "CMP",
    "Name": "SWAN CMP",
-   "SWANAccessNode": "swanap.swan-demo.uk"
+   "SWANAccessNode": "swanap.swan-demo.uk",
+   "SWANAccessKey": "CMPKeySWAN"
 }

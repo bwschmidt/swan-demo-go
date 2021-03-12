@@ -1,133 +1,135 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="icon" type="image/svg+xml" href="noun_Swan_3263882.svg">
-    <title>Localhost : SWAN Demo</title>
-    <link href="bootstrap.min.css" rel="stylesheet">
-    <link href="product.css" rel="stylesheet">
-    <link href="advert.css" rel="stylesheet">
-    <script src="owid.js" type="text/javascript"></script>
-  </head>
+<html lang="en" class="h-100">
 
-  <body style="background-color: {{ .Domain.SwanBackgroundColor }};">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/svg+xml" href="noun_Swan_3263882.svg">
+  <title>LocalHost | SWAN Demo</title>
+  <link href="bootstrap.min.css" rel="stylesheet">
+  <script src="owid.js" type="text/javascript"></script>
+  <style>
 
-    <nav class="site-header sticky-top py-1">
-      <div class="container d-flex flex-column flex-md-row justify-content-between">
-        <a class="py-2" href="//swan-demo.uk">
-          SWAN Demo
-        </a>
-        <a class="py-2 d-none d-md-inline-block" href="//swan-demo.uk">Tour</a>
-        <a class="py-2 d-none d-md-inline-block" href="//swan-demo.uk">Product</a>
-        <a class="py-2 d-none d-md-inline-block" href="//swan-demo.uk">Features</a>
-        <a class="py-2 d-none d-md-inline-block" href="//swan-demo.uk">Enterprise</a>
-        <a class="py-2 d-none d-md-inline-block" href="//swan-demo.uk">Support</a>
-        <a class="py-2 d-none d-md-inline-block" href="//swan-demo.uk">Pricing</a>
-        <a class="py-2 d-none d-md-inline-block" href="//swan-demo.uk">Cart</a>
-      </div>
-    </nav>
+    .bd-placeholder-img {
+      font-size: 1.125rem;
+      text-anchor: middle;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      user-select: none;
+    }
 
-    <div class="position-relative overflow-hidden p-3 p-md-5 m-md-3 text-center bg-light">
-      <div class="col-md-5 p-lg-5 mx-auto">
-        <figure class="figure">
-          {{ .NewAdvertHTML "Heading1" }}
-          <figcaption class="figure-caption text-black">advert</figcaption>
-        </figure>
-      </div>
-    </div>
+    @media (min-width: 768px) {
+      .bd-placeholder-img-lg {
+        font-size: 3.5rem;
+      }
+    }
 
-    <div class="d-md-flex flex-md-equal w-100 my-md-3 pl-md-3">
-      <div class="bg-dark mr-md-3 pt-3 px-3 pt-md-5 px-md-5 text-center text-white overflow-hidden">
-        <div class="py-3">
-          <h2 class="display-5">Winners</h2>
-          <p>
-            {{ .AuditWinnerHTML }}
-          </p>
-        </div>
-      </div>
-      <div class="bg-dark mr-md-3 pt-3 px-3 pt-md-5 px-md-5 text-center text-white overflow-hidden">
-        <div class="py-3">
-          <h2 class="display-5">Full</h2>
-          <p>
-            {{ .AuditFullHTML}}
-          </p>
-        </div>
-      </div>
-    </div>
+    samp {
+      word-break: break-all;
+    }
+  </style>
+  <link href="cover.css" rel="stylesheet">
+</head>
 
-    <div class="position-relative overflow-hidden p-3 p-md-5 m-md-3 text-center bg-light">
-      <div class="col-md-5 p-lg-5 mx-auto">
-        <h2 class="display-5">Offer ID</h2>
-        {{ .OfferIDUnpacked }}
-      </div>
-    </div>
+<body class="d-flex h-100 text-center text-white bg-dark">
 
-    <div class="position-relative overflow-hidden p-3 p-md-5 m-md-3 text-center bg-light">
-      <div class="col-md-5 p-lg-5 mx-auto">
-        <h2 class="display-5">JSON Tree</h2>
-        {{ .TreeAsJSON }}
+  <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
+    <header class="mb-auto">
+      <div>
+        <h3 class="float-md-start mb-0">LocalHost</h3>
+        <nav class="nav nav-masthead justify-content-center float-md-end">
+          <a class="nav-link active" aria-current="page"
+            href="//swan-demo.uk">Home</a>
+          <a class="nav-link" href="//swan-demo.uk">Features</a>
+          <a class="nav-link" href="//swan-demo.uk">Contact</a>
+        </nav>
       </div>
-    </div>
+    </header>
 
-    <footer class="container py-5">
-      <div class="row">
-        <div class="col-12 col-md">
-          <small class="d-block mb-3 text-muted">© 2020-2021</small>
+    <main class="px-3">
+      <p class="lead">SWAN knows the suppliers that bring people to advertisers. This increases accountability, transparency and enables audit.</p>
+
+      <div id="accordion">
+        <div class="card bg-dark">
+          <div class="card-header" id="headingOne">
+            <h5 class="mb-0">
+              <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                Winners
+              </button>
+            </h5>
+          </div>
+          <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+            <div class="card-body">
+              {{ .AuditWinnerHTML }}
+            </div>
+          </div>
         </div>
-        <div class="col-6 col-md">
-          <h5>Features</h5>
-          <ul class="list-unstyled text-small">
-            <li><a class="text-muted" href="//swan-demo.uk">Cool stuff</a></li>
-            <li><a class="text-muted" href="//swan-demo.uk">Random feature</a></li>
-            <li><a class="text-muted" href="//swan-demo.uk">Team feature</a></li>
-            <li><a class="text-muted" href="//swan-demo.uk">Stuff for developers</a></li>
-            <li><a class="text-muted" href="//swan-demo.uk">Another one</a></li>
-            <li><a class="text-muted" href="//swan-demo.uk">Last time</a></li>
-          </ul>
+        <div class="card bg-dark">
+          <div class="card-header" id="headingTwo">
+            <h5 class="mb-0">
+              <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                SWAN Offer ID
+              </button>
+            </h5>
+          </div>
+          <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+            <div class="card-body">
+              <p>The SWAN Offer ID is used to verify the entire supply chain.</p>
+              <p><samp>{{ .OfferID }}</samp></p>
+              <p>The Offer ID contains all this information.
+              <p>
+                {{ .OfferIDUnpacked }}
+              </p>
+          </div>
+          </div>
+        </div>        
+        <div class="card bg-dark">
+          <div class="card-header" id="headingTwo">
+            <h5 class="mb-0">
+              <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                Full
+              </button>
+            </h5>
+          </div>
+          <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
+            <div class="card-body">
+              {{ .AuditFullHTML }}
+            </div>
+          </div>
         </div>
-        <div class="col-6 col-md">
-          <h5>Resources</h5>
-          <ul class="list-unstyled text-small">
-            <li><a class="text-muted" href="//swan-demo.uk">Resource</a></li>
-            <li><a class="text-muted" href="//swan-demo.uk">Resource name</a></li>
-            <li><a class="text-muted" href="//swan-demo.uk">Another resource</a></li>
-            <li><a class="text-muted" href="//swan-demo.uk">Final resource</a></li>
-          </ul>
-        </div>
-        <div class="col-6 col-md">
-          <h5>Resources</h5>
-          <ul class="list-unstyled text-small">
-            <li><a class="text-muted" href="//swan-demo.uk">Business</a></li>
-            <li><a class="text-muted" href="//swan-demo.uk">Education</a></li>
-            <li><a class="text-muted" href="//swan-demo.uk">Government</a></li>
-            <li><a class="text-muted" href="//swan-demo.uk">Gaming</a></li>
-          </ul>
-        </div>
-        <div class="col-6 col-md">
-          <h5>About</h5>
-          <ul class="list-unstyled text-small">
-            <li><a class="text-muted" href="//swan-demo.uk">Team</a></li>
-            <li><a class="text-muted" href="//swan-demo.uk">Locations</a></li>
-            <li><a class="text-muted" href="//swan-demo.uk">Privacy</a></li>
-            <li><a class="text-muted" href="//swan-demo.uk">Terms</a></li>
-          </ul>
-        </div>
+        <div class="card bg-dark">
+          <div class="card-header" id="headingFour">
+            <h5 class="mb-0">
+              <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseFour" aria-expanded="false" aria-controls="collapseThree">
+                JSON
+              </button>
+            </h5>
+          </div>
+          <div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#accordion">
+            <div class="card-body">
+              {{ .TreeAsJSON }}
+            </div>
+          </div>
+        </div>        
       </div>
+
+    </main>
+
+    <footer class="mt-auto text-white-50">
+      <p><a href="//swan-demo.uk" class="text-white">Return to SWAN demo</a></p>
     </footer>
+  </div>
 
-
-    <!-- Bootstrap core JavaScript
+  <!-- Bootstrap core JavaScript
     ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="/jquery-3.2.1.slim.min.js"></script>
-    <script src="/popper.min.js"></script>
-    <script src="/bootstrap.min.js"></script>
-    <script src="/holder.min.js"></script>
-    <script>
-      Holder.addTheme('thumb', {
-        bg: '#55595c',
-        fg: '#eceeef',
-        text: 'Thumbnail'
-      });
-    </script>
-  
-</body></html>
+  <!-- Placed at the end of the document so the pages load faster -->
+  <script src="jquery-3.2.1.slim.min.js"></script>
+  <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery-slim.min.js"><\/script>')</script>
+  <script src="popper.min.js"></script>
+  <script src="bootstrap.min.js"></script>
+  <!-- Just to make our placeholder images work. Don't actually copy the next line! -->
+  <script src="holder.min.js"></script>
+
+</body>
+
+</html>

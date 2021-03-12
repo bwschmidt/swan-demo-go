@@ -44,7 +44,7 @@ func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 		// Unpack the body of the request to form the bid data structure.
 		o, err := getOffer(d, r)
 		if err != nil {
-			common.ReturnAPIError(d.Config, w, err, http.StatusBadRequest)
+			common.ReturnStatusCodeError(d.Config, w, err, http.StatusBadRequest)
 			return
 		}
 
@@ -53,7 +53,7 @@ func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 		if d.Bad {
 			err = changePubDomain(o, "high-value-pub.com")
 			if err != nil {
-				common.ReturnAPIError(
+				common.ReturnStatusCodeError(
 					d.Config,
 					w,
 					err,
@@ -65,7 +65,7 @@ func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 		// Handle the bid and return if the URL was found.
 		t, err := HandleTransaction(d, o)
 		if err != nil {
-			common.ReturnAPIError(d.Config, w, err, http.StatusInternalServerError)
+			common.ReturnServerError(d.Config, w, err)
 			return
 		}
 
@@ -73,7 +73,7 @@ func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 		// Processor OWID and the children.
 		b, err := t.AsJSON()
 		if err != nil {
-			common.ReturnAPIError(d.Config, w, err, http.StatusInternalServerError)
+			common.ReturnServerError(d.Config, w, err)
 			return
 		}
 
@@ -84,7 +84,7 @@ func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-cache")
 		_, err = g.Write(b)
 		if err != nil {
-			common.ReturnAPIError(d.Config, w, err, http.StatusInternalServerError)
+			common.ReturnServerError(d.Config, w, err)
 			return
 		}
 	} else {

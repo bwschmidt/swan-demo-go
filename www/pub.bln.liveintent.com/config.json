@@ -7,6 +7,7 @@
    "swanProgressColor": "#6c757d",   
    "cmp": "swanson.bln.liveintent.com",
    "SWANAccessNode": "swanap.swan-demo.uk",
+   "SWANAccessKey": "PubKeyLiveintent",
    "suppliers": [
       "magnite.swan-demo.uk",
       "pubmatic.swan-demo.uk"

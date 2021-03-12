@@ -25,8 +25,7 @@ import (
 
 // Configuration maps to the appsettings.json settings file.
 type Configuration struct {
-	AccessKey  string     `json:"accessKey"`  // Key to authenticate with the nodes
-	AccessKeys []string   `json:"accessKeys"` // Array of keys to authenticate nodes with
+	AccessKeys []string   `json:"accessKeys"` // Array of valid keys for SWAN access
 	Scheme     string     `json:"scheme"`     // The scheme to use for requests
 	Debug      bool       `json:"debug"`      // True if debug HTML output should be provided
 	Domains    []*Domain  // All the domains that form the demo

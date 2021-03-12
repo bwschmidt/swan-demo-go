@@ -3,6 +3,7 @@
    "name": "Pop Up Site",
    "cmp": "quantcast.swan-demo.uk",
    "SWANAccessNode": "swanap.swan-demo.uk",
+   "SWANAccessKey": "PubKeyPopUp",
    "suppliers": [
       "badssp.swan-demo.uk"
    ]

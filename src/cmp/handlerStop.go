@@ -35,7 +35,7 @@ func handlerStop(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Form.Get("host") == "" {
-		common.ReturnAPIError(
+		common.ReturnStatusCodeError(
 			d.Config,
 			w,
 			fmt.Errorf("Host to be stopped must be provided"),
@@ -43,7 +43,7 @@ func handlerStop(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u, err := d.CreateSWANURL(
+	u, e := d.CreateSWANURL(
 		r,
 		r.Form.Get("returnUrl"),
 		"stop",
@@ -60,8 +60,8 @@ func handlerStop(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 					r.Form.Get("host")))
 			}
 		})
-	if err != nil {
-		common.ReturnServerError(d.Config, w, err)
+	if e != nil {
+		common.ReturnProxyError(d.Config, w, e)
 		return
 	}
 

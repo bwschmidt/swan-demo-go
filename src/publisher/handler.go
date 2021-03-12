@@ -21,7 +21,6 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"fod"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -31,8 +30,6 @@ import (
 
 // Handler for publisher web pages.
 func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
-	var err error
-	var p []*swan.Pair // Key value pairs of SWAN data
 
 	// If this is the privacy path then redirect to the CMP.
 	if strings.EqualFold(r.URL.Path, "/privacy") {
@@ -41,9 +38,9 @@ func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Try the URL path for the preference values.
-	p, err = newSWANDataFromPath(d, r)
-	if err != nil {
-		common.ReturnServerError(d.Config, w, err)
+	p, ae := newSWANDataFromPath(d, r)
+	if ae != nil {
+		common.ReturnServerError(d.Config, w, ae)
 		return
 	}
 	if p != nil {
@@ -51,8 +48,7 @@ func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// If the path does not contain any values then get them from the
-	// cookies.
+	// If the path does not contain any values then get them from the cookies.
 	if p == nil {
 		p = newSWANDataFromCookies(r)
 	}
@@ -125,7 +121,7 @@ func newSWANDataFromCookies(r *http.Request) []*swan.Pair {
 
 func newSWANDataFromPath(
 	d *common.Domain,
-	r *http.Request) ([]*swan.Pair, error) {
+	r *http.Request) ([]*swan.Pair, *common.SWANError) {
 	var p []*swan.Pair
 
 	// Get the section of the URL that has the SWAN data.
@@ -135,9 +131,9 @@ func newSWANDataFromPath(
 	}
 
 	// Decrypt the SWAN data string.
-	in, err := decode(d, b)
-	if err != nil {
-		return nil, err
+	in, e := decode(d, b)
+	if e != nil {
+		return nil, e
 	}
 
 	// If debug is enabled then output the JSON.
@@ -146,9 +142,9 @@ func newSWANDataFromPath(
 	}
 
 	// Get the results.
-	err = json.Unmarshal(in, &p)
+	err := json.Unmarshal(in, &p)
 	if err != nil {
-		return nil, err
+		return nil, &common.SWANError{err, nil}
 	}
 
 	return p, nil
@@ -186,7 +182,7 @@ func redirectToCMPDialog(
 			q.Set("dialogUrl", u.String())
 		})
 	if err != nil {
-		common.ReturnServerError(d.Config, w, err)
+		common.ReturnProxyError(d.Config, w, err)
 		return
 	}
 	http.Redirect(w, r, u, 303)
@@ -210,7 +206,7 @@ func redirectToSWANFetch(
 	r *http.Request) {
 	u, err := d.CreateSWANURL(r, "", "fetch", nil)
 	if err != nil {
-		common.ReturnServerError(d.Config, w, err)
+		common.ReturnProxyError(d.Config, w, err)
 		return
 	}
 	http.Redirect(w, r, u, 303)
@@ -262,25 +258,9 @@ func isSet(d []*swan.Pair) bool {
 	return c == 3
 }
 
-func decode(d *common.Domain, v string) ([]byte, error) {
-
-	// Combine it with the access node to decrypt the result.
-	var u url.URL
-	u.Scheme = d.Config.Scheme
-	u.Host = d.SWANAccessNode
-	u.Path = "/swan/api/v1/values-as-json"
-	q := u.Query()
-	q.Set("data", v)
-	q.Set("accessKey", d.Config.AccessKey)
-	u.RawQuery = q.Encode()
-
-	// Call the URL and unpack the results if they're available.
-	res, err := http.Get(u.String())
-	if err != nil {
-		return nil, err
-	}
-	if res.StatusCode != http.StatusOK {
-		return nil, common.NewResponseError(d.Config, res)
-	}
-	return ioutil.ReadAll(res.Body)
+func decode(d *common.Domain, v string) ([]byte, *common.SWANError) {
+	return d.CallSWANURL("values-as-json", func(q *url.Values) error {
+		q.Set("data", v)
+		return nil
+	})
 }

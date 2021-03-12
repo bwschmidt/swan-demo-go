@@ -51,12 +51,12 @@ func handleStaticFolder(
 	folder string) (bool, error) {
 	files, err := ioutil.ReadDir(folder)
 	if err != nil {
-		return false, err
+		return false, &SWANError{err, nil}
 	}
 	for _, f := range files {
 		if f.IsDir() == false &&
 			f.Name() == filepath.Base(r.URL.Path) {
-			return handlerFile(w, r, filepath.Join(folder, f.Name()))
+			return handlerFile(w, r, filepath.Join(folder, f.Name())), nil
 		}
 	}
 	return false, nil
@@ -65,32 +65,32 @@ func handleStaticFolder(
 func handlerFile(
 	w http.ResponseWriter,
 	r *http.Request,
-	f string) (bool, error) {
+	f string) bool {
 	switch filepath.Ext(f) {
 	case ".ico":
 		http.ServeFile(w, r, f)
-		return true, nil
+		return true
 	case ".jpeg":
 		http.ServeFile(w, r, f)
-		return true, nil
+		return true
 	case ".jpg":
 		http.ServeFile(w, r, f)
-		return true, nil
+		return true
 	case ".png":
 		http.ServeFile(w, r, f)
-		return true, nil
+		return true
 	case ".css":
 		http.ServeFile(w, r, f)
-		return true, nil
+		return true
 	case ".js":
 		http.ServeFile(w, r, f)
-		return true, nil
+		return true
 	case ".svg":
 		http.ServeFile(w, r, f)
-		return true, nil
+		return true
 	case ".map":
 		http.ServeFile(w, r, f)
-		return true, nil
+		return true
 	}
-	return false, nil
+	return false
 }

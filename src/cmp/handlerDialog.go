@@ -20,7 +20,6 @@ import (
 	"common"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"swift"
@@ -29,8 +28,8 @@ import (
 )
 
 type dialogModel struct {
-	url.Values         // Key value pairs
-	redirectURL string // The URL to redirect the request to
+	url.Values      // Key value pairs
+	update     bool // True if the update should be performed
 }
 
 func (m *dialogModel) Title() string           { return m.Get("title") }
@@ -63,6 +62,13 @@ func handlerDialog(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// If this is a close request then don't update the values and just return
+	// to the return URL.
+	if r.Form.Get("close") != "" {
+		http.Redirect(w, r, m.Get("returnUrl"), 303)
+		return
+	}
+
 	// If the method is POST then update the model with the data from the form.
 	if r.Method == "POST" {
 		err = dialogUpdateModel(d, r, &m)
@@ -74,9 +80,22 @@ func handlerDialog(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 
 	// If the redirect URL has been set then redirect, otherwise display the
 	// HTML template.
-	if m.redirectURL != "" {
-		http.Redirect(w, r, m.redirectURL, 303)
+	if m.update == true {
+
+		// The user has request that the data be updated in the SWAN network.
+		// Set the redirection URL for the operation to store the data. The web
+		// browser will then be redirected to that URL, the data saved and the
+		// return URL for the publisher returned to.
+		u, err := getRedirectUpdateURL(d, r, m.Values)
+		if err != nil {
+			common.ReturnProxyError(d.Config, w, err)
+		}
+		http.Redirect(w, r, u, 303)
+
 	} else {
+
+		// The dialog needs to be displayed. Use the cmp.html template for the
+		// user interface.
 		err := d.LookupHTML("cmp.html").Execute(w, &m)
 		if err != nil {
 			common.ReturnServerError(d.Config, w, err)
@@ -133,13 +152,6 @@ func dialogUpdateModel(
 	m *dialogModel) error {
 	var err error
 
-	// If this is a close request then don't update the values and just return
-	// to the return URL.
-	if r.Form.Get("close") != "" {
-		m.redirectURL = m.Get("returnUrl")
-		return nil
-	}
-
 	// Copy the field values from the form.
 	m.Values.Set("cbid", r.Form.Get("cbid"))
 	m.Values.Set("email", r.Form.Get("email"))
@@ -163,70 +175,48 @@ func dialogUpdateModel(
 		return nil
 	}
 
-	// The user has request that the data be updated in the SWAN network.
-	// Set the redirection URL for the operation to store the data. The web
-	// browser will then be redirected to that URL, the data saved and the
-	// return URL for the publisher returned to.
-	m.redirectURL, err = getRedirectUpdateURL(d, &m.Values)
+	// The data should be updated in the SWAN network.
+	m.update = true
 
 	return err
 }
 
-func getRedirectUpdateURL(d *common.Domain, m *url.Values) (string, error) {
-
-	// Build the URL to request the redirect URL for the storage operation.
-	var u url.URL
-	u.Scheme = d.Config.Scheme
-	u.Host = d.SWANAccessNode
-	u.Path = "/swan/api/v1/update"
-	u.RawQuery = m.Encode()
-	q := u.Query()
-
-	// Add the access key for the SWAN network.
-	q.Set("accessKey", d.Config.AccessKey)
-
-	// Add the query parameters back with the access key.
-	u.RawQuery = q.Encode()
-
-	// Call SWAN to get the URL to redirect the web browser to.
-	r, err := http.Get(u.String())
+func getRedirectUpdateURL(
+	d *common.Domain,
+	r *http.Request,
+	m url.Values) (string, *common.SWANError) {
+	b, err := d.CallSWANURL("update", func(q *url.Values) error {
+		for k, v := range m {
+			if k == "allow" && v[0] == "" {
+				q.Add(k, "off")
+			} else {
+				for _, i := range v {
+					q.Add(k, i)
+				}
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return "", err
-	}
-	b, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return "", err
-	}
-	if r.StatusCode != http.StatusOK {
-		return "", fmt.Errorf(string(b))
 	}
 	return string(b), nil
 }
 
-func decryptAndDecode(d *common.Domain, v string) (*swift.Results, error) {
+func decryptAndDecode(d *common.Domain, v string) (
+	*swift.Results,
+	*common.SWANError) {
 	var r swift.Results
-	var u url.URL
-	u.Scheme = d.Config.Scheme
-	u.Host = d.SWANAccessNode
-	u.Path = "/swan/api/v1/operation-as-json"
-	q := u.Query()
-	q.Set("accessKey", d.Config.AccessKey)
-	q.Set("data", v)
-	u.RawQuery = q.Encode()
-	res, err := http.Get(u.String())
-	if err != nil {
-		return nil, err
+	b, e := d.CallSWANURL("operation-as-json", func(q *url.Values) error {
+		q.Set("data", v)
+		return nil
+	})
+	if e != nil {
+		return nil, e
 	}
-	b, err := ioutil.ReadAll(res.Body)
+	err := json.Unmarshal(b, &r)
 	if err != nil {
-		return nil, err
-	}
-	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf(string(b))
-	}
-	err = json.Unmarshal(b, &r)
-	if err != nil {
-		return nil, err
+		return nil, &common.SWANError{err, nil}
 	}
 	return &r, nil
 }

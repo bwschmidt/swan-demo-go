@@ -44,6 +44,7 @@ type Domain struct {
 	SwanProgressColor   string // Message progress color if used with SWAN
 	// The domain of the access node used with SWAN (only set for CMPs)
 	SWANAccessNode string
+	SWANAccessKey  string // The access key to use when communicating with SWAN.
 	// The domain of the CMP that will in turn access the SWAN Network via an Operator
 	CMP       string
 	Suppliers []string           // Suppliers used by the domain operator
@@ -150,7 +151,7 @@ func (d *Domain) LookupHTML(p string) *template.Template {
 func (d *Domain) setCommon(r *http.Request, q *url.Values) {
 
 	// Set the access key
-	q.Set("accessKey", d.Config.AccessKey)
+	q.Set("accessKey", d.SWANAccessKey)
 
 	// Set the user interface title, message and colours.
 	q.Set("title", "Your Preference Management")
@@ -159,70 +160,87 @@ func (d *Domain) setCommon(r *http.Request, q *url.Values) {
 	swift.SetHomeNodeHeaders(r, q)
 }
 
+// CallSWANURL constructs a URL, gets the response, and then returns the
+// response as a byte array. If an error occurs then an API error is returned.
+func (d *Domain) CallSWANURL(
+	action string,
+	addParams func(*url.Values) error) ([]byte, *SWANError) {
+	if d.SWANAccessNode == "" {
+		return nil, &SWANError{fmt.Errorf(
+			"Verify '%s' config.json for missing SWANAccessNode",
+			d.Host), nil}
+	}
+	if d.SWANAccessKey == "" {
+		return nil, &SWANError{fmt.Errorf(
+			"Verify '%s' config.json for missing SWANAccessKey",
+			d.Host), nil}
+	}
+	var u url.URL
+	u.Scheme = d.Config.Scheme
+	u.Host = d.SWANAccessNode
+	u.Path = "/swan/api/v1/" + action
+	q := u.Query()
+	q.Set("accessKey", d.SWANAccessKey)
+	err := addParams(&q)
+	if err != nil {
+		return nil, &SWANError{err, nil}
+	}
+	u.RawQuery = q.Encode()
+	res, err := http.Get(u.String())
+	if err != nil {
+		return nil, &SWANError{err, nil}
+	}
+	if res.StatusCode != http.StatusOK {
+		return nil, NewSWANError(d.Config, res)
+	}
+	b, e := ioutil.ReadAll(res.Body)
+	if e != nil {
+		return nil, &SWANError{e, nil}
+	}
+	return b, nil
+}
+
 // CreateSWANURL returns a URL from SWAN to pass to the web browser navigation.
 func (d *Domain) CreateSWANURL(
 	r *http.Request,
 	returnURL string,
 	action string,
-	addParams func(*url.Values)) (string, error) {
+	addParams func(*url.Values)) (string, *SWANError) {
+	b, err := d.CallSWANURL(action, func(q *url.Values) error {
+		d.setCommon(r, q)
+		// If an explicit return URL was provided then use that. Otherwise use the
+		// page for the current request.
+		if returnURL != "" {
+			q.Set("returnUrl", returnURL)
+		} else {
+			q.Set("returnUrl", getCurrentPage(d.Config, r))
+		}
 
-	// Build the SWAN URL.
-	var u url.URL
-	u.Scheme = d.Config.Scheme
-	u.Host = d.SWANAccessNode
-	u.Path = "/swan/api/v1/" + action
+		// Add user interface parameters for the SWAN operation and the user
+		// interface.
+		if d.SwanMessage != "" {
+			q.Set("message", d.SwanMessage)
+		}
+		if d.SwanBackgroundColor != "" {
+			q.Set("backgroundColor", d.SwanBackgroundColor)
+		}
+		if d.SwanProgressColor != "" {
+			q.Set("progressColor", d.SwanProgressColor)
+		}
+		if d.SwanMessageColor != "" {
+			q.Set("messageColor", d.SwanMessageColor)
+		}
 
-	// Add the query string parameters for the SWAN operation starting with the
-	// common ones that are the same for every request from this demo.
-	q := u.Query()
-	d.setCommon(r, &q)
-
-	// If an explicit return URL was provided then use that. Otherwise use the
-	// page for the current request.
-	if returnURL != "" {
-		q.Set("returnUrl", returnURL)
-	} else {
-		q.Set("returnUrl", getCurrentPage(d.Config, r))
-	}
-
-	// Add user interface parameters for the SWAN operation and the user
-	// interface.
-	if d.SwanMessage != "" {
-		q.Set("message", d.SwanMessage)
-	}
-	if d.SwanBackgroundColor != "" {
-		q.Set("backgroundColor", d.SwanBackgroundColor)
-	}
-	if d.SwanProgressColor != "" {
-		q.Set("progressColor", d.SwanProgressColor)
-	}
-	if d.SwanMessageColor != "" {
-		q.Set("messageColor", d.SwanMessageColor)
-	}
-
-	// Add any additional parameters needed by the action if a function was
-	// provided.
-	if addParams != nil {
-		addParams(&q)
-	}
-
-	u.RawQuery = q.Encode()
-
-	// Get the link to SWAN to use for the operation.
-	res, err := http.Get(u.String())
+		// Add any additional parameters needed by the action if a function was
+		// provided.
+		if addParams != nil {
+			addParams(q)
+		}
+		return nil
+	})
 	if err != nil {
 		return "", err
 	}
-	if res.StatusCode != http.StatusOK {
-		return "", NewResponseError(d.Config, res)
-	}
-
-	// Read the response as a string.
-	b, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return "", err
-	}
-
 	return string(b), nil
 }
 

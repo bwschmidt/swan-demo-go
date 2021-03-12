@@ -39,6 +39,6 @@ func HandlerHTML(d *Domain, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache")
 	err := t.Execute(g, nil)
 	if err != nil {
-		ReturnServerError(d.Config, w, err)
+		ReturnServerError(d.Config, w, &SWANError{err, nil})
 	}
 }

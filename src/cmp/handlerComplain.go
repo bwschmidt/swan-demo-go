@@ -147,13 +147,13 @@ func handlerComplain(
 	// Get the form values from the input request.
 	err := r.ParseForm()
 	if err != nil {
-		common.ReturnAPIError(d.Config, w, err, http.StatusInternalServerError)
+		common.ReturnServerError(d.Config, w, err)
 		return
 	}
 
 	// Check that the offer ID and the SWAN ID are present.
 	if r.Form.Get("offerid") == "" {
-		common.ReturnAPIError(
+		common.ReturnStatusCodeError(
 			d.Config,
 			w,
 			fmt.Errorf("'offerid' missing"),
@@ -161,7 +161,7 @@ func handlerComplain(
 		return
 	}
 	if r.Form.Get("swanowid") == "" {
-		common.ReturnAPIError(
+		common.ReturnStatusCodeError(
 			d.Config,
 			w,
 			fmt.Errorf("'swanowid' missing"),
@@ -172,7 +172,7 @@ func handlerComplain(
 	// Get the SWAN OWIDs from the parameters.
 	offerID, err := owid.FromBase64(r.Form.Get("offerid"))
 	if err != nil {
-		common.ReturnAPIError(
+		common.ReturnStatusCodeError(
 			d.Config,
 			w,
 			fmt.Errorf("'offerid' not a valid OWID"),
@@ -181,7 +181,7 @@ func handlerComplain(
 	}
 	swanOWID, err := owid.FromBase64(r.Form.Get("swanowid"))
 	if err != nil {
-		common.ReturnAPIError(
+		common.ReturnStatusCodeError(
 			d.Config,
 			w,
 			fmt.Errorf("'swanowid' not a valid OWID"),
@@ -192,7 +192,7 @@ func handlerComplain(
 	// Create the complaint object.
 	c, err := newComplaint(d.Config, offerID, swanOWID)
 	if err != nil {
-		common.ReturnAPIError(d.Config, w, err, http.StatusInternalServerError)
+		common.ReturnServerError(d.Config, w, err)
 		return
 	}
 
@@ -200,13 +200,13 @@ func handlerComplain(
 	var subject bytes.Buffer
 	err = complaintSubjectTemplate.Execute(&subject, c)
 	if err != nil {
-		common.ReturnAPIError(d.Config, w, err, http.StatusInternalServerError)
+		common.ReturnServerError(d.Config, w, err)
 		return
 	}
 	var body bytes.Buffer
 	err = complaintBodyTemplate.Execute(&body, c)
 	if err != nil {
-		common.ReturnAPIError(d.Config, w, err, http.StatusInternalServerError)
+		common.ReturnServerError(d.Config, w, err)
 		return
 	}
 
@@ -224,7 +224,7 @@ func handlerComplain(
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(b)))
 	_, err = w.Write(b)
 	if err != nil {
-		common.ReturnAPIError(d.Config, w, err, http.StatusInternalServerError)
+		common.ReturnServerError(d.Config, w, err)
 		return
 	}
 }

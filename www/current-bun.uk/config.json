@@ -7,6 +7,7 @@
    "swanProgressColor": "#5a5a5a",
    "cmp": "liveramp.swan-demo.uk",
    "SWANAccessNode": "swanap.swan-demo.uk",
+   "SWANAccessKey": "PubKeyCurrentBun",
    "suppliers": [
       "magnite.swan-demo.uk",
       "pubmatic.swan-demo.uk"

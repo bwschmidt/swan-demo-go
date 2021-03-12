@@ -24,6 +24,17 @@ import (
 	"strings"
 )
 
+// SWANError is used to pass back errors from methods that call APIs. If the
+// Response member is set then the called method can use this information in
+// its response. If it is not set then an internal server error can be assumed.
+type SWANError struct {
+	Err      error          // The underlying error message.
+	Response *http.Response // The HTTP response that caused the error.
+}
+
+// Error returns the error message as a string from an HTTPError reference.
+func (e *SWANError) Error() string { return e.Err.Error() }
+
 // Handler for all HTTP requests to domains controlled by the demo.
 func Handler(d []*Domain) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -64,48 +75,52 @@ func Handler(d []*Domain) http.HandlerFunc {
 	}
 }
 
-// NewResponseError used to produce an error response to a request.
-func NewResponseError(c *Configuration, r *http.Response) error {
+// NewSWANError creates an error instance that includes the details of the
+// response returned. This is needed to pass the correct status codes and
+// context back to the caller.
+func NewSWANError(c *Configuration, r *http.Response) *SWANError {
+	var u string
 	in, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		return err
+		return &SWANError{err, nil}
 	}
-	var u string
 	if c.Debug {
 		u = r.Request.URL.String()
 	} else {
 		u = r.Request.Host
 	}
-	return fmt.Errorf("API call '%s' returned '%d' and '%s'",
-		u,
-		r.StatusCode,
-		strings.TrimSpace(string(in)))
+	return &SWANError{
+		fmt.Errorf("SWAN '%s' status '%d' message '%s'",
+			u,
+			r.StatusCode,
+			strings.TrimSpace(string(in))),
+		r}
 }
 
-// ReturnServerError returns an error for a UI page request.
-func ReturnServerError(c *Configuration, w http.ResponseWriter, err error) {
-	if c.Debug {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	} else {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+// ReturnProxyError returns an error where the request is related to a proxy
+// request being passed to another end point.
+func ReturnProxyError(c *Configuration, w http.ResponseWriter, e *SWANError) {
+	s := http.StatusInternalServerError
+	if e.Response != nil {
+		s = e.Response.StatusCode
 	}
-	if c.Debug {
-		println(err.Error())
-	}
+	ReturnStatusCodeError(c, w, e.Err, s)
 }
 
-// ReturnAPIError an API error
-func ReturnAPIError(
+// ReturnServerError returns an internal server error.
+func ReturnServerError(c *Configuration, w http.ResponseWriter, e error) {
+	ReturnStatusCodeError(c, w, e, http.StatusInternalServerError)
+}
+
+// ReturnStatusCodeError returns the HTTP status code specified.
+func ReturnStatusCodeError(
 	c *Configuration,
 	w http.ResponseWriter,
-	err error,
+	e error,
 	code int) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	http.Error(w, err.Error(), code)
+	http.Error(w, e.Error(), code)
 	if c.Debug {
-		println(err.Error())
+		println(e.Error())
 	}
 }
 

@@ -22,9 +22,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"math/rand"
-	"net/http"
 	"net/url"
 	"openrtb"
 	"owid"
@@ -92,13 +90,13 @@ func (m Model) NewAdvertHTML(placement string) (template.HTML, error) {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	// Use the SWAN network to generate the Offer ID.
-	r, err := m.newOfferID(placement)
-	if err != nil {
-		return "", err
+	r, ae := m.newOfferID(placement)
+	if ae != nil {
+		return "", ae.Err
 	}
 
 	// Add the publishers signature and then process the supply chain.
-	_, err = openrtb.HandleTransaction(m.Domain, r)
+	_, err := openrtb.HandleTransaction(m.Domain, r)
 	if err != nil {
 		return template.HTML("<p>" + err.Error() + "</p>"), nil
 	}
@@ -178,55 +176,37 @@ func (m Model) findResult(k string) *swan.Pair {
 }
 
 // newOfferID returns a new Offer OWID Node from the SWAN network.
-func (m *Model) newOfferID(placement string) (*owid.Node, error) {
-
-	var u url.URL
-	u.Scheme = m.Config().Scheme
-	u.Host = m.Domain.CMP
-	u.Path = "/swan/api/v1/create-offer-id"
-
-	q := u.Query()
-	q.Add("accessKey", m.Config().AccessKey)
-	q.Add("placement", placement)
-	q.Add("pubdomain", m.Request.Host)
-	cbid, err := m.cbid().AsBase64()
-	if err != nil {
-		return nil, err
-	}
-	q.Add("cbid", cbid)
-	sid, err := m.sid().AsBase64()
-	if err != nil {
-		return nil, err
-	}
-	q.Add("sid", sid)
-	allow, err := m.allow().AsBase64()
-	if err != nil {
-		return nil, err
-	}
-	q.Add("preferences", allow)
-	stopped, err := m.stopped().AsBase64()
-	if err != nil {
-		return nil, err
-	}
-	q.Add("stopped", stopped)
-	u.RawQuery = q.Encode()
-
-	resp, err := http.Get(u.String())
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Status code '%d' returned", resp.StatusCode)
-	}
-
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
+func (m *Model) newOfferID(placement string) (*owid.Node, *common.SWANError) {
 	var n owid.Node
-	n.OWID = body
+	var err *common.SWANError
+	n.OWID, err = m.Domain.CallSWANURL("create-offer-id",
+		func(q *url.Values) error {
+			q.Add("placement", placement)
+			q.Add("pubdomain", m.Request.Host)
+			cbid, err := m.cbid().AsBase64()
+			if err != nil {
+				return err
+			}
+			q.Add("cbid", cbid)
+			sid, err := m.sid().AsBase64()
+			if err != nil {
+				return err
+			}
+			q.Add("sid", sid)
+			allow, err := m.allow().AsBase64()
+			if err != nil {
+				return err
+			}
+			q.Add("preferences", allow)
+			stopped, err := m.stopped().AsBase64()
+			if err != nil {
+				return err
+			}
+			q.Add("stopped", stopped)
+			return nil
+		})
+	if err != nil {
+		return nil, err
+	}
 	return &n, nil
 }
