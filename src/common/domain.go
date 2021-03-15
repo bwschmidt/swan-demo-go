@@ -164,7 +164,7 @@ func (d *Domain) setCommon(r *http.Request, q *url.Values) {
 // response as a byte array. If an error occurs then an API error is returned.
 func (d *Domain) CallSWANURL(
 	action string,
-	addParams func(*url.Values) error) ([]byte, *SWANError) {
+	addParams func(url.Values) error) ([]byte, *SWANError) {
 	if d.SWANAccessNode == "" {
 		return nil, &SWANError{fmt.Errorf(
 			"Verify '%s' config.json for missing SWANAccessNode",
@@ -181,7 +181,7 @@ func (d *Domain) CallSWANURL(
 	u.Path = "/swan/api/v1/" + action
 	q := u.Query()
 	q.Set("accessKey", d.SWANAccessKey)
-	err := addParams(&q)
+	err := addParams(q)
 	if err != nil {
 		return nil, &SWANError{err, nil}
 	}
@@ -205,16 +205,12 @@ func (d *Domain) CreateSWANURL(
 	r *http.Request,
 	returnURL string,
 	action string,
-	addParams func(*url.Values)) (string, *SWANError) {
-	b, err := d.CallSWANURL(action, func(q *url.Values) error {
-		d.setCommon(r, q)
-		// If an explicit return URL was provided then use that. Otherwise use the
-		// page for the current request.
-		if returnURL != "" {
-			q.Set("returnUrl", returnURL)
-		} else {
-			q.Set("returnUrl", getCurrentPage(d.Config, r))
-		}
+	addParams func(url.Values)) (string, *SWANError) {
+	b, err := d.CallSWANURL(action, func(q url.Values) error {
+		d.setCommon(r, &q)
+
+		// Set the return URL after the operation completes.
+		q.Set("returnUrl", returnURL)
 
 		// Add user interface parameters for the SWAN operation and the user
 		// interface.

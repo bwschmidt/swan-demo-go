@@ -47,7 +47,7 @@ func handlerStop(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 		r,
 		r.Form.Get("returnUrl"),
 		"stop",
-		func(q *url.Values) {
+		func(q url.Values) {
 			q.Set("host", r.Form.Get("host"))
 
 			// Demonstrate the CMP can control the nodes used.

@@ -37,6 +37,11 @@ type Model struct {
 	results []*swan.Pair // The SWAN data for display
 }
 
+// CMPURL returns the URL for the CMP dialog.
+func (m Model) CMPURL() string {
+	return getCMPURL(m.Domain, m.Request)
+}
+
 // Allow returns a boolean to indicate if personalized marketing is enabled.
 func (m Model) Allow() bool { return m.AllowAsString() == "on" }
 
@@ -130,6 +135,7 @@ func (m Model) NewAdvertHTML(placement string) (template.HTML, error) {
 		q.Add("owid", n.GetOWIDAsString())
 		n = n.GetParent()
 	}
+	q.Set("returnUrl", common.GetCurrentPage(m.Config(), m.Request).String())
 	i.RawQuery = q.Encode()
 
 	// Return a FORM HTML element with a button for the advert. The OWID tree
@@ -180,7 +186,7 @@ func (m *Model) newOfferID(placement string) (*owid.Node, *common.SWANError) {
 	var n owid.Node
 	var err *common.SWANError
 	n.OWID, err = m.Domain.CallSWANURL("create-offer-id",
-		func(q *url.Values) error {
+		func(q url.Values) error {
 			q.Add("placement", placement)
 			q.Add("pubdomain", m.Request.Host)
 			cbid, err := m.cbid().AsBase64()

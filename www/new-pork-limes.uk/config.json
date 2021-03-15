@@ -6,7 +6,7 @@
    "swanMessageColor": "#343a40",
    "swanProgressColor": "#6c757d", 
    "cmp": "cmp.swan-demo.uk",
-   "SWANAccessNode": "swanap.swan-demo.uk",
+   "SWANAccessNode": "swanap2.swan-demo.uk",
    "SWANAccessKey": "PubKeyNewPorkLimes",
    "suppliers": [
       "magnite.swan-demo.uk",

@@ -32,6 +32,14 @@ type SWANError struct {
 	Response *http.Response // The HTTP response that caused the error.
 }
 
+// StatusCode returns the status code of the response.
+func (e *SWANError) StatusCode() int {
+	if e.Response != nil {
+		return e.Response.StatusCode
+	}
+	return 0
+}
+
 // Error returns the error message as a string from an HTTPError reference.
 func (e *SWANError) Error() string { return e.Err.Error() }
 
@@ -124,20 +132,41 @@ func ReturnStatusCodeError(
 	}
 }
 
-func getCurrentPage(c *Configuration, r *http.Request) string {
+// GetCleanURL returns a URL with the SWAN data removed.
+func GetCleanURL(c *Configuration, r *http.Request) *url.URL {
+	var u url.URL
+	u.Scheme = c.Scheme
+	u.Host = r.Host
+	u.Path = strings.ReplaceAll(
+		r.URL.Path,
+		GetSWANDataFromRequest(r),
+		"")
+	u.RawQuery = ""
+	return &u
+}
+
+// GetReturnURL returns a parsed URL from the query string, or if not present
+// from the referer HTTP header.
+func GetReturnURL(r *http.Request) (*url.URL, error) {
+	u, err := url.Parse(r.Form.Get("returnUrl"))
+	if err != nil {
+		return nil, err
+	}
+	if u == nil {
+		u, err = url.Parse(r.Header.Get("Referer"))
+		if err != nil {
+			return nil, err
+		}
+	}
+	u.RawQuery = ""
+	return u, nil
+}
+
+// GetCurrentPage returns the current request URL.
+func GetCurrentPage(c *Configuration, r *http.Request) *url.URL {
 	var u url.URL
 	u.Scheme = c.Scheme
 	u.Host = r.Host
 	u.Path = r.URL.Path
-	return u.String()
-}
-
-// GetReferer returns a parsed URL from the referer header.
-func GetReferer(r *http.Request) (string, error) {
-	u, err := url.Parse(r.Header.Get("Referer"))
-	if err != nil {
-		return "", err
-	}
-	u.RawQuery = ""
-	return u.String(), nil
+	return &u
 }

@@ -19,6 +19,7 @@ package cmp
 import (
 	"bytes"
 	"common"
+	"compress/gzip"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -217,12 +218,13 @@ func handlerComplain(
 		url.PathEscape(body.String()))
 
 	// Return the URL as a text string.
-	b := []byte(u)
+	g := gzip.NewWriter(w)
+	defer g.Close()
+	w.Header().Set("Content-Encoding", "gzip")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(b)))
-	_, err = w.Write(b)
+	_, err = g.Write([]byte(u))
 	if err != nil {
 		common.ReturnServerError(d.Config, w, err)
 		return

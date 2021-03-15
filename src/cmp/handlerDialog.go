@@ -18,6 +18,7 @@ package cmp
 
 import (
 	"common"
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -47,6 +48,7 @@ func (m *dialogModel) PublisherHost() string {
 
 func handlerDialog(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 	var m dialogModel
+	m.Values = make(url.Values)
 
 	// Parse the form variables.
 	err := r.ParseForm()
@@ -55,12 +57,30 @@ func handlerDialog(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set the storage operation data form the URL in the dialog model.
-	err = dialogGetModel(d, r, &m)
-	if err != nil {
-		common.ReturnServerError(d.Config, w, err)
+	// Get the SWAN data from the request path.
+	s := common.GetSWANDataFromRequest(r)
+	if s == "" {
+		redirectToSWANDialog(d, w, r)
 		return
 	}
+
+	// Call the SWAN access node for the CMP to turn the data provided in the
+	// URL into usable data for the dialog.
+	op, e := decryptAndDecode(d, s)
+	if e != nil {
+
+		// If the data can't be decrypted rather than another type of error
+		// then redirect via SWAN to the dialog.
+		if e.StatusCode() >= 400 && e.StatusCode() < 500 {
+			redirectToSWANDialog(d, w, r)
+			return
+		}
+		common.ReturnStatusCodeError(d.Config, w, e.Err, http.StatusBadRequest)
+		return
+	}
+
+	// Set the storage operation data form the URL in the dialog model.
+	dialogGetModel(d, r, &m, op)
 
 	// If this is a close request then don't update the values and just return
 	// to the return URL.
@@ -96,7 +116,10 @@ func handlerDialog(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 
 		// The dialog needs to be displayed. Use the cmp.html template for the
 		// user interface.
-		err := d.LookupHTML("cmp.html").Execute(w, &m)
+		g := gzip.NewWriter(w)
+		defer g.Close()
+		w.Header().Set("Content-Encoding", "gzip")
+		err := d.LookupHTML("cmp.html").Execute(g, &m)
 		if err != nil {
 			common.ReturnServerError(d.Config, w, err)
 			return
@@ -104,33 +127,26 @@ func handlerDialog(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Build the form parameters from the data received from SWAN.
 func dialogGetModel(d *common.Domain,
 	r *http.Request,
-	m *dialogModel) error {
-	m.Values = make(url.Values)
+	m *dialogModel,
+	op *swift.Results) {
 
-	// Get the SWAN data from the request path.
-	s := common.GetSWANDataFromRequest(r)
-	if s == "" {
-		return fmt.Errorf(
-			"Path '%s' does not contain SWAN data",
-			r.URL.Path)
-	}
-
-	// Call the SWAN access node for the CMP to turn the data provided in the
-	// URL into usable data for the dialog.
-	op, err := decryptAndDecode(d, s)
-	if err != nil {
-		return err
-	}
-
-	// Build the form parameters from the data received from SWAN.
+	// Set the user interface preference information.
 	m.Set("title", op.HTML.Title)
 	m.Set("backgroundColor", op.HTML.BackgroundColor)
 	m.Set("messageColor", op.HTML.MessageColor)
 	m.Set("progressColor", op.HTML.ProgressColor)
 	m.Set("message", op.HTML.Message)
-	m.Set("returnUrl", op.State) // State is the return URL for the dialog.
+
+	// redirectToSWANDialog set State index 0 to the return URL, and index 1 to
+	// the access node of the caller. Use these for the final storage operation
+	// to update the SWAN data and return to the caller.
+	m.Set("returnUrl", op.State[0])
+	m.Set("accessNode", op.State[1])
+
+	// Set the parameters for the form from the data contained in SWAN.
 	if op.Get("cbid") != nil && op.Get("cbid").Value != "" {
 		m.Set("cbid", op.Get("cbid").Value)
 	} else {
@@ -142,8 +158,6 @@ func dialogGetModel(d *common.Domain,
 	if op.Get("allow") != nil {
 		m.Set("allow", op.Get("allow").Value)
 	}
-
-	return nil
 }
 
 func dialogUpdateModel(
@@ -185,7 +199,8 @@ func getRedirectUpdateURL(
 	d *common.Domain,
 	r *http.Request,
 	m url.Values) (string, *common.SWANError) {
-	b, err := d.CallSWANURL("update", func(q *url.Values) error {
+
+	b, err := d.CallSWANURL("update", func(q url.Values) error {
 		for k, v := range m {
 			if k == "allow" && v[0] == "" {
 				q.Add(k, "off")
@@ -207,7 +222,7 @@ func decryptAndDecode(d *common.Domain, v string) (
 	*swift.Results,
 	*common.SWANError) {
 	var r swift.Results
-	b, e := d.CallSWANURL("operation-as-json", func(q *url.Values) error {
+	b, e := d.CallSWANURL("operation-as-json", func(q url.Values) error {
 		q.Set("data", v)
 		return nil
 	})
@@ -219,4 +234,44 @@ func decryptAndDecode(d *common.Domain, v string) (
 		return nil, &common.SWANError{err, nil}
 	}
 	return &r, nil
+}
+
+func redirectToSWANDialog(
+	d *common.Domain,
+	w http.ResponseWriter,
+	r *http.Request) {
+	f, err := common.GetReturnURL(r)
+	if err != nil {
+		common.ReturnServerError(d.Config, w, err)
+		return
+	}
+	a := r.Form.Get("accessNode")
+	if a == "" {
+		common.ReturnStatusCodeError(
+			d.Config,
+			w,
+			fmt.Errorf("SWAN accessNode parameter required for CMP operation"),
+			http.StatusBadRequest)
+		return
+	}
+	u, e := d.CreateSWANURL(
+		r,
+		// Use this CMP page as the return URL for fetching the SWAN data.
+		common.GetCurrentPage(d.Config, r).String(),
+		"fetch",
+		func(q url.Values) {
+
+			// Use the return URL provided in the request to this URL as the
+			// final return URL after the update has occurred. Store in the
+			// state for use when the CMP dialogue updates.
+			q.Add("state", f.String())
+
+			// Also also add the access node to the state store.
+			q.Add("state", a)
+		})
+	if e != nil {
+		common.ReturnProxyError(d.Config, w, e)
+		return
+	}
+	http.Redirect(w, r, u, 303)
 }

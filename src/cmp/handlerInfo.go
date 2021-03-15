@@ -18,6 +18,7 @@ package cmp
 
 import (
 	"common"
+	"compress/gzip"
 	"html/template"
 	"net/http"
 	"owid"
@@ -61,17 +62,19 @@ func handlerInfo(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 	}
 	var m infoModel
 	m.OWIDs = make(map[*owid.OWID]interface{})
-	for _, vs := range r.Form {
-		for _, v := range vs {
-			o, err := owid.FromBase64(v)
-			if err != nil {
-				common.ReturnServerError(d.Config, w, err)
-				return
-			}
-			m.OWIDs[o], err = swan.FromOWID(o)
-			if err != nil {
-				common.ReturnServerError(d.Config, w, err)
-				return
+	for k, vs := range r.Form {
+		if k == "owid" {
+			for _, v := range vs {
+				o, err := owid.FromBase64(v)
+				if err != nil {
+					common.ReturnServerError(d.Config, w, err)
+					return
+				}
+				m.OWIDs[o], err = swan.FromOWID(o)
+				if err != nil {
+					common.ReturnServerError(d.Config, w, err)
+					return
+				}
 			}
 		}
 	}
@@ -79,15 +82,18 @@ func handlerInfo(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 	// Set the common fields.
 	m.Bid = m.findBid()
 	m.Root, m.Offer = m.findOffer()
-	f, err := common.GetReferer(r)
+	f, err := common.GetReturnURL(r)
 	if err != nil {
 		common.ReturnServerError(d.Config, w, err)
 		return
 	}
-	m.ReturnURL = template.HTML(f)
+	m.ReturnURL = template.HTML(f.String())
 
 	// Display the template form.
-	err = d.LookupHTML("info.html").Execute(w, m)
+	g := gzip.NewWriter(w)
+	defer g.Close()
+	w.Header().Set("Content-Encoding", "gzip")
+	err = d.LookupHTML("info.html").Execute(g, m)
 	if err != nil {
 		common.ReturnServerError(d.Config, w, err)
 		return

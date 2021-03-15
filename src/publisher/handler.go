@@ -31,15 +31,16 @@ import (
 // Handler for publisher web pages.
 func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 
-	// If this is the privacy path then redirect to the CMP.
-	if strings.EqualFold(r.URL.Path, "/privacy") {
-		redirectToCMPDialog(d, w, r)
-		return
-	}
-
 	// Try the URL path for the preference values.
 	p, ae := newSWANDataFromPath(d, r)
 	if ae != nil {
+
+		// If the data can't be decrypted rather than another type of error
+		// then redirect via SWAN to the dialog.
+		if ae.StatusCode() >= 400 && ae.StatusCode() < 500 {
+			redirectToSWANFetch(d, w, r)
+			return
+		}
 		common.ReturnServerError(d.Config, w, ae)
 		return
 	}
@@ -73,7 +74,7 @@ func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 		if isSet(p) {
 			handlerPublisherPage(d, w, r, p)
 		} else {
-			redirectToCMPDialog(d, w, r)
+			http.Redirect(w, r, getCMPURL(d, r), 303)
 		}
 	} else {
 		redirectToSWANFetch(d, w, r)
@@ -158,7 +159,7 @@ func redirectToCleanURL(
 	w http.ResponseWriter,
 	r *http.Request,
 	p []*swan.Pair) {
-	u := getCleanURL(c, r).String()
+	u := common.GetCleanURL(c, r).String()
 	if c.Debug {
 		log.Printf("Redirecting to '%s'\n", u)
 	}
@@ -166,45 +167,15 @@ func redirectToCleanURL(
 	http.Redirect(w, r, u, 303)
 }
 
-func redirectToCMPDialog(
+func redirectToSWANFetch(
 	d *common.Domain,
 	w http.ResponseWriter,
 	r *http.Request) {
 	u, err := d.CreateSWANURL(
 		r,
-		getCleanURL(d.Config, r).String(),
-		"dialog",
-		func(q *url.Values) {
-			var u url.URL
-			u.Scheme = d.Config.Scheme
-			u.Host = d.CMP
-			u.Path = "/preferences/"
-			q.Set("dialogUrl", u.String())
-		})
-	if err != nil {
-		common.ReturnProxyError(d.Config, w, err)
-		return
-	}
-	http.Redirect(w, r, u, 303)
-}
-
-func getCleanURL(c *common.Configuration, r *http.Request) *url.URL {
-	var u url.URL
-	u.Scheme = c.Scheme
-	u.Host = r.Host
-	u.Path = strings.ReplaceAll(
-		r.URL.Path,
-		common.GetSWANDataFromRequest(r),
-		"")
-	u.RawQuery = ""
-	return &u
-}
-
-func redirectToSWANFetch(
-	d *common.Domain,
-	w http.ResponseWriter,
-	r *http.Request) {
-	u, err := d.CreateSWANURL(r, "", "fetch", nil)
+		common.GetCleanURL(d.Config, r).String(),
+		"fetch",
+		nil)
 	if err != nil {
 		common.ReturnProxyError(d.Config, w, err)
 		return
@@ -240,6 +211,19 @@ func getDomain(h string) string {
 	return s[0]
 }
 
+// Returns the CMP preferences URL.
+func getCMPURL(d *common.Domain, r *http.Request) string {
+	var u url.URL
+	u.Scheme = d.Config.Scheme
+	u.Host = d.CMP
+	u.Path = "/preferences"
+	q := u.Query()
+	q.Set("returnUrl", common.GetCurrentPage(d.Config, r).String())
+	q.Set("accessNode", d.SWANAccessNode)
+	u.RawQuery = q.Encode()
+	return u.String()
+}
+
 // isSet returns true if all three of the values are present in the results and
 // are valid OWIDs.
 func isSet(d []*swan.Pair) bool {
@@ -259,7 +243,7 @@ func isSet(d []*swan.Pair) bool {
 }
 
 func decode(d *common.Domain, v string) ([]byte, *common.SWANError) {
-	return d.CallSWANURL("values-as-json", func(q *url.Values) error {
+	return d.CallSWANURL("values-as-json", func(q url.Values) error {
 		q.Set("data", v)
 		return nil
 	})
