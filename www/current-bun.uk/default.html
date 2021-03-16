@@ -79,7 +79,18 @@
               <figure class="figure">
                 {{ if eq .IsCrawler false }}
                   {{ if .Allow }}
-                  {{ .NewAdvertHTML "Heading1" }}
+                  <script>
+                    var p = document.currentScript.parentNode;
+                    fetch("/advert?placement=heading")
+                      .then(r => r.text() )
+                      .then(m => {
+                        var a = document.createElement("div");
+                        a.innerHTML = m;
+                        p.insertBefore(a, p.firstChild);})
+                      .catch(x => {
+                        console.log(x);
+                      });
+                  </script>
                   {{ else }}
                   <p>Personalization needed to show adverts.</p>
                   {{ end }}

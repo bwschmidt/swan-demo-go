@@ -31,6 +31,12 @@ import (
 // Handler for publisher web pages.
 func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 
+	// Check to see if this request is for an advert.
+	if r.URL.Path == "/advert" {
+		HandlerAdvert(d, w, r)
+		return
+	}
+
 	// Try the URL path for the preference values.
 	p, ae := newSWANDataFromPath(d, r)
 	if ae != nil {
