@@ -18,6 +18,7 @@ package marketer
 
 import (
 	"common"
+	"compress/gzip"
 	"encoding/base64"
 	"net/http"
 	"owid"
@@ -45,7 +46,13 @@ func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 	m.Domain = d
 	m.Request = r
 	m.offer = o
-	err = t.Execute(w, &m)
+
+	g := gzip.NewWriter(w)
+	defer g.Close()
+	w.Header().Set("Content-Encoding", "gzip")
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache")
+	err = t.Execute(g, &m)
 	if err != nil {
 		common.ReturnServerError(d.Config, w, err)
 	}
