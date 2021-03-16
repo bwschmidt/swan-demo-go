@@ -3,7 +3,6 @@
 }
 
 .advert-stop {
-  display: block;
   position: absolute;
   top: 0px;
   right: 0px;
@@ -20,4 +19,8 @@
 .advert-button img {
   height: 240px;
   max-width: 100%
+}
+
+.figure {
+  height: 277px;
 }

@@ -124,6 +124,12 @@ func (m Model) NewAdvertHTML(placement string) (template.HTML, error) {
 		return template.HTML("<p>" + err.Error() + "</p>"), nil
 	}
 
+	// Get the return URL.
+	t, err := common.GetReturnURL(m.Request)
+	if err != nil {
+		return template.HTML("<p>" + err.Error() + "</p>"), nil
+	}
+
 	// Get the URL for the info icon.
 	var i url.URL
 	i.Scheme = m.Config().Scheme
@@ -135,7 +141,7 @@ func (m Model) NewAdvertHTML(placement string) (template.HTML, error) {
 		q.Add("owid", n.GetOWIDAsString())
 		n = n.GetParent()
 	}
-	q.Set("returnUrl", common.GetCurrentPage(m.Config(), m.Request).String())
+	q.Set("returnUrl", t.String())
 	i.RawQuery = q.Encode()
 
 	// Return a FORM HTML element with a button for the advert. The OWID tree

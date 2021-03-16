@@ -152,7 +152,7 @@ func GetReturnURL(r *http.Request) (*url.URL, error) {
 	if err != nil {
 		return nil, err
 	}
-	if u == nil {
+	if u == nil || u.String() == "" {
 		u, err = url.Parse(r.Header.Get("Referer"))
 		if err != nil {
 			return nil, err
