@@ -9,12 +9,12 @@ owid = function() {
         }
 
         function readString(b) {
-        var r = ""; 
-        while (b.index < b.array.length && b.array[b.index] != 0) {
-            r += String.fromCharCode(b.array[b.index++]);
-        }
-        b.index++;
-        return r;
+            var r = ""; 
+            while (b.index < b.array.length && b.array[b.index] != 0) {
+                r += String.fromCharCode(b.array[b.index++]);
+            }
+            b.index++;
+            return r;
         }
 
         function readUint32(b) {
@@ -51,6 +51,10 @@ owid = function() {
             o.date = readDate(b);
             o.payload = readByteArray(b);
             o.signature = readSignature(b);
+            o.payloadAsString = "";
+            Uint8Array.from(
+                o.payload, 
+                c => o.payloadAsString += String.fromCharCode(c) );
             return o
         }
 
@@ -113,6 +117,8 @@ owid = function() {
             return new Uint8Array(buf);
         }
     }
+
+    this.parse = function(t) { return parse(t); }
 
     this.stop = function(s, d, r) {
         fetch("/stop?" +

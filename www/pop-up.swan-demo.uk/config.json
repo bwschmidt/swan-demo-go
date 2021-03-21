@@ -2,6 +2,9 @@
    "category": "Publisher",
    "name": "Pop Up Site",
    "cmp": "quantcast.swan-demo.uk",
+   "swanDisplayUserInterface" : false,
+   "swanPostMessage": true,
+   "swanBackgroundColor": "lightpink",
    "SWANAccessNode": "51db.uk",
    "SWANAccessKey": "PubKeyPopUp",
    "suppliers": [

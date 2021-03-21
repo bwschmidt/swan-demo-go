@@ -26,28 +26,38 @@ import (
 // HandlerAdvert for the request for adverts for the publisher web pages.
 func HandlerAdvert(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 
-	// Get the SWAN data from the request cookies.
-	p := newSWANDataFromCookies(r)
-	if p == nil {
-		common.ReturnStatusCodeError(
-			d.Config,
-			w,
-			fmt.Errorf("SWAN data cookies missing for request"),
-			http.StatusBadRequest)
-		return
-	}
-
 	// Create the model for publishers.
 	var m Model
 	m.Domain = d
 	m.Request = r
-	m.results = p
 
 	// Get the form parameters which will include the placement.
 	err := r.ParseForm()
 	if err != nil {
 		common.ReturnServerError(d.Config, w, err)
 		return
+	}
+
+	// See if there is also SWAN data in the request. If so then use it for this
+	// advert and set cookies to store it in the response.
+	if r.Form.Get("data") != "" {
+		var e *common.SWANError
+		m.results, e = newSWANData(d, r.Form.Get("data"))
+		if e != nil {
+			common.ReturnProxyError(d.Config, w, e)
+			return
+		}
+		setCookies(r, w, m.results)
+	} else {
+		m.results = newSWANDataFromCookies(r)
+		if m.results == nil {
+			common.ReturnStatusCodeError(
+				d.Config,
+				w,
+				fmt.Errorf("SWAN data cookies missing for request"),
+				http.StatusBadRequest)
+			return
+		}
 	}
 
 	// Use the new advert HTML to request the advert.

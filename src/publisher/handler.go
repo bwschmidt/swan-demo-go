@@ -44,7 +44,11 @@ func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 		// If the data can't be decrypted rather than another type of error
 		// then redirect via SWAN to the dialog.
 		if ae.StatusCode() >= 400 && ae.StatusCode() < 500 {
-			redirectToSWANFetch(d, w, r)
+			if d.SwanPostMessage == false {
+				redirectToSWANFetch(d, w, r)
+			} else {
+				handlerPublisherPage(d, w, r, p)
+			}
 			return
 		}
 		common.ReturnServerError(d.Config, w, ae)
@@ -83,7 +87,11 @@ func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, getCMPURL(d, r), 303)
 		}
 	} else {
-		redirectToSWANFetch(d, w, r)
+		if d.SwanPostMessage == false {
+			redirectToSWANFetch(d, w, r)
+		} else {
+			handlerPublisherPage(d, w, r, p)
+		}
 	}
 }
 
@@ -126,19 +134,13 @@ func newSWANDataFromCookies(r *http.Request) []*swan.Pair {
 	return p
 }
 
-func newSWANDataFromPath(
+func newSWANData(
 	d *common.Domain,
-	r *http.Request) ([]*swan.Pair, *common.SWANError) {
+	v string) ([]*swan.Pair, *common.SWANError) {
 	var p []*swan.Pair
 
-	// Get the section of the URL that has the SWAN data.
-	b := common.GetSWANDataFromRequest(r)
-	if b == "" {
-		return nil, nil
-	}
-
 	// Decrypt the SWAN data string.
-	in, e := decode(d, b)
+	in, e := decode(d, v)
 	if e != nil {
 		return nil, e
 	}
@@ -155,6 +157,19 @@ func newSWANDataFromPath(
 	}
 
 	return p, nil
+}
+
+func newSWANDataFromPath(
+	d *common.Domain,
+	r *http.Request) ([]*swan.Pair, *common.SWANError) {
+
+	// Get the section of the URL that has the SWAN data.
+	b := common.GetSWANDataFromRequest(r)
+	if b == "" {
+		return nil, nil
+	}
+
+	return newSWANData(d, b)
 }
 
 // SWAN data could be obtained from the URL. Remove the SWAN data string from
@@ -177,16 +192,43 @@ func redirectToSWANFetch(
 	d *common.Domain,
 	w http.ResponseWriter,
 	r *http.Request) {
-	u, err := d.CreateSWANURL(
-		r,
-		common.GetCleanURL(d.Config, r).String(),
-		"fetch",
-		nil)
+	u, err := getSWANURL(d, r)
 	if err != nil {
 		common.ReturnProxyError(d.Config, w, err)
 		return
 	}
 	http.Redirect(w, r, u, 303)
+}
+
+func getSWANURL(
+	d *common.Domain,
+	r *http.Request) (string, *common.SWANError) {
+	return d.CreateSWANURL(
+		r,
+		common.GetCleanURL(d.Config, r).String(),
+		"fetch",
+		func(q url.Values) {
+			if d.SwanPostMessage {
+				q.Set("postMessageOnComplete", "true")
+			} else {
+				q.Set("postMessageOnComplete", "false")
+			}
+			if d.SwanDisplayUserInterface {
+				q.Set("displayUserInterface", "true")
+			} else {
+				q.Set("displayUserInterface", "false")
+			}
+		})
+}
+
+func getHomeNode(
+	d *common.Domain,
+	r *http.Request) (string, *common.SWANError) {
+	b, err := d.CallSWANURL("home-node", nil)
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
 }
 
 func setCookies(r *http.Request, w http.ResponseWriter, p []*swan.Pair) {
@@ -202,8 +244,7 @@ func setCookies(r *http.Request, w http.ResponseWriter, p []*swan.Pair) {
 			Domain:   getDomain(r.Host),    // Specifically to this domain
 			Value:    i.Value,              // The OWID value
 			SameSite: http.SameSiteLaxMode, // Available to all paths
-			// The cookie never needs to be read from JavaScript so always true
-			HttpOnly: true,
+			HttpOnly: false,
 			Secure:   s, // Secure if HTTPs, otherwise false.
 			// Set the cookie expiry time to the same as the SWAN pair.
 			Expires: i.Expires,

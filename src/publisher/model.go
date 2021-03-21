@@ -42,6 +42,19 @@ func (m Model) CMPURL() string {
 	return getCMPURL(m.Domain, m.Request)
 }
 
+// SWANURL returns the URL for the SWAN operation. Used when the SWAN
+// transaction is completed in a pop up window or iFrame.
+func (m Model) SWANURL() string {
+	u, _ := getSWANURL(m.Domain, m.Request)
+	return u
+}
+
+// HomeNode returns the internet domain name of the home node.
+func (m Model) HomeNode() string {
+	h, _ := getHomeNode(m.Domain, m.Request)
+	return h
+}
+
 // Allow returns a boolean to indicate if personalized marketing is enabled.
 func (m Model) Allow() bool { return m.AllowAsString() == "on" }
 
@@ -91,6 +104,11 @@ func (m Model) DomainsByCategory(category string) []*common.Domain {
 // NewAdvertHTML provides the HTML for the advert that will be displayed on the
 // web page at the placement provided.
 func (m Model) NewAdvertHTML(placement string) (template.HTML, error) {
+
+	// Check that the allow information is either yes or no.
+	if m.AllowAsString() == "" {
+		return template.HTML("<p>Preferences not set</p>"), nil
+	}
 
 	rand.Seed(time.Now().UTC().UnixNano())
 

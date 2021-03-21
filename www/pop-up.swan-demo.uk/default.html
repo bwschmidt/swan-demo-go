@@ -9,9 +9,13 @@
   <link href="bootstrap.min.css" rel="stylesheet">
   <link href="blog.css" rel="stylesheet">
   <link href="advert.css" rel="stylesheet">
+  <script src="owid.js" type="text/javascript"></script>
+  <style>
+    .modal { display: block; }
+  </style>
 </head>
 
-<body>
+<body style="background-color:{{ .Domain.SwanBackgroundColor }};">
 
   <div class="container">
     <header class="blog-header py-3">
@@ -57,16 +61,55 @@
         <figure class="figure">
           {{ if eq .IsCrawler false }}
           <script>
+            var swanWindow = null;
             var p = document.currentScript.parentNode;
-            fetch("/advert?placement=heading")
-              .then(r => r.text() )
-              .then(m => {
-                var a = document.createElement("div");
-                a.innerHTML = m;
-                p.insertBefore(a, p.firstChild);})
-              .catch(x => {
-                console.log(x);
-              });
+            function getCookie(n)
+            {
+              var v = new RegExp(n + "=([^;]+)").exec(document.cookie);
+              return (v != null) ? unescape(new owid().parse(v[1]).payloadAsString) : null;
+            }
+            function openSWANPopup() {
+              document.getElementById("personalize").style.display = "none";
+              if(swanWindow == null || swanWindow.closed) {
+                swanWindow = window.open(
+                  "{{ .SWANURL }}",
+                  "swan",
+                  "width=420,height=230,resizable,scrollbars=yes,status=1");
+              }
+              else {
+                swanWindow.focus();
+              };
+            }
+            function fetchAdvert(data) {
+              var u = "/advert?placement=heading";
+              if (data) {
+                u += "&data=" + data;
+              }
+              fetch(u)
+                .then(r => r.text())
+                .then(m => {
+                  if (getCookie("allow") == "") {
+                    window.location.href = "{{ .CMPURL }}";
+                  } else {
+                    var a = document.createElement("div");
+                    a.innerHTML = m;
+                    p.insertBefore(a, p.firstChild);
+                    document.getElementById("cbid").innerText = getCookie("cbid");
+                    document.getElementById("sid").innerText = getCookie("sid");
+                    document.getElementById("allow").innerText = getCookie("allow");
+                    document.getElementById("stop").innerText = getCookie("stop");
+                  }
+                })
+                .catch(x => {
+                  console.log(x);
+                });
+            }
+            window.addEventListener("message", (event) => {
+              if (event.origin !== "{{ .HomeNode }}") {
+                swanWindow.close();
+                fetchAdvert(event.data);
+              }
+            }, false);
           </script>
           {{ else }}
           <p>Adverts not displayed to crawlers.</p>
@@ -75,6 +118,27 @@
         </figure>
       </div>
     </div>
+
+    {{ if eq .CBIDAsString "" }}
+    <div class="modal" id="personalize" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content bg-dark text-white">
+          <div class="modal-body">
+            <span>We use global consent to display adverts.<br></span>
+              <a href="#">Learn more<i class="fa fa-angle-right ml-2"></i></a>
+          </div>
+          <div class="modal-footer">
+            <span class="mr-3 decline">Decline</span>
+            <button class="btn btn-light btn-sm" type="button" onclick="openSWANPopup()">Use Global Consent</button>
+          </div>
+        </div>
+      </div>
+    </div>    
+    {{ else }}
+    <script>
+      fetchAdvert();
+    </script>
+    {{ end }}
 
     <div class="row mb-2">
       <div class="col-md-6">
@@ -153,19 +217,19 @@
               <tbody>
                 <tr>
                   <th>CBID</th>
-                  <td style="word-break: break-all;" tabindex="0" data-toggle="tooltip" title="{{ .CBIDDomain }} {{ .CBIDDate }}">{{ .CBIDAsString }}</td>
+                  <td id="cbid" style="word-break: break-all;" tabindex="0" data-toggle="tooltip" title="{{ .CBIDDomain }} {{ .CBIDDate }}">{{ .CBIDAsString }}</td>
                 </tr>
                 <tr>
                   <th>SID</th>
-                  <td style="word-break: break-all;" tabindex="0" data-toggle="tooltip" title="{{ .SIDDomain }} {{ .SIDDate }}">{{ .SIDAsString }}</td>
+                  <td id="sid" style="word-break: break-all;" tabindex="0" data-toggle="tooltip" title="{{ .SIDDomain }} {{ .SIDDate }}">{{ .SIDAsString }}</td>
                 </tr>
                 <tr>
                   <th>Allow</th>
-                  <td style="word-break: break-all;" tabindex="0" data-toggle="tooltip" title="{{ .AllowDomain }} {{ .AllowDate }}">{{ .AllowAsString }}</td>
+                  <td id="allow" style="word-break: break-all;" tabindex="0" data-toggle="tooltip" title="{{ .AllowDomain }} {{ .AllowDate }}">{{ .AllowAsString }}</td>
                 </tr>
                 <tr>
                   <th>Stopped Ads.</th>
-                  <td>
+                  <td id="stop" >
                     {{range .Stopped}}
                     <span>{{.}}</span>
                     {{end}}

@@ -34,14 +34,16 @@ import (
 // Domain represents the information held in the domain configuration file
 // commonly represented in the demo in config.json.
 type Domain struct {
-	Category            string // Category of the domain
-	Name                string // Common name for the domain
-	Bad                 bool   // True if this domain is a bad actor for the demo
-	Host                string // The host name for the domain
-	SwanMessage         string // Message if used with SWAN
-	SwanBackgroundColor string // Background color if used with SWAN
-	SwanMessageColor    string // Message text color if used with SWAN
-	SwanProgressColor   string // Message progress color if used with SWAN
+	Category                 string // Category of the domain
+	Name                     string // Common name for the domain
+	Bad                      bool   // True if this domain is a bad actor for the demo
+	Host                     string // The host name for the domain
+	SwanMessage              string // Message if used with SWAN
+	SwanBackgroundColor      string // Background color if used with SWAN
+	SwanMessageColor         string // Message text color if used with SWAN
+	SwanProgressColor        string // Message progress color if used with SWAN
+	SwanPostMessage          bool   // True if the publisher gets the results from SWAN as a post message
+	SwanDisplayUserInterface bool   // True to display the user interface
 	// The domain of the access node used with SWAN (only set for CMPs)
 	SWANAccessNode string
 	SWANAccessKey  string // The access key to use when communicating with SWAN.
@@ -162,6 +164,8 @@ func (d *Domain) setCommon(r *http.Request, q *url.Values) {
 
 // CallSWANURL constructs a URL, gets the response, and then returns the
 // response as a byte array. If an error occurs then an API error is returned.
+// action to be performed
+// addParams optional method to add parameters to the call to SWAN
 func (d *Domain) CallSWANURL(
 	action string,
 	addParams func(url.Values) error) ([]byte, *SWANError) {
@@ -181,9 +185,11 @@ func (d *Domain) CallSWANURL(
 	u.Path = "/swan/api/v1/" + action
 	q := u.Query()
 	q.Set("accessKey", d.SWANAccessKey)
-	err := addParams(q)
-	if err != nil {
-		return nil, &SWANError{err, nil}
+	if addParams != nil {
+		err := addParams(q)
+		if err != nil {
+			return nil, &SWANError{err, nil}
+		}
 	}
 	u.RawQuery = q.Encode()
 	res, err := http.Get(u.String())

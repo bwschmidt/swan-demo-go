@@ -5,6 +5,7 @@
    "swanBackgroundColor": "#fff",
    "swanMessageColor": "#343a40",
    "swanProgressColor": "#6c757d", 
+   "swanDisplayUserInterface" : true,
    "cmp": "cmp.swan-demo.uk",
    "SWANAccessNode": "51da.uk",
    "SWANAccessKey": "PubKeyNewPorkLimes",
