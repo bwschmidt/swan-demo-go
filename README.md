@@ -18,16 +18,16 @@ least the following:
 An example of nodes and members with example domain names:
 ```
              +-----------+  +-----------+  +-----------+
-             |           |  |           |  |           |
-Swift Nodes  | 1.51da.uk |  | 2.51da.uk |  | 3.51da.uk |  ... etc
-             |           |  |           |  |           |
+Swift        |           |  |           |  |           |
+Storage      | 1.51da.uk |  | 2.51da.uk |  | 3.51da.uk |  ... etc
+Nodes        |           |  |           |  |           |
              +-----------+  +-----------+  +-----------+
 
-             +--------+
-             |        |
-Swan Nodes   | 51d.io |
-             |        |
-             +--------+
+             +---------+  +---------+
+Swan Nodes & |         |  |         |
+Swift Access | 51da.uk |  | 51db.uk | ... etc
+Nodes        |         |  |         |
+             +---------+  +---------+
 
              +-------------------+  +----------------+
              |                   |  |                |
@@ -93,11 +93,10 @@ line.
 
 ### Steps
 
-* Having cloned the repository, configure the `appsettings.dev.json` file.
-
-  ```
-  cp appsettings.dev.json.rename appsettings.dev.json
-  ```
+* Having cloned the repository, configure the Go environment. If using Visual
+Studio Code see `.vscode/launch.json.rename` for a template environment. Rename 
+to remove the `rename` extension suffix. As this file will contain sensitive 
+information it is exclude in .gitignore.
 
 * Configure your hosts file to point URLs to localhost, see 
 [Environments](#environments) section in this readme for platform specifics. 
@@ -127,13 +126,19 @@ The following host resolutions are used in the sample configuration:
   127.0.0.1	zeta.swan-demo.uk
   127.0.0.1	liveramp.swan-demo.uk
   127.0.0.1	quantcast.swan-demo.uk
-  127.0.0.1	swiftap.swan-demo.uk
-  # swift nodes
-  127.0.0.1	1.51d.uk
-  127.0.0.1	2.51d.uk
-  127.0.0.1	3.51d.uk
-  127.0.0.1	4.51d.uk
-  127.0.0.1	5.51d.uk
+  # swift access nodes
+  127.0.0.1	51da.uk
+  127.0.0.1	51db.uk
+  127.0.0.1	51dc.uk
+  127.0.0.1	51dd.uk
+  127.0.0.1	51de.uk
+  # swift storage nodes
+  127.0.0.1	1.51da.uk
+  127.0.0.1	2.51da.uk
+  127.0.0.1	3.51da.uk
+  127.0.0.1	4.51da.uk
+  127.0.0.1	5.51da.uk
+  # Add more if your wish...
   ```
 
 * Run either the `./build.sh` file if you are on Linux or run the `./build.ps1` 
@@ -145,38 +150,75 @@ file if you are on Windows.
   ./src/server appsettings.dev.json
   ```
 
-* The SWAN access domain will be used to sign all the outgoing Open Web IDs and
+* The SWAN access nodes will be used to sign all the outgoing Open Web IDs and
 also to capture people's preferences. Register this domain with the following
-URL and entering any of the details requested. This will create a record in the 
+URL entering any of the details requested. This will create a record in the 
 ``owidcreators`` table for the domain which will contain randomly generated 
 public and private signing keys.
 
   ```
-  http://51d.io:5000/owid/register
+  http://51da.uk/owid/register
+  http://51db.uk/owid/register
+  http://51dc.uk/owid/register
+  http://51dd.uk/owid/register
+  http://51de.uk/owid/register
   ```
 
-* For each of the storage nodes that will be used for the SWIFT component of the
-demo register these using the following URL. Enter the network as "swan" (no 
-quotes) to match the value provided in the ``appsettings.json`` in the 
-``swanNetwork`` field. Leave the others as default.
+* The other SWAN participant nodes will also need to be registered as Open Web
+ID processors.
+
+  http://new-pork-limes.uk/owid/register
+  http://current-bun.uk/owid/register
+  http://cool-bikes.uk/owid/register
+  http://cool-cars.uk/owid/register
+  http://cool-creams.uk/owid/register
+  http://cmp.swan-demo.uk/owid/register
+  http://swan-demo.uk/owid/register
+  http://pop-up.swan-demo.uk/owid/register
+  http://badssp.swan-demo.uk/owid/register
+  http://bidswitch.swan-demo.uk/owid/register
+  http://centro.swan-demo.uk/owid/register
+  http://dataxu.swan-demo.uk/owid/register
+  http://liveintent.swan-demo.uk/owid/register
+  http://magnite.swan-demo.uk/owid/register
+  http://mediamath.swan-demo.uk/owid/register
+  http://oath.swan-demo.uk/owid/register
+  http://pubmatic.swan-demo.uk/owid/register
+  http://smaato.swan-demo.uk/owid/register
+  http://thetradedesk.swan-demo.uk/owid/register
+  http://zeta.swan-demo.uk/owid/register
+  http://liveramp.swan-demo.uk/owid/register
+  http://quantcast.swan-demo.uk/owid/register
+
+* For each of the access and storage nodes that will be used for the SWIFT 
+component of the demo register these using the following URL. Enter the network 
+as "swan" (no quotes). The records from these steps will be visible in the 
+``swiftnodes`` and ``swiftsecrets`` tables.
+
+Access nodes
 
   ```
-  http://1.51d.uk:5000/swift/register
+  http://51da.uk/swift/register
+  http://51db.uk/swift/register
+  http://51dc.uk/swift/register
+  http://51dd.uk/swift/register
+  http://51de.uk/swift/register
   ```
 
-* At least one SWIFT access node is required. Repeat the previous process but 
-select the "Access Node" option rather than the default "Storage Node". The 
-records from these steps will be visible in the ``swiftnodes`` and 
-``swiftsecrets`` tables.
+Storage nodes
 
   ```
-  http://5.51d.uk:5000/swift/register
+  http://1.51da.uk/swift/register
+  http://2.51da.uk/swift/register
+  http://3.51da.uk/swift/register
+  http://4.51da.uk/swift/register
+  http://5.51da.uk/swift/register
   ```
 * Now browse to one of the publisher URLs, you will be prompted to set your 
 preferences:
 
   ```
-  http://swan-pub.uk:5000
+  http://new-pork-limes.uk
   ```
 
 # Files
@@ -188,16 +230,18 @@ executable for web services.
 
 `build.sh` : builds AWS or Azure packages on Linux ready for manual deployment.
 
-`appsettings.json.rename` : template application settings ready for Azure and AWS 
-storage or DynamoDB keys.
+`appsettings.json` : application settings for production.
 
-`appsettings.dev.json.rename` : development app settings template.
+`appsettings.dev.json` : application settings for development.
 
 `.ebextensions/.config.rename` : AWS Elastic Beanstalk .config template ready for
 additional SSL certificates.
 
-Note: `.gitignore` will ignore `appsettings.json`, `appsettings.dev.json`, and
-`.ebextensions/.config` to limit the risk of commits containing access keys.
+`.vscode/launch.json.rename` : template Visual Studio Code launch settings 
+including place holders for the storage environment variable values.
+
+Note: `.gitignore` will ignore `launch.json`, and `.ebextensions/.config` to 
+limit the risk of commits containing access keys.
 
 # Environments
 
@@ -224,23 +268,27 @@ vi /etc/hosts
 line.
 
 * Familiar with the concepts associated with 
-[SWIFT](https://github.com/51degrees/swift) and 
+[SWAN](https://github.com/51degrees/swan),
+[SWIFT](https://github.com/51degrees/swift), and 
 [OWID](https://github.com/51Degrees/owid).
 
-* AWS account with Elastic Beanstalk and DynamoDB administration privileges. 
+* AWS account with Elastic Beanstalk and DynamoDB administration privileges or
+Azure account with Storage and App Services.
+
+#### AWS
 
 * Setup domains to use with the demo in AWS using 
 [Route 53](https://console.aws.amazon.com/route53). Domains are needed for the 
 following roles.
 
-    * SWAN access domain. For example ``51d.io``.
+    * SWAN access domain. For example ``51da.uk``.
 
     * Each of the SWIFT nodes that will support SWAN. At least two domains are 
     needed. For the purposes of the demo they may be sub domains. For example
     ``51da.uk`` and ``51db.uk``.
 
-    * At least two different domains for publishers. For example ``swan-pub.uk``
-    and ``swift-pub.uk``.
+    * At least two different domains for publishers. For example 
+    ``new-pork-limes.uk`` and ``current-bun.uk``.
 
     * At least two different domains for marketers. For example 
     ``cool-bikes.uk`` and ``cool-creams.uk``.
@@ -251,7 +299,7 @@ for each of the domains.
 
 #### Windows
 
-* Set powershell unstricted execution policy to enable `build.ps1` to execute.
+* Set powershell unrestricted execution policy to enable `build.ps1` to execute.
   Use the following command with administrator privileges.
 
   `Set-ExecutionPolicy Unrestricted`
