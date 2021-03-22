@@ -2,7 +2,7 @@
    "category": "Publisher",
    "name": "Pop Up Site",
    "cmp": "quantcast.swan-demo.uk",
-   "swanDisplayUserInterface" : false,
+   "swanDisplayUserInterface" : true,
    "swanPostMessage": true,
    "swanNodeCount": 1,
    "swanBackgroundColor": "lightpink",
