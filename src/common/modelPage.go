@@ -20,6 +20,7 @@ import (
 	"fod"
 	"net/http"
 	"net/url"
+	"strings"
 	"swan"
 )
 
@@ -28,6 +29,11 @@ type PageModel struct {
 	Domain *Domain // The domain associated with the request
 	// The request that relates to the page request with the ParseForm method complete
 	Request *http.Request
+}
+
+// SupportsHTTPS returns true if the server supports HTTPS.
+func (m PageModel) SupportsHTTPS() bool {
+	return strings.EqualFold("https", m.Domain.Config.Scheme)
 }
 
 // PreferencesDialogURL returns the URL to display the preferences dialog.

@@ -55,6 +55,14 @@
 
 <body>
 
+  {{ if .SupportsHTTPS}}
+  <script>
+    if (location.protocol !== "https:"){
+      location.replace(window.location.href.replace("http:", "https:"));
+    }
+  </script>
+  {{ end }}
+
   <header>
     <div class="navbar navbar-dark bg-dark box-shadow">
       <div class="container d-flex justify-content-between">

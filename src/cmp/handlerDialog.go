@@ -140,11 +140,14 @@ func dialogGetModel(d *common.Domain,
 	m.Set("progressColor", op.HTML.ProgressColor)
 	m.Set("message", op.HTML.Message)
 
-	// redirectToSWANDialog set State index 0 to the return URL, and index 1 to
-	// the access node of the caller. Use these for the final storage operation
-	// to update the SWAN data and return to the caller.
+	// redirectToSWANDialog set State index 0 to the return URL, index 1 to
+	// the access node of the caller, and index 2 and 3 for UI flags. Use these
+	// for the final storage operation to update the SWAN data and return to the
+	// caller.
 	m.Set("returnUrl", op.State[0])
 	m.Set("accessNode", op.State[1])
+	m.Set("displayUserInterface", op.State[2])
+	m.Set("postMessageOnComplete", op.State[3])
 
 	// Set the parameters for the form from the data contained in SWAN.
 	if op.Get("cbid") != nil && op.Get("cbid").Value != "" {
@@ -268,6 +271,10 @@ func redirectToSWANDialog(
 
 			// Also also add the access node to the state store.
 			q.Add("state", a)
+
+			// Add the flags.
+			q.Add("state", r.Form.Get("displayUserInterface"))
+			q.Add("state", r.Form.Get("postMessageOnComplete"))
 		})
 	if e != nil {
 		common.ReturnProxyError(d.Config, w, e)

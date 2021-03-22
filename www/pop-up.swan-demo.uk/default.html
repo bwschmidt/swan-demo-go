@@ -17,6 +17,14 @@
 
 <body style="background-color:{{ .Domain.SwanBackgroundColor }};">
 
+  {{ if .SupportsHTTPS}}
+  <script>
+    if (location.protocol !== "https:"){
+      location.replace(window.location.href.replace("http:", "https:"));
+    }
+  </script>
+  {{ end }}
+
   <div class="container">
     <header class="blog-header py-3">
       <div class="row flex-nowrap justify-content-between align-items-center">
@@ -68,15 +76,24 @@
               var v = new RegExp(n + "=([^;]+)").exec(document.cookie);
               return (v != null) ? unescape(new owid().parse(v[1]).payloadAsString) : null;
             }
-            function openSWANPopup() {
+            function openSWANPopup(u) {
+              {{ if eq .CBIDAsString "" }}
               document.getElementById("personalize").style.display = "none";
-              if(swanWindow == null || swanWindow.closed) {
+              {{ end }}
+              if(swanWindow == null) {
+                var w = 500;
+                var h = 625;
+                var x = screen.width/2 - w/2;
+                var y = screen.height/2 - h/2;
                 swanWindow = window.open(
-                  "{{ .SWANURL }}",
+                  u,
                   "swan",
-                  "width=420,height=230,resizable,scrollbars=yes,status=1");
+                  "width=" + w + ",height=" +  h + ",left=" + x + ",top=" + y + 
+                  ",directories=0,titlebar=0,toolbar=0,location=0,status=0," +
+                  "menubar=0,scrollbars=no,resizable=no");
               }
               else {
+                swanWindow.location.href = u;
                 swanWindow.focus();
               };
             }
@@ -85,11 +102,13 @@
               if (data) {
                 u += "&data=" + data;
               }
+              if (swanWindow != null) { swanWindow.close(); }
+              swanWindow = null;
               fetch(u)
                 .then(r => r.text())
                 .then(m => {
                   if (getCookie("allow") == "") {
-                    window.location.href = "{{ .CMPURL }}";
+                    openSWANPopup("{{ .CMPURL }}");
                   } else {
                     var a = document.createElement("div");
                     a.innerHTML = m;
@@ -105,8 +124,8 @@
                 });
             }
             window.addEventListener("message", (event) => {
+              console.log(event);
               if (event.origin !== "{{ .HomeNode }}") {
-                swanWindow.close();
                 fetchAdvert(event.data);
               }
             }, false);
@@ -129,7 +148,7 @@
           </div>
           <div class="modal-footer">
             <span class="mr-3 decline">Decline</span>
-            <button class="btn btn-light btn-sm" type="button" onclick="openSWANPopup()">Consent</button>
+            <button class="btn btn-light btn-sm" type="button" onclick='openSWANPopup("{{ .SWANURL }}")'>Consent</button>
           </div>
         </div>
       </div>
@@ -238,7 +257,7 @@
               </tbody>
             </table>
             <p>
-              <a href="{{ .CMPURL }}">Update Privacy Preferences</a>
+              <button class="btn btn-link" onclick='openSWANPopup("{{ .CMPURL }}")'>Update Privacy Preferences</button>
             </p>
         </div>
       </div>
@@ -279,7 +298,7 @@
 
   <footer class="blog-footer">
     <p>
-      <a href="{{ .CMPURL }}">Update Privacy Preferences</a>
+      <button class="btn btn-link" onclick='openSWANPopup("{{ .CMPURL }}")'>Update Privacy Preferences</button>
     </p>
     <p>
       <a href="//swan-demo.uk">Back to top</a>

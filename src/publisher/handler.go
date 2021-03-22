@@ -20,6 +20,7 @@ import (
 	"common"
 	"compress/gzip"
 	"encoding/json"
+	"fmt"
 	"fod"
 	"log"
 	"net/http"
@@ -208,17 +209,24 @@ func getSWANURL(
 		common.GetCleanURL(d.Config, r).String(),
 		"fetch",
 		func(q url.Values) {
-			if d.SwanPostMessage {
-				q.Set("postMessageOnComplete", "true")
-			} else {
-				q.Set("postMessageOnComplete", "false")
-			}
-			if d.SwanDisplayUserInterface {
-				q.Set("displayUserInterface", "true")
-			} else {
-				q.Set("displayUserInterface", "false")
+			setFlags(d, &q)
+			if d.SwanNodeCount > 0 {
+				q.Set("nodeCount", fmt.Sprintf("%d", d.SwanNodeCount))
 			}
 		})
+}
+
+func setFlags(d *common.Domain, q *url.Values) {
+	if d.SwanPostMessage {
+		q.Set("postMessageOnComplete", "true")
+	} else {
+		q.Set("postMessageOnComplete", "false")
+	}
+	if d.SwanDisplayUserInterface {
+		q.Set("displayUserInterface", "true")
+	} else {
+		q.Set("displayUserInterface", "false")
+	}
 }
 
 func getHomeNode(
@@ -267,6 +275,7 @@ func getCMPURL(d *common.Domain, r *http.Request) string {
 	q := u.Query()
 	q.Set("returnUrl", common.GetCurrentPage(d.Config, r).String())
 	q.Set("accessNode", d.SWANAccessNode)
+	setFlags(d, &q)
 	u.RawQuery = q.Encode()
 	return u.String()
 }

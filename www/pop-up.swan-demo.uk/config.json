@@ -4,6 +4,7 @@
    "cmp": "quantcast.swan-demo.uk",
    "swanDisplayUserInterface" : false,
    "swanPostMessage": true,
+   "swanNodeCount": 1,
    "swanBackgroundColor": "lightpink",
    "SWANAccessNode": "51db.uk",
    "SWANAccessKey": "PubKeyPopUp",
