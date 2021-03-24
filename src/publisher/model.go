@@ -102,6 +102,21 @@ func (m Model) Stopped() []string {
 	return strings.Split(common.AsString(m.stop()), "\r\n")
 }
 
+func (m Model) NewOfferIDAsString() string {
+
+	// Use the SWAN network to generate the Offer ID.
+	r, ae := m.newOfferID("placement")
+	if ae != nil {
+		return ""
+	}
+	// Get the OWID tree as a base 64 string.
+	e, err := r.AsJSON()
+	if err != nil {
+		return ""
+	}
+	return base64.StdEncoding.EncodeToString(e)
+}
+
 // DomainsByCategory returns all the domains that match the category.
 func (m Model) DomainsByCategory(category string) []*common.Domain {
 	var domains []*common.Domain

@@ -82,6 +82,8 @@ func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Encoding", "gzip")
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		_, err = g.Write(b)
 		if err != nil {
 			common.ReturnServerError(d.Config, w, err)
