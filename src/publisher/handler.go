@@ -288,8 +288,8 @@ func isSet(d []*swan.Pair) bool {
 }
 
 func decode(d *common.Domain, v string) ([]byte, *common.SWANError) {
-	return d.CallSWANURL("data", func(q url.Values) error {
-		q.Set("data", v)
+	return d.CallSWANURL("decrypt", func(q url.Values) error {
+		q.Set("encrypted", v)
 		return nil
 	})
 }

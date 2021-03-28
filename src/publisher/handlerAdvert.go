@@ -40,9 +40,9 @@ func HandlerAdvert(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 
 	// See if there is also SWAN data in the request. If so then use it for this
 	// advert and set cookies to store it in the response.
-	if r.Form.Get("data") != "" {
+	if r.Form.Get("encrypted") != "" {
 		var e *common.SWANError
-		m.results, e = newSWANData(d, r.Form.Get("data"))
+		m.results, e = newSWANData(d, r.Form.Get("encrypted"))
 		if e != nil {
 			common.ReturnProxyError(d.Config, w, e)
 			return

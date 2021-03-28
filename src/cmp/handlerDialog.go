@@ -261,8 +261,8 @@ func decryptAndDecode(
 	d *common.Domain,
 	v string,
 	m *dialogModel) *common.SWANError {
-	b, e := d.CallSWANURL("raw", func(q url.Values) error {
-		q.Set("data", v)
+	b, e := d.CallSWANURL("decrypt-raw", func(q url.Values) error {
+		q.Set("encrypted", v)
 		return nil
 	})
 	if e != nil {
