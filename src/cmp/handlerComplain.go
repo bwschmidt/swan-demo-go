@@ -31,15 +31,12 @@ import (
 
 var complaintSubjectTemplate = newComplaintTemplate(
 	"subject",
-	"Complaint: {{ .Organization }}")
+	"SWAN Complaint: {{ .Organization }}")
 var complaintBodyTemplate = newComplaintTemplate("body", `
 To whom it may concern,
 
-I believe that "{{ .Organization }}" used my personal information without a 
-legal basis on '{{ .Date }}'. 
-
-	Common Browser Identifier:	{{ .CBID }}
-	Signed in Identifier:		{{ .SID }}
+I believe that {{ .Organization }} used my personal information without a 
+legal basis on {{ .Date }}. 
 
 I provided you the following permissions for use of this data.
 
@@ -61,7 +58,7 @@ Regards,
 [INSERT YOU NAME]
 
 --- DO NOT CHANGE THE TEXT BELOW THIS LINE ---
-{{ .OfferID }} {{ .SWANOWID }}
+{{ .OfferID }}
 --- DO NOT CHANGE THE TEXT ABOVE THIS LINE ---`)
 
 // Complaint used to format an email template.
@@ -76,17 +73,17 @@ type Complaint struct {
 
 // Date to use in the email template.
 func (c *Complaint) Date() string {
-	return c.swanOWID.Date.Format("2006-01-02")
+	return c.swanOWID.Date.Format("2006-01-02 15:01")
 }
 
 // CBID to use in the email template.
 func (c *Complaint) CBID() string {
-	return c.Offer.CBIDAsString()
+	return c.Offer.CBID.AsString()
 }
 
 // SID to use in the email template.
 func (c *Complaint) SID() string {
-	return c.Offer.SIDAsString()
+	return c.Offer.SID.AsString()
 }
 
 // Preferences string to use in the email template.

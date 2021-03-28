@@ -62,25 +62,37 @@
 
     <div class="jumbotron p-3 p-md-5 rounded bg-light">
       <div class="col-md-12 px-0 text-center">
-        <figure class="figure">
-          {{ if eq .IsCrawler false }}
-          <script>
-            var p = document.currentScript.parentNode;
-            fetch("/advert?placement=heading")
-              .then(r => r.text() )
-              .then(m => {
-                var a = document.createElement("div");
-                a.innerHTML = m;
-                p.insertBefore(a, p.firstChild);})
-              .catch(x => {
-                console.log(x);
-              });
-          </script>
-          {{ else }}
-          <p>Adverts not displayed to crawlers.</p>
-          {{ end }}
-          <figcaption class="figure-caption">advert</figcaption>
-        </figure>
+        {{ if eq .IsNew true }}
+          <div class="bg-light text-dark rounded py-4">
+            <h3 class="text-danger">Select these publishers to experience hassle free future access.</h3>
+            <ol class="list-unstyled">
+              {{ range $publisher := .DomainsByCategory "Publisher" }}
+              <li><a href="//{{ $publisher.Host }}">{{ $publisher.Name }}</a></li>
+              {{ end }}
+            </ol>
+            <p>The secure cross web domain ID is '{{ .CBIDAsString }}'.</p>
+          </div>
+        {{ else }}
+          <figure class="figure">
+            {{ if eq .IsCrawler false }}
+            <script>
+              var p = document.currentScript.parentNode;
+              fetch("/advert?placement=heading")
+                .then(r => r.text() )
+                .then(m => {
+                  var a = document.createElement("div");
+                  a.innerHTML = m;
+                  p.insertBefore(a, p.firstChild);})
+                .catch(x => {
+                  console.log(x);
+                });
+            </script>
+            {{ else }}
+            <p>Adverts not displayed to crawlers.</p>
+            {{ end }}
+            <figcaption class="figure-caption">advert</figcaption>
+          </figure>
+        {{ end }}
       </div>
     </div>
 

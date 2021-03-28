@@ -75,7 +75,8 @@
                         <div class="form-group mb-6">
                             <label for="cbid">Common Browser ID</label>
                             <input class="button-link reset" type="submit" value="Reset" name="reset-cbid"/>
-                            <input type="text" class="form-control" id="cbid" name="cbid" value="{{ .CBID }}" readonly>
+                            <input type="text" class="form-control" value="{{ .CBIDAsString }}" readonly>
+                            <input type="hidden" id="cbid" name="cbid" value="{{ .CBIDAsOWID }}">
                             <small id="cbidHelp" class="form-text text-muted">
                                 This ID enables your ad-funded access to the Open Web. You can reset it at any time. Recipients promise not to use for personalized marketing or associate this with your identity without consent.
                             </small>

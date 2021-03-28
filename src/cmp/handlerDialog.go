@@ -23,27 +23,54 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"owid"
 	"swift"
 
-	"github.com/google/uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 type dialogModel struct {
-	url.Values      // Key value pairs
-	update     bool // True if the update should be performed
+	url.Values
+	update bool // True if the update should be performed
 }
 
-func (m *dialogModel) Title() string           { return m.Get("title") }
-func (m *dialogModel) CBID() string            { return m.Get("cbid") }
-func (m *dialogModel) Email() string           { return m.Get("email") }
-func (m *dialogModel) Allow() string           { return m.Get("allow") }
-func (m *dialogModel) BackgroundColor() string { return m.Get("backgroundColor") }
+// Title for the SWAN storage operation.
+func (m *dialogModel) Title() string { return m.Get("title") }
+
+// CBID as a base64 OWID.
+func (m *dialogModel) CBIDAsOWID() string { return m.Get("cbid") }
+
+// Email as a string.
+func (m *dialogModel) Email() string { return m.Get("email") }
+
+// Allow as a string.
+func (m *dialogModel) Allow() string { return m.Get("allow") }
+
+// BackgroundColor for the SWAN storage operation.
+func (m *dialogModel) BackgroundColor() string {
+	return m.Get("backgroundColor")
+}
+
+// PublisherHost the domain from the returnUrl.
 func (m *dialogModel) PublisherHost() string {
 	u, _ := url.Parse(m.Get("returnUrl"))
 	if u != nil {
 		return u.Host
 	}
 	return ""
+}
+
+// CBIDAsString returns the CBID as a readable string without the OWID data.
+func (m *dialogModel) CBIDAsString() (string, error) {
+	o, err := owid.FromBase64(m.Get("cbid"))
+	if err != nil {
+		return "", err
+	}
+	u, err := uuid.FromBytes(o.Payload)
+	if err != nil {
+		return "", err
+	}
+	return u.String(), nil
 }
 
 func handlerDialog(d *common.Domain, w http.ResponseWriter, r *http.Request) {
@@ -66,7 +93,7 @@ func handlerDialog(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 
 	// Call the SWAN access node for the CMP to turn the data provided in the
 	// URL into usable data for the dialog.
-	op, e := decryptAndDecode(d, s)
+	e := decryptAndDecode(d, s, &m)
 	if e != nil {
 
 		// If the data can't be decrypted rather than another type of error
@@ -79,9 +106,6 @@ func handlerDialog(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set the storage operation data form the URL in the dialog model.
-	dialogGetModel(d, r, &m, op)
-
 	// If this is a close request then don't update the values and just return
 	// to the return URL.
 	if r.Form.Get("close") != "" {
@@ -91,9 +115,9 @@ func handlerDialog(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 
 	// If the method is POST then update the model with the data from the form.
 	if r.Method == "POST" {
-		err = dialogUpdateModel(d, r, &m)
-		if err != nil {
-			common.ReturnServerError(d.Config, w, err)
+		se := dialogUpdateModel(d, r, &m)
+		if se != nil {
+			common.ReturnProxyError(d.Config, w, se)
 			return
 		}
 	}
@@ -127,47 +151,10 @@ func handlerDialog(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Build the form parameters from the data received from SWAN.
-func dialogGetModel(d *common.Domain,
-	r *http.Request,
-	m *dialogModel,
-	op *swift.Results) {
-
-	// Set the user interface preference information.
-	m.Set("title", op.HTML.Title)
-	m.Set("backgroundColor", op.HTML.BackgroundColor)
-	m.Set("messageColor", op.HTML.MessageColor)
-	m.Set("progressColor", op.HTML.ProgressColor)
-	m.Set("message", op.HTML.Message)
-
-	// redirectToSWANDialog set State index 0 to the return URL, index 1 to
-	// the access node of the caller, and index 2 and 3 for UI flags. Use these
-	// for the final storage operation to update the SWAN data and return to the
-	// caller.
-	m.Set("returnUrl", op.State[0])
-	m.Set("accessNode", op.State[1])
-	m.Set("displayUserInterface", op.State[2])
-	m.Set("postMessageOnComplete", op.State[3])
-
-	// Set the parameters for the form from the data contained in SWAN.
-	if op.Get("cbid") != nil && op.Get("cbid").Value != "" {
-		m.Set("cbid", op.Get("cbid").Value)
-	} else {
-		m.Set("cbid", uuid.New().String())
-	}
-	if op.Get("email") != nil {
-		m.Set("email", op.Get("email").Value)
-	}
-	if op.Get("allow") != nil {
-		m.Set("allow", op.Get("allow").Value)
-	}
-}
-
 func dialogUpdateModel(
 	d *common.Domain,
 	r *http.Request,
-	m *dialogModel) error {
-	var err error
+	m *dialogModel) *common.SWANError {
 
 	// Copy the field values from the form.
 	m.Values.Set("cbid", r.Form.Get("cbid"))
@@ -178,8 +165,7 @@ func dialogUpdateModel(
 	if r.Form.Get("reset-cbid") != "" {
 
 		// Replace the CBID with a new random value.
-		m.Set("cbid", uuid.New().String())
-		return nil
+		return setNewCBID(d, m)
 	}
 
 	// Check to see if the post is as a result for all data.
@@ -188,55 +174,109 @@ func dialogUpdateModel(
 		// Replace the data.
 		m.Set("email", "")
 		m.Set("allow", "")
-		m.Set("cbid", uuid.New().String())
-		return nil
+		return setNewCBID(d, m)
 	}
 
 	// The data should be updated in the SWAN network.
 	m.update = true
 
-	return err
+	return nil
+}
+
+func setNewCBID(d *common.Domain, m *dialogModel) *common.SWANError {
+	c, se := createCBID(d)
+	if se != nil {
+		return se
+	}
+	o, err := owid.FromByteArray(c)
+	if err != nil {
+		return &common.SWANError{Err: err}
+	}
+	m.Set("cbid", o.AsString())
+	return nil
 }
 
 func getRedirectUpdateURL(
 	d *common.Domain,
 	r *http.Request,
 	m url.Values) (string, *common.SWANError) {
+	c, err := d.GetOWIDCreator()
+	if err != nil {
+		return "", &common.SWANError{Err: err}
+	}
+	b, se := d.CallSWANURL("update", func(q url.Values) error {
+		var err error
 
-	b, err := d.CallSWANURL("update", func(q url.Values) error {
+		// Loop through all the key value pairs in the model values. If the key
+		// relates to SWAN data then turn the value into an OWID with this UIP
+		// as the signatory.
 		for k, v := range m {
-			if k == "allow" && v[0] == "" {
-				q.Add(k, "off")
-			} else {
+			switch k {
+			case "allow":
+				a := v[0]
+				if a == "" {
+					a = "off"
+				}
+				err = setSWANData(c, &q, k, []byte(a))
+				break
+			case "email":
+				err = setSWANData(c, &q, k, []byte(v[0]))
+				break
+			default:
 				for _, i := range v {
 					q.Add(k, i)
 				}
+				break
+			}
+			if err != nil {
+				return err
 			}
 		}
 		return nil
 	})
-	if err != nil {
-		return "", err
+	if se != nil {
+		return "", se
 	}
 	return string(b), nil
 }
 
-func decryptAndDecode(d *common.Domain, v string) (
-	*swift.Results,
-	*common.SWANError) {
-	var r swift.Results
-	b, e := d.CallSWANURL("operation-as-json", func(q url.Values) error {
+func setSWANData(c *owid.Creator, q *url.Values, k string, v []byte) error {
+	o, err := c.CreateOWIDandSign(v)
+	if err != nil {
+		return err
+	}
+	q.Set(k, o.AsString())
+	return nil
+}
+
+func createCBID(d *common.Domain) ([]byte, *common.SWANError) {
+	b, e := d.CallSWANURL("create-cbid", nil)
+	if e != nil {
+		return nil, e
+	}
+	return b, nil
+}
+
+func decryptAndDecode(
+	d *common.Domain,
+	v string,
+	m *dialogModel) *common.SWANError {
+	b, e := d.CallSWANURL("raw", func(q url.Values) error {
 		q.Set("data", v)
 		return nil
 	})
 	if e != nil {
-		return nil, e
+		return e
 	}
+	r := make(map[string]string)
 	err := json.Unmarshal(b, &r)
 	if err != nil {
-		return nil, &common.SWANError{err, nil}
+		return &common.SWANError{Err: err}
 	}
-	return &r, nil
+	for k, v := range r {
+		m.Set(k, v)
+	}
+	return nil
 }
 
 func redirectToSWANDialog(
@@ -281,4 +321,20 @@ func redirectToSWANDialog(
 		return
 	}
 	http.Redirect(w, r, u, 303)
+}
+
+// All the values from the SWIFT storage operation are OWIDs. Returns the OWID
+// for the key provided.
+func getOWID(r *swift.Results, k string) (*owid.OWID, error) {
+	v := r.Get(k)
+	if v != nil {
+		return nil, fmt.Errorf("Key '%s' does not exist", k)
+	}
+	if len(v.Value()) != 1 {
+		return nil, fmt.Errorf(
+			"Key '%s' contains '%d' values",
+			k,
+			len(v.Values()))
+	}
+	return owid.FromByteArray(v.Values()[0])
 }

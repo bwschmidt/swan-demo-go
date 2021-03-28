@@ -143,7 +143,10 @@ func HandleTransaction(d *common.Domain, n *owid.Node) (*owid.Node, error) {
 	}
 
 	// Create an OWID for this processor.
-	t := d.OWID.CreateOWID(nil)
+	t, err := d.OWID.CreateOWID(nil)
+	if err != nil {
+		return nil, err
+	}
 	if t == nil {
 		return nil, fmt.Errorf("Could not create new OWID")
 	}
@@ -355,7 +358,10 @@ func createFailed(
 	if err != nil {
 		return nil, err
 	}
-	t := d.OWID.CreateOWID(b)
+	t, err := d.OWID.CreateOWID(b)
+	if err != nil {
+		return nil, err
+	}
 	err = d.OWID.Sign(t, r)
 	var c owid.Node
 	c.OWID, err = t.AsByteArray()

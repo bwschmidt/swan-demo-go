@@ -184,22 +184,27 @@ func (d *Domain) CallSWANURL(
 	u.Scheme = d.Config.Scheme
 	u.Host = d.SWANAccessNode
 	u.Path = "/swan/api/v1/" + action
-	q := u.Query()
-	q.Set("accessKey", d.SWANAccessKey)
+
+	// Add the parameters for the query.
+	p := url.Values{}
+	p.Set("accessKey", d.SWANAccessKey)
 	if addParams != nil {
-		err := addParams(q)
+		err := addParams(p)
 		if err != nil {
 			return nil, &SWANError{err, nil}
 		}
 	}
-	u.RawQuery = q.Encode()
-	res, err := http.Get(u.String())
+
+	// Post the parameters to the SWAN url.
+	res, err := http.PostForm(u.String(), p)
 	if err != nil {
 		return nil, &SWANError{err, nil}
 	}
 	if res.StatusCode != http.StatusOK {
 		return nil, NewSWANError(d.Config, res)
 	}
+
+	// Read the response and return as a byte array.
 	b, e := ioutil.ReadAll(res.Body)
 	if e != nil {
 		return nil, &SWANError{e, nil}

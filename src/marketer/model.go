@@ -100,17 +100,23 @@ func (m *MarketerModel) OfferIDUnpacked() (template.HTML, error) {
 		"<tr><td>Domain</td><td>%s</td></tr>",
 		o.Domain))
 	html.WriteString(fmt.Sprintf(
+		"<tr><td>Created</td><td>%s</td></tr>",
+		o.Date.Format("02-01-2006 15:04")))
+	html.WriteString(fmt.Sprintf(
 		"<tr><td>Signature</td><td style=\"word-break:break-all\">%s</td></tr>",
 		convertToString(o.Signature)))
 	html.WriteString(fmt.Sprintf(
-		"<tr><td>CBID</td><td>%s</td></tr>",
-		s.CBIDAsString()))
+		"<tr><td>CBID</td><td>%s<br/>%s<td></tr>",
+		s.CBIDAsString(),
+		owidTitle(s.CBID)))
 	html.WriteString(fmt.Sprintf(
-		"<tr><td>Allow</td><td>%s</td></tr>",
-		s.PreferencesAsString()))
+		"<tr><td>Allow</td><td>%s<br/>%s<td></tr>",
+		s.PreferencesAsString(),
+		owidTitle(s.Preferences)))
 	html.WriteString(fmt.Sprintf(
-		"<tr><td>SID</td><td>%s</td></tr>",
-		s.SIDAsString()))
+		"<tr><td>SID</td><td>%s<br/>%s<td></tr>",
+		s.SIDAsString(),
+		owidTitle(s.SID)))
 	html.WriteString(fmt.Sprintf(
 		"<tr><td>Pub. domain</td><td>%s</td></tr>",
 		s.PubDomain))
@@ -121,10 +127,14 @@ func (m *MarketerModel) OfferIDUnpacked() (template.HTML, error) {
 		"<tr><td>Unique</td><td style=\"word-break:break-all\">%s</td></tr>",
 		convertToString(s.UUID)))
 	html.WriteString(fmt.Sprintf(
-		"<tr><td>Stopped Ads.</td><td style=\"word-break:break-all\">%s</td></tr>",
+		"<tr><td>Stopped Ads.</td><td style=\"word-break:break-all\">%s<td></tr>",
 		strings.Join(s.StoppedAsArray(), ",")))
 	htmlAddFooter(&html)
 	return template.HTML(html.String()), nil
+}
+
+func owidTitle(o *owid.OWID) string {
+	return fmt.Sprintf("%s %s", o.Date.Format("02-01-2006 15:04"), o.Domain)
 }
 
 // AuditWinnerHTML returns the audit information from the bid used in the advert
@@ -144,7 +154,7 @@ func (m *MarketerModel) AuditWinnerHTML() (template.HTML, error) {
 		return "", nil
 	}
 	htmlAddHeader(&html)
-	err = appendParents(&html, w)
+	err = appendParents(m.Domain, &html, w)
 	if err != nil {
 		return "", err
 	}
@@ -166,7 +176,7 @@ func (m *MarketerModel) AuditFullHTML() (template.HTML, error) {
 
 	var html bytes.Buffer
 	htmlAddHeader(&html)
-	err = appendOWIDAndChildren(&html, m.offer, w, 0)
+	err = appendOWIDAndChildren(m.Domain, &html, m.offer, w, 0)
 	if err != nil {
 		return template.HTML("<p>" + err.Error() + "</p>"), nil
 	}
@@ -192,7 +202,7 @@ func htmlAddFooter(html *bytes.Buffer) {
 	html.WriteString("</tbody>\r\n</table>\r\n")
 }
 
-func appendParents(html *bytes.Buffer, w *owid.Node) error {
+func appendParents(d *common.Domain, html *bytes.Buffer, w *owid.Node) error {
 	var n []*owid.Node
 	p := w
 	for p != nil {
@@ -201,7 +211,7 @@ func appendParents(html *bytes.Buffer, w *owid.Node) error {
 	}
 	i := len(n) - 1
 	for i >= 0 {
-		err := appendHTML(html, w, n[i], 0)
+		err := appendHTML(d, html, w, n[i], 0)
 		if err != nil {
 			return err
 		}
@@ -211,14 +221,15 @@ func appendParents(html *bytes.Buffer, w *owid.Node) error {
 }
 
 func appendOWIDAndChildren(
+	d *common.Domain,
 	html *bytes.Buffer,
 	o *owid.Node,
 	w *owid.Node,
 	level int) error {
-	appendHTML(html, w, o, level)
+	appendHTML(d, html, w, o, level)
 	if len(o.Children) > 0 {
 		for _, c := range o.Children {
-			err := appendOWIDAndChildren(html, c, w, level+1)
+			err := appendOWIDAndChildren(d, html, c, w, level+1)
 			if err != nil {
 				return err
 			}
@@ -228,6 +239,7 @@ func appendOWIDAndChildren(
 }
 
 func appendHTML(
+	d *common.Domain,
 	html *bytes.Buffer,
 	w *owid.Node,
 	o *owid.Node,
@@ -275,8 +287,9 @@ func appendHTML(
 	if o != nil && r != "" {
 		html.WriteString(fmt.Sprintf(
 			"<td style=\"text-align:center;\">\r\n"+
-				"<script>new owid().appendComplaintEmail(document.currentScript.parentNode,\"%s\",\"%s\", \"noun_complaint_376466.svg\");</script>\r\n"+
+				"<script>new owid().appendComplaintEmail(document.currentScript.parentNode,\"%s\",\"%s\",\"%s\", \"noun_complaint_376466.svg\");</script>\r\n"+
 				"<noscript>JavaScript needed to audit</noscript></td>\r\n",
+			d.CMP,
 			r,
 			o.GetOWIDAsString()))
 	} else {

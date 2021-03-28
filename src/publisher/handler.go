@@ -25,7 +25,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"strings"
 	"swan"
 )
 
@@ -43,10 +42,10 @@ func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 	if ae != nil {
 
 		// If the data can't be decrypted rather than another type of error
-		// then redirect via SWAN to the dialog.
+		// then redirect to the CMP dialog.
 		if ae.StatusCode() >= 400 && ae.StatusCode() < 500 {
 			if d.SwanPostMessage == false {
-				redirectToSWANFetch(d, w, r)
+				http.Redirect(w, r, getCMPURL(d, r), 303)
 			} else {
 				handlerPublisherPage(d, w, r, p)
 			}
@@ -62,7 +61,11 @@ func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 
 	// If the path does not contain any values then get them from the cookies.
 	if p == nil {
-		p = newSWANDataFromCookies(r)
+		var err error
+		p, err = newSWANDataFromCookies(r)
+		if err != nil && d.Config.Debug {
+			log.Println(err.Error())
+		}
 	}
 
 	// If the request is from a crawler than ignore SWAN.
@@ -121,18 +124,19 @@ func handlerPublisherPage(
 	}
 }
 
-func newSWANDataFromCookies(r *http.Request) []*swan.Pair {
+func newSWANDataFromCookies(r *http.Request) ([]*swan.Pair, error) {
 	var p []*swan.Pair
 	for _, c := range r.Cookies() {
 		if c.Name == "cbid" || c.Name == "sid" ||
 			c.Name == "allow" || c.Name == "stop" {
-			var s swan.Pair
-			s.Key = c.Name
-			s.Value = string(c.Value)
-			p = append(p, &s)
+			i, err := swan.NewPairFromCookie(c)
+			if err != nil {
+				return nil, err
+			}
+			p = append(p, i)
 		}
 	}
-	return p
+	return p, nil
 }
 
 func newSWANData(
@@ -154,7 +158,7 @@ func newSWANData(
 	// Get the results.
 	err := json.Unmarshal(in, &p)
 	if err != nil {
-		return nil, &common.SWANError{err, nil}
+		return nil, &common.SWANError{Err: err}
 	}
 
 	return p, nil
@@ -247,23 +251,8 @@ func setCookies(r *http.Request, w http.ResponseWriter, p []*swan.Pair) {
 		s = false
 	}
 	for _, i := range p {
-		c := http.Cookie{
-			Name:     i.Key,
-			Domain:   getDomain(r.Host),    // Specifically to this domain
-			Value:    i.Value,              // The OWID value
-			SameSite: http.SameSiteLaxMode, // Available to all paths
-			HttpOnly: false,
-			Secure:   s, // Secure if HTTPs, otherwise false.
-			// Set the cookie expiry time to the same as the SWAN pair.
-			Expires: i.Expires,
-		}
-		http.SetCookie(w, &c)
+		http.SetCookie(w, i.AsCookie(r, w, s))
 	}
-}
-
-func getDomain(h string) string {
-	s := strings.Split(h, ":")
-	return s[0]
 }
 
 // Returns the CMP preferences URL.
@@ -273,7 +262,7 @@ func getCMPURL(d *common.Domain, r *http.Request) string {
 	u.Host = d.CMP
 	u.Path = "/preferences"
 	q := u.Query()
-	q.Set("returnUrl", common.GetCurrentPage(d.Config, r).String())
+	q.Set("returnUrl", common.GetCleanURL(d.Config, r).String())
 	q.Set("accessNode", d.SWANAccessNode)
 	setFlags(d, &q)
 	u.RawQuery = q.Encode()
@@ -299,7 +288,7 @@ func isSet(d []*swan.Pair) bool {
 }
 
 func decode(d *common.Domain, v string) ([]byte, *common.SWANError) {
-	return d.CallSWANURL("values-as-json", func(q url.Values) error {
+	return d.CallSWANURL("data", func(q url.Values) error {
 		q.Set("data", v)
 		return nil
 	})

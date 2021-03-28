@@ -55,11 +55,20 @@ func (m Model) HomeNode() string {
 	return h
 }
 
+// IsNew returns true if the CBID is newly created, otherwise false.
+func (m Model) IsNew() bool {
+	o, _ := m.cbid().AsOWID()
+	if o != nil {
+		return o.Age() <= 1
+	}
+	return false
+}
+
 // Allow returns a boolean to indicate if personalized marketing is enabled.
 func (m Model) Allow() bool { return m.AllowAsString() == "on" }
 
 // CBIDAsString Common Browser IDentifier
-func (m Model) CBIDAsString() string { return common.AsString(m.cbid()) }
+func (m Model) CBIDAsString() string { return common.AsStringFromUUID(m.cbid()) }
 
 // SIDAsString Signed in IDentifier
 func (m Model) SIDAsString() string { return common.AsPrintable(m.sid()) }
@@ -177,7 +186,7 @@ func (m Model) NewAdvertHTML(placement string) (template.HTML, error) {
 		"</div>"+
 		"</form>",
 		b.AdvertiserURL,
-		base64.StdEncoding.EncodeToString(e),
+		base64.RawStdEncoding.EncodeToString(e),
 		b.MediaURL,
 		i.String(),
 		"noun_Info_1582932.svg"))
@@ -198,7 +207,7 @@ func (m Model) stopped() *swan.Pair { return m.findResult("stop") }
 
 func (m Model) findResult(k string) *swan.Pair {
 	for _, n := range m.results {
-		if k == n.Key {
+		if strings.EqualFold(k, n.Key) {
 			return n
 		}
 	}
@@ -213,26 +222,10 @@ func (m *Model) newOfferID(placement string) (*owid.Node, *common.SWANError) {
 		func(q url.Values) error {
 			q.Add("placement", placement)
 			q.Add("pubdomain", m.Request.Host)
-			cbid, err := m.cbid().AsBase64()
-			if err != nil {
-				return err
-			}
-			q.Add("cbid", cbid)
-			sid, err := m.sid().AsBase64()
-			if err != nil {
-				return err
-			}
-			q.Add("sid", sid)
-			allow, err := m.allow().AsBase64()
-			if err != nil {
-				return err
-			}
-			q.Add("preferences", allow)
-			stopped, err := m.stopped().AsBase64()
-			if err != nil {
-				return err
-			}
-			q.Add("stopped", stopped)
+			q.Add("cbid", m.cbid().AsBase64())
+			q.Add("sid", m.sid().AsBase64())
+			q.Add("preferences", m.allow().AsBase64())
+			q.Add("stopped", m.stopped().AsBase64())
 			return nil
 		})
 	if err != nil {

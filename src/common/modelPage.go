@@ -22,6 +22,8 @@ import (
 	"net/url"
 	"strings"
 	"swan"
+
+	"github.com/google/uuid"
 )
 
 // PageModel used as the base for models used with HTML templates.
@@ -62,7 +64,7 @@ func OWIDDate(p *swan.Pair) string {
 	if err != nil || o == nil {
 		return ""
 	}
-	return o.Date.Format("2006-01-02")
+	return o.Date.Format("2006-01-02T15:04")
 }
 
 // OWIDDomain returns the creator domain of the ID.
@@ -77,6 +79,21 @@ func OWIDDomain(p *swan.Pair) string {
 	return o.Domain
 }
 
+func AsStringFromUUID(p *swan.Pair) string {
+	if p == nil {
+		return ""
+	}
+	o, err := p.AsOWID()
+	if err != nil || o == nil {
+		return ""
+	}
+	u, err := uuid.FromBytes(o.Payload)
+	if err != nil {
+		return ""
+	}
+	return u.String()
+}
+
 // AsString gets the value of the pair as string for display.
 func AsString(p *swan.Pair) string {
 	if p == nil {
@@ -84,7 +101,7 @@ func AsString(p *swan.Pair) string {
 	}
 	o, err := p.AsOWID()
 	if err != nil || o == nil {
-		return ""
+		return string(p.Value)
 	}
 	return o.PayloadAsString()
 }
@@ -96,7 +113,7 @@ func AsPrintable(p *swan.Pair) string {
 	}
 	o, err := p.AsOWID()
 	if err != nil || o == nil {
-		return ""
+		return string(p.Value)
 	}
 	return o.PayloadAsPrintable()
 }

@@ -72,10 +72,25 @@
             var swanWindow = null;
             var swanOpenTime = null;
             var p = document.currentScript.parentNode;
-            function getCookie(n)
+            function getCookie(n) {
+              var c = new RegExp(n + "=([^;]+)").exec(document.cookie);
+              return c? c[1] : "";
+            }
+            function getCookieAsString(n)
             {
-              var v = new RegExp(n + "=([^;]+)").exec(document.cookie);
-              return (v != null) ? unescape(new owid().parse(v[1]).payloadAsString) : null;
+              var s = "";
+              Uint8Array.from(atob(getCookie(n)), c => s += c);
+              return s;
+            }
+            function getOWIDCookieAsString(n)
+            {
+              var v = getCookie(n);
+              return (v != null) ? unescape(new owid().parse(v).payloadAsString()) : null;
+            }
+            function getOWIDCookieAsPrintable(n)
+            {
+              var v = getCookie(n);
+              return (v != null) ? unescape(new owid().parse(v).payloadAsPrintable()) : null;
             }
             function openSWANPopup(u) {
               {{ if eq .CBIDAsString "" }}
@@ -113,10 +128,10 @@
                     var a = document.createElement("div");
                     a.innerHTML = m;
                     p.insertBefore(a, p.firstChild);
-                    document.getElementById("cbid").innerText = getCookie("cbid");
-                    document.getElementById("sid").innerText = getCookie("sid");
-                    document.getElementById("allow").innerText = getCookie("allow");
-                    document.getElementById("stop").innerText = getCookie("stop");
+                    document.getElementById("cbid").innerText = getOWIDCookieAsPrintable("cbid");
+                    document.getElementById("sid").innerText = getOWIDCookieAsPrintable("sid");
+                    document.getElementById("allow").innerText = getOWIDCookieAsString("allow");
+                    document.getElementById("stop").innerText = getCookieAsString("stop");
                     if (swanWindow != null) { 
                       var t = 3000 - (new Date().getTime() - swanOpenTime.getTime());
                       if (t < 0) {
@@ -248,23 +263,19 @@
               <tbody>
                 <tr>
                   <th>CBID</th>
-                  <td id="cbid" style="word-break: break-all;" tabindex="0" data-toggle="tooltip" title="{{ .CBIDDomain }} {{ .CBIDDate }}">{{ .CBIDAsString }}</td>
+                  <td id="cbid" style="word-break: break-all;" tabindex="0"></td>
                 </tr>
                 <tr>
                   <th>SID</th>
-                  <td id="sid" style="word-break: break-all;" tabindex="0" data-toggle="tooltip" title="{{ .SIDDomain }} {{ .SIDDate }}">{{ .SIDAsString }}</td>
+                  <td id="sid" style="word-break: break-all;" tabindex="0"></td>
                 </tr>
                 <tr>
                   <th>Allow</th>
-                  <td id="allow" style="word-break: break-all;" tabindex="0" data-toggle="tooltip" title="{{ .AllowDomain }} {{ .AllowDate }}">{{ .AllowAsString }}</td>
+                  <td id="allow" style="word-break: break-all;" tabindex="0"></td>
                 </tr>
                 <tr>
                   <th>Stopped Ads.</th>
-                  <td id="stop" >
-                    {{range .Stopped}}
-                    <span>{{.}}</span>
-                    {{end}}
-                  </td>
+                  <td id="stop"></td>
                 </tr>
               </tbody>
             </table>

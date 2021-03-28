@@ -72,7 +72,7 @@ func getOffer(r *http.Request) (*owid.Node, error) {
 	}
 
 	// Get the transaction from the form data.
-	d, err := base64.StdEncoding.DecodeString(
+	d, err := base64.RawStdEncoding.DecodeString(
 		r.Form.Get("transaction"))
 	if err != nil {
 		return nil, err

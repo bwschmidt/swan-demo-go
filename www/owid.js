@@ -1,7 +1,11 @@
 owid = function() {
     "use-strict";
 
-    // Parses a base 64 encoded string into a OWID tree.
+    // Parses a base 64 byte array into an ascii string.
+    function parseToString(v) {
+    }
+
+    // Parses a base 64 encoded byte array into a OWID tree.
     function parse(v) {
 
         function readByte(b) {
@@ -31,10 +35,15 @@ owid = function() {
             return r;
         }
 
-        function readDate(b) {
-            var h = readByte(b);
-            var l = readByte(b);
-            return {h, l};
+        function readDate(b, v) {
+            if (v == 1) {
+                var h = readByte(b);
+                var l = readByte(b);
+                return (h>>8 | l) * 24 * 60;
+            } 
+            if (v == 2) {
+                return readUint32(b);
+            }
         }
 
         function readSignature(b) {
@@ -48,13 +57,19 @@ owid = function() {
             var o = Object();
             o.version = readByte(b);
             o.domain = readString(b);
-            o.date = readDate(b);
+            o.date = readDate(b, o.version);
             o.payload = readByteArray(b);
             o.signature = readSignature(b);
-            o.payloadAsString = "";
-            Uint8Array.from(
-                o.payload, 
-                c => o.payloadAsString += String.fromCharCode(c) );
+            o.payloadAsString = function() {
+                var s = "";
+                Uint8Array.from(this.payload, c => s+=String.fromCharCode(c));
+                return s;
+            };
+            o.payloadAsPrintable = function() { 
+                var s = "";
+                Uint8Array.from(this.payload, c => s+=(c&0xFF).toString(16));
+                return s;
+            }
             return o
         }
 
@@ -93,18 +108,17 @@ owid = function() {
             b.push(0);
         }
 
-        function writeDate(b, v) {
-            b.push(v.h);
-            b.push(v.l);
-        }
-
-        function writeByteArray(b, v) {
+        function writeUint32(b, v) {
             var a = new ArrayBuffer(4);
             var d = new DataView(a);
-            d.setUint32(0, v.length, true);
+            d.setUint32(0, v, true);
             for (var i = 0; i < 4; i++) {
                 b.push(d.getUint8(i));
             }
+        }
+
+        function writeByteArray(b, v) {
+            writeUint32(b, v.length)
             v.forEach(e => b.push(e));
         }
 
@@ -112,7 +126,7 @@ owid = function() {
             var buf = [];
             writeByte(buf, t.version);
             writeString(buf, t.domain);
-            writeDate(buf, t.date);
+            writeUint32(buf, t.date);
             writeByteArray(buf, t.payload);
             return new Uint8Array(buf);
         }
@@ -123,7 +137,8 @@ owid = function() {
     this.stop = function(s, d, r) {
         fetch("/stop?" +
             "host=" + encodeURIComponent(d) + "&" +
-            "returnUrl=" + encodeURIComponent(r))
+            "returnUrl=" + encodeURIComponent(r),
+            { method: "GET", mode: "cors", cache: "no-cache" })
             .then(r => r.text() )
             .then(m => {
                 console.log(m);
@@ -134,10 +149,11 @@ owid = function() {
             });
     }
 
-    this.appendComplaintEmail = function(e, o, s, g) {
-        fetch("/complain?" +
+    this.appendComplaintEmail = function(e, d, o, s, g) {
+        fetch("//" + d + "/complain?" +
             "offerid=" + encodeURIComponent(o) + "&" +
-            "swanowid=" + encodeURIComponent(s))
+            "swanowid=" + encodeURIComponent(s),
+            { method: "GET", mode: "cors", cache: "no-cache" })
             .then(r => r.text() )
             .then(m => {
                 var a = document.createElement("a");
@@ -157,14 +173,15 @@ owid = function() {
     }
 
     this.appendName = function(e, s) {
-        fetch("//" + parse(s).domain + "/owid/api/v1/creator")
+        fetch("//" + parse(s).domain + "/owid/api/v1/creator", 
+            { method: "GET", mode: "cors" })
             .then(r => r.json())
             .then(o => {
                 var t = document.createTextNode(o.name);
                 e.appendChild(t);
             }).catch(x => {
                 console.log(x);
-                var t = document.createTextNode(u);
+                var t = document.createTextNode(x);
                 e.appendChild(t);
             });
     }

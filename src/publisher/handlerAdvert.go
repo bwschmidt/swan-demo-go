@@ -49,7 +49,14 @@ func HandlerAdvert(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 		}
 		setCookies(r, w, m.results)
 	} else {
-		m.results = newSWANDataFromCookies(r)
+		m.results, err = newSWANDataFromCookies(r)
+		if err != nil {
+			common.ReturnStatusCodeError(
+				d.Config,
+				w,
+				err,
+				http.StatusBadRequest)
+		}
 		if m.results == nil {
 			common.ReturnStatusCodeError(
 				d.Config,
@@ -71,7 +78,6 @@ func HandlerAdvert(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 	g := gzip.NewWriter(w)
 	defer g.Close()
 	w.Header().Set("Content-Encoding", "gzip")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-cache")
 	_, err = g.Write([]byte(t))
