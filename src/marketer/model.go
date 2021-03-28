@@ -106,11 +106,11 @@ func (m *MarketerModel) OfferIDUnpacked() (template.HTML, error) {
 		"<tr><td>Signature</td><td style=\"word-break:break-all\">%s</td></tr>",
 		convertToString(o.Signature)))
 	html.WriteString(fmt.Sprintf(
-		"<tr><td>CBID</td><td>%s<br/>%s<td></tr>",
-		s.CBIDAsString(),
-		owidTitle(s.CBID)))
+		"<tr><td>SWID</td><td>%s<br/>%s<td></tr>",
+		s.SWIDAsString(),
+		owidTitle(s.SWID)))
 	html.WriteString(fmt.Sprintf(
-		"<tr><td>Allow</td><td>%s<br/>%s<td></tr>",
+		"<tr><td>Preferences</td><td>%s<br/>%s<td></tr>",
 		s.PreferencesAsString(),
 		owidTitle(s.Preferences)))
 	html.WriteString(fmt.Sprintf(

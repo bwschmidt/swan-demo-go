@@ -37,14 +37,14 @@ type dialogModel struct {
 // Title for the SWAN storage operation.
 func (m *dialogModel) Title() string { return m.Get("title") }
 
-// CBID as a base64 OWID.
-func (m *dialogModel) CBIDAsOWID() string { return m.Get("cbid") }
+// SWID as a base64 OWID.
+func (m *dialogModel) SWIDAsOWID() string { return m.Get("swid") }
 
 // Email as a string.
 func (m *dialogModel) Email() string { return m.Get("email") }
 
-// Allow as a string.
-func (m *dialogModel) Allow() string { return m.Get("allow") }
+// Pref as a string.
+func (m *dialogModel) Pref() string { return m.Get("pref") }
 
 // BackgroundColor for the SWAN storage operation.
 func (m *dialogModel) BackgroundColor() string {
@@ -60,9 +60,9 @@ func (m *dialogModel) PublisherHost() string {
 	return ""
 }
 
-// CBIDAsString returns the CBID as a readable string without the OWID data.
-func (m *dialogModel) CBIDAsString() (string, error) {
-	o, err := owid.FromBase64(m.Get("cbid"))
+// SWIDAsString returns the SWID as a readable string without the OWID data.
+func (m *dialogModel) SWIDAsString() (string, error) {
+	o, err := owid.FromBase64(m.Get("swid"))
 	if err != nil {
 		return "", err
 	}
@@ -157,15 +157,15 @@ func dialogUpdateModel(
 	m *dialogModel) *common.SWANError {
 
 	// Copy the field values from the form.
-	m.Values.Set("cbid", r.Form.Get("cbid"))
+	m.Values.Set("swid", r.Form.Get("swid"))
 	m.Values.Set("email", r.Form.Get("email"))
-	m.Values.Set("allow", r.Form.Get("allow"))
+	m.Values.Set("pref", r.Form.Get("pref"))
 
-	// Check to see if the post is as a result of the CBID reset.
-	if r.Form.Get("reset-cbid") != "" {
+	// Check to see if the post is as a result of the SWID reset.
+	if r.Form.Get("reset-swid") != "" {
 
-		// Replace the CBID with a new random value.
-		return setNewCBID(d, m)
+		// Replace the SWID with a new random value.
+		return setNewSWID(d, m)
 	}
 
 	// Check to see if the post is as a result for all data.
@@ -173,8 +173,8 @@ func dialogUpdateModel(
 
 		// Replace the data.
 		m.Set("email", "")
-		m.Set("allow", "")
-		return setNewCBID(d, m)
+		m.Set("pref", "")
+		return setNewSWID(d, m)
 	}
 
 	// The data should be updated in the SWAN network.
@@ -183,8 +183,8 @@ func dialogUpdateModel(
 	return nil
 }
 
-func setNewCBID(d *common.Domain, m *dialogModel) *common.SWANError {
-	c, se := createCBID(d)
+func setNewSWID(d *common.Domain, m *dialogModel) *common.SWANError {
+	c, se := createSWID(d)
 	if se != nil {
 		return se
 	}
@@ -192,7 +192,7 @@ func setNewCBID(d *common.Domain, m *dialogModel) *common.SWANError {
 	if err != nil {
 		return &common.SWANError{Err: err}
 	}
-	m.Set("cbid", o.AsString())
+	m.Set("swid", o.AsString())
 	return nil
 }
 
@@ -212,7 +212,7 @@ func getRedirectUpdateURL(
 		// as the signatory.
 		for k, v := range m {
 			switch k {
-			case "allow":
+			case "pref":
 				a := v[0]
 				if a == "" {
 					a = "off"
@@ -249,8 +249,8 @@ func setSWANData(c *owid.Creator, q *url.Values, k string, v []byte) error {
 	return nil
 }
 
-func createCBID(d *common.Domain) ([]byte, *common.SWANError) {
-	b, e := d.CallSWANURL("create-cbid", nil)
+func createSWID(d *common.Domain) ([]byte, *common.SWANError) {
+	b, e := d.CallSWANURL("create-swid", nil)
 	if e != nil {
 		return nil, e
 	}

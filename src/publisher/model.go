@@ -55,48 +55,48 @@ func (m Model) HomeNode() string {
 	return h
 }
 
-// IsNew returns true if the CBID is newly created, otherwise false.
+// IsNew returns true if the SWID is newly created, otherwise false.
 func (m Model) IsNew() bool {
-	o, _ := m.cbid().AsOWID()
+	o, _ := m.swid().AsOWID()
 	if o != nil {
 		return o.Age() <= 1
 	}
 	return false
 }
 
-// Allow returns a boolean to indicate if personalized marketing is enabled.
-func (m Model) Allow() bool { return m.AllowAsString() == "on" }
+// Personalized returns a boolean to indicate if personalized marketing is enabled.
+func (m Model) Personalized() bool { return m.PrefAsString() == "on" }
 
-// CBIDAsString Common Browser IDentifier
-func (m Model) CBIDAsString() string { return common.AsStringFromUUID(m.cbid()) }
+// SWIDAsString Secure Web IDentifier
+func (m Model) SWIDAsString() string { return common.AsStringFromUUID(m.swid()) }
 
 // SIDAsString Signed in IDentifier
 func (m Model) SIDAsString() string { return common.AsPrintable(m.sid()) }
 
-// AllowAsString true if personalized marketing allowed, otherwise false
-func (m Model) AllowAsString() string { return common.AsString(m.allow()) }
+// PrefAsString true if personalized marketing allowed, otherwise false
+func (m Model) PrefAsString() string { return common.AsString(m.pref()) }
 
-// CBIDDomain returns the domain that created the CBID OWID
-func (m Model) CBIDDomain() string { return common.OWIDDomain(m.cbid()) }
+// SWIDDomain returns the domain that created the SWID OWID
+func (m Model) SWIDDomain() string { return common.OWIDDomain(m.swid()) }
 
 // SIDDomain returns the domain that created the SID OWID
 func (m Model) SIDDomain() string { return common.OWIDDomain(m.sid()) }
 
-// AllowDomain returns the domain that created the Allow OWID
-func (m Model) AllowDomain() string { return common.OWIDDomain(m.allow()) }
+// PrefDomain returns the domain that created the Allow OWID
+func (m Model) PrefDomain() string { return common.OWIDDomain(m.pref()) }
 
-// CBIDDate returns the date CBID OWID was created
-func (m Model) CBIDDate() string { return common.OWIDDate(m.cbid()) }
+// SWIDDate returns the date SWID OWID was created
+func (m Model) SWIDDate() string { return common.OWIDDate(m.swid()) }
 
 // SIDDate returns the date SID OWID was created
 func (m Model) SIDDate() string { return common.OWIDDate(m.sid()) }
 
-// AllowDate returns the date Allow OWID was created
-func (m Model) AllowDate() string { return common.OWIDDate(m.allow()) }
+// PrefDate returns the date Allow OWID was created
+func (m Model) PrefDate() string { return common.OWIDDate(m.pref()) }
 
 // Stopped returns a list of the domains that have been stopped for advertising.
 func (m Model) Stopped() []string {
-	return strings.Split(common.AsString(m.stopped()), "\r\n")
+	return strings.Split(common.AsString(m.stop()), "\r\n")
 }
 
 // DomainsByCategory returns all the domains that match the category.
@@ -114,8 +114,8 @@ func (m Model) DomainsByCategory(category string) []*common.Domain {
 // web page at the placement provided.
 func (m Model) NewAdvertHTML(placement string) (template.HTML, error) {
 
-	// Check that the allow information is either yes or no.
-	if m.AllowAsString() == "" {
+	// Check that the preference information has a value and is not empty.
+	if m.PrefAsString() == "" {
 		return template.HTML("<p>Preferences not set</p>"), nil
 	}
 
@@ -193,17 +193,17 @@ func (m Model) NewAdvertHTML(placement string) (template.HTML, error) {
 	return template.HTML(html.String()), nil
 }
 
-// CBID Common Browser IDentifier
-func (m Model) cbid() *swan.Pair { return m.findResult("cbid") }
+// SWID Secure Web IDentifier
+func (m Model) swid() *swan.Pair { return m.findResult("swid") }
 
 // SID Signed in IDentifier
 func (m Model) sid() *swan.Pair { return m.findResult("sid") }
 
 // Allow true if personalized marketing allowed, otherwise false
-func (m Model) allow() *swan.Pair { return m.findResult("allow") }
+func (m Model) pref() *swan.Pair { return m.findResult("pref") }
 
 // Stop the list of domains that should not have adverts displayed form.
-func (m Model) stopped() *swan.Pair { return m.findResult("stop") }
+func (m Model) stop() *swan.Pair { return m.findResult("stop") }
 
 func (m Model) findResult(k string) *swan.Pair {
 	for _, n := range m.results {
@@ -222,10 +222,10 @@ func (m *Model) newOfferID(placement string) (*owid.Node, *common.SWANError) {
 		func(q url.Values) error {
 			q.Add("placement", placement)
 			q.Add("pubdomain", m.Request.Host)
-			q.Add("cbid", m.cbid().AsBase64())
+			q.Add("swid", m.swid().AsBase64())
 			q.Add("sid", m.sid().AsBase64())
-			q.Add("preferences", m.allow().AsBase64())
-			q.Add("stopped", m.stopped().AsBase64())
+			q.Add("pref", m.pref().AsBase64())
+			q.Add("stop", m.stop().AsBase64())
 			return nil
 		})
 	if err != nil {

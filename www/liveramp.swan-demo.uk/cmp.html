@@ -73,19 +73,19 @@
                 <div class="modal-body">
                     <div class="pt-3 pb-3">
                         <div class="form-group mb-6">
-                            <label for="cbid">Common Browser ID</label>
-                            <input class="button-link reset" type="submit" value="Reset" name="reset-cbid"/>
-                            <input type="text" class="form-control" value="{{ .CBIDAsString }}" readonly>
-                            <input type="hidden" id="cbid" name="cbid" value="{{ .CBIDAsOWID }}">
-                            <small id="cbidHelp" class="form-text text-muted">
+                            <label for="swid">Secure Web ID</label>
+                            <input class="button-link reset" type="submit" value="Reset" name="reset-swid"/>
+                            <input type="text" class="form-control" value="{{ .SWIDAsString }}" readonly>
+                            <input type="hidden" id="swid" name="swid" value="{{ .SWIDAsOWID }}">
+                            <small id="swidHelp" class="form-text text-muted">
                                 This ID enables your ad-funded access to the Open Web. You can reset it at any time. Recipients promise not to use for personalized marketing or associate this with your identity without consent.
                             </small>
                         </div>
                         <div class="form-group form-check mb-6 pl-2 py-4">
                             <div>
-                            <input type="checkbox" id="allow" name="allow" {{ if eq .Allow "on" }} checked {{ end }}>
-                            <label class="form-check-label small" for="allow">Personalize Marketing</label>
-                            <small id="allowHelp" class="form-text text-muted">
+                            <input type="checkbox" id="pref" name="pref" {{ if eq .Pref "on" }} checked {{ end }}>
+                            <label class="form-check-label small" for="pref">Personalize Marketing</label>
+                            <small id="prefHelp" class="form-text text-muted">
                                 Tick to receive more personalized content.
                             </small>
                             </div>

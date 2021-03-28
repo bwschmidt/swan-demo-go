@@ -58,7 +58,7 @@
     </nav>
   </header>
 
-  {{ if not .Allow }}
+  {{ if not .Personalized }}
   <div class="modal fade" id="personalize" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -92,12 +92,12 @@
                     <li><a href="//{{ $publisher.Host }}">{{ $publisher.Name }}</a></li>
                     {{ end }}
                   </ol>
-                  <p>The secure cross web domain ID is '{{ .CBIDAsString }}'.</p>
+                  <p>The secure cross web domain ID is '{{ .SWIDAsString }}'.</p>
                 </div>
               {{ else }}
               <figure class="figure" style="height:277px">
                 {{ if eq .IsCrawler false }}
-                  {{ if .Allow }}
+                  {{ if .Personalized }}
                   <script>
                     var p = document.currentScript.parentNode;
                     fetch("/advert?placement=heading")
@@ -189,16 +189,16 @@
             </thead>
             <tbody>
               <tr>
-                <th>CBID</th>
-                <td style="word-break: break-all;" tabindex="0" data-toggle="tooltip" title="{{ .CBIDDomain }} {{ .CBIDDate }}">{{ .CBIDAsString }}</td>
+                <th>SWID</th>
+                <td style="word-break: break-all;" tabindex="0" data-toggle="tooltip" title="{{ .SWIDDomain }} {{ .SWIDDate }}">{{ .SWIDAsString }}</td>
               </tr>
               <tr>
                 <th>SID</th>
                 <td style="word-break: break-all;" tabindex="0" data-toggle="tooltip" title="{{ .SIDDomain }} {{ .SIDDate }}">{{ .SIDAsString }}</td>
               </tr>
               <tr>
-                <th>Allow</th>
-                <td style="word-break: break-all;" tabindex="0" data-toggle="tooltip" title="{{ .AllowDomain }} {{ .AllowDate }}">{{ .AllowAsString }}</td>
+                <th>Personalize</th>
+                <td style="word-break: break-all;" tabindex="0" data-toggle="tooltip" title="{{ .PrefDomain }} {{ .PrefDate }}">{{ .PrefAsString }}</td>
               </tr>
               <tr>
                 <th>Stopped Ads.</th>
@@ -244,7 +244,7 @@
       $('[data-toggle="tooltip"]').tooltip()
     })
   </script>
-  {{ if not .Allow }}
+  {{ if not .Personalized }}
   <script type="text/javascript">
     $(window).on('load', function() {
         $('#personalize').modal('show');

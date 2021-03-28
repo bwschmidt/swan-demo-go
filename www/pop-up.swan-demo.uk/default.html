@@ -93,7 +93,7 @@
               return (v != null) ? unescape(new owid().parse(v).payloadAsPrintable()) : null;
             }
             function openSWANPopup(u) {
-              {{ if eq .CBIDAsString "" }}
+              {{ if eq .SWIDAsString "" }}
               document.getElementById("personalize").style.display = "none";
               {{ end }}
               if(swanWindow == null) {
@@ -122,15 +122,15 @@
               fetch(u)
                 .then(r => r.text())
                 .then(m => {
-                  if (getCookie("allow") == "") {
+                  if (getCookie("pref") == "") {
                     openSWANPopup("{{ .CMPURL }}");
                   } else {
                     var a = document.createElement("div");
                     a.innerHTML = m;
                     p.insertBefore(a, p.firstChild);
-                    document.getElementById("cbid").innerText = getOWIDCookieAsPrintable("cbid");
+                    document.getElementById("swid").innerText = getOWIDCookieAsPrintable("swid");
                     document.getElementById("sid").innerText = getOWIDCookieAsPrintable("sid");
-                    document.getElementById("allow").innerText = getOWIDCookieAsString("allow");
+                    document.getElementById("pref").innerText = getOWIDCookieAsString("pref");
                     document.getElementById("stop").innerText = getCookieAsString("stop");
                     if (swanWindow != null) { 
                       var t = 3000 - (new Date().getTime() - swanOpenTime.getTime());
@@ -165,7 +165,7 @@
       </div>
     </div>
 
-    {{ if eq .CBIDAsString "" }}
+    {{ if eq .SWIDAsString "" }}
     <div class="modal" id="personalize" tabindex="-1" role="dialog" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content bg-dark text-white">
@@ -262,16 +262,16 @@
               </thead>
               <tbody>
                 <tr>
-                  <th>CBID</th>
-                  <td id="cbid" style="word-break: break-all;" tabindex="0"></td>
+                  <th>SWID</th>
+                  <td id="swid" style="word-break: break-all;" tabindex="0"></td>
                 </tr>
                 <tr>
                   <th>SID</th>
                   <td id="sid" style="word-break: break-all;" tabindex="0"></td>
                 </tr>
                 <tr>
-                  <th>Allow</th>
-                  <td id="allow" style="word-break: break-all;" tabindex="0"></td>
+                  <th>Personalize</th>
+                  <td id="pref" style="word-break: break-all;" tabindex="0"></td>
                 </tr>
                 <tr>
                   <th>Stopped Ads.</th>

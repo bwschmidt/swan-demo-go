@@ -76,9 +76,9 @@ func (c *Complaint) Date() string {
 	return c.swanOWID.Date.Format("2006-01-02 15:01")
 }
 
-// CBID to use in the email template.
-func (c *Complaint) CBID() string {
-	return c.Offer.CBID.AsString()
+// SWID to use in the email template.
+func (c *Complaint) SWID() string {
+	return c.Offer.SWID.AsString()
 }
 
 // SID to use in the email template.

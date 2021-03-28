@@ -127,8 +127,8 @@ func handlerPublisherPage(
 func newSWANDataFromCookies(r *http.Request) ([]*swan.Pair, error) {
 	var p []*swan.Pair
 	for _, c := range r.Cookies() {
-		if c.Name == "cbid" || c.Name == "sid" ||
-			c.Name == "allow" || c.Name == "stop" {
+		if c.Name == "swid" || c.Name == "sid" ||
+			c.Name == "pref" || c.Name == "stop" {
 			i, err := swan.NewPairFromCookie(c)
 			if err != nil {
 				return nil, err
@@ -274,7 +274,7 @@ func getCMPURL(d *common.Domain, r *http.Request) string {
 func isSet(d []*swan.Pair) bool {
 	c := 0
 	for _, e := range d {
-		if e.Key == "allow" || e.Key == "cbid" || e.Key == "sid" {
+		if e.Key == "pref" || e.Key == "swid" || e.Key == "sid" {
 			o, err := e.AsOWID()
 			if err != nil {
 				return false
