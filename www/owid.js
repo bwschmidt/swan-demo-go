@@ -150,7 +150,7 @@ owid = function() {
     }
 
     this.appendComplaintEmail = function(e, d, o, s, g) {
-        fetch("//" + d + "/complain?" +
+        fetch((d ? "//" + d : "") + "/complain?" +
             "offerid=" + encodeURIComponent(o) + "&" +
             "swanowid=" + encodeURIComponent(s),
             { method: "GET", mode: "cors", cache: "no-cache" })
