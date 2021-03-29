@@ -117,21 +117,21 @@
             function fetchAdvert(data) {
               var u = "/advert?placement=heading";
               if (data) {
-                u += "&data=" + data;
+                u += "&encrypted=" + data;
               }
               fetch(u)
                 .then(r => r.text())
                 .then(m => {
-                  if (getCookie("pref") == "") {
+                  if (getCookie("swan-pref") == "") {
                     openSWANPopup("{{ .CMPURL }}");
                   } else {
                     var a = document.createElement("div");
                     a.innerHTML = m;
                     p.insertBefore(a, p.firstChild);
-                    document.getElementById("swid").innerText = getOWIDCookieAsPrintable("swid");
-                    document.getElementById("sid").innerText = getOWIDCookieAsPrintable("sid");
-                    document.getElementById("pref").innerText = getOWIDCookieAsString("pref");
-                    document.getElementById("stop").innerText = getCookieAsString("stop");
+                    document.getElementById("swid").innerText = getOWIDCookieAsPrintable("swan-swid");
+                    document.getElementById("sid").innerText = getOWIDCookieAsPrintable("swan-sid");
+                    document.getElementById("pref").innerText = getOWIDCookieAsString("swan-pref");
+                    document.getElementById("stop").innerText = getCookieAsString("swan-stop");
                     if (swanWindow != null) { 
                       var t = 3000 - (new Date().getTime() - swanOpenTime.getTime());
                       if (t < 0) {

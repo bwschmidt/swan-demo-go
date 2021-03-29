@@ -204,7 +204,7 @@ func getRedirectUpdateURL(
 	if err != nil {
 		return "", &common.SWANError{Err: err}
 	}
-	b, se := d.CallSWANURL("update", func(q url.Values) error {
+	b, se := d.CallSWANStorageURL(r, "update", func(q url.Values) error {
 		var err error
 
 		// Loop through all the key value pairs in the model values. If the key

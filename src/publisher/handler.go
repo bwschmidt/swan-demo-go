@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"net/url"
 	"swan"
+	"time"
 )
 
 // Handler for publisher web pages.
@@ -41,11 +42,11 @@ func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 	p, ae := newSWANDataFromPath(d, r)
 	if ae != nil {
 
-		// If the data can't be decrypted rather than another type of error
-		// then redirect to the CMP dialog.
+		// If the data can't be decrypted rather than another type of error then
+		// redirect to the CMP dialog.
 		if ae.StatusCode() >= 400 && ae.StatusCode() < 500 {
 			if d.SwanPostMessage == false {
-				http.Redirect(w, r, getCMPURL(d, r), 303)
+				http.Redirect(w, r, getCMPURL(d, r, nil), 303)
 			} else {
 				handlerPublisherPage(d, w, r, p)
 			}
@@ -80,19 +81,26 @@ func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// If there is valid SWAN data then display the page using the page handler.
-	// If the SWAN data is not complete or valid then ask the user to verify
-	// or add the required data via the update redirect action.
+	// If the SWAN data is not complete, valid, or needs revalidating because it
+	// might be old then ask the user to verify or add the required data via the
+	// User Interface Provider redirect action.
 	// If the SWAN data is not present or invalid then redirect to SWAN to
 	// get the latest data.
 	if p != nil && len(p) > 0 {
 		if isSet(p) {
-			handlerPublisherPage(d, w, r, p)
+
+			// Check to see if the values need to be revalidated.
+			if d.SwanPostMessage == false && revalidateNeeded(p) {
+				redirectToSWANFetch(d, w, r, p)
+			} else {
+				handlerPublisherPage(d, w, r, p)
+			}
 		} else {
-			http.Redirect(w, r, getCMPURL(d, r), 303)
+			http.Redirect(w, r, getCMPURL(d, r, p), 303)
 		}
 	} else {
 		if d.SwanPostMessage == false {
-			redirectToSWANFetch(d, w, r)
+			redirectToSWANFetch(d, w, r, p)
 		} else {
 			handlerPublisherPage(d, w, r, p)
 		}
@@ -112,7 +120,7 @@ func handlerPublisherPage(
 	var m Model
 	m.Domain = d
 	m.Request = r
-	m.results = p
+	m.swanData = p
 	g := gzip.NewWriter(w)
 	defer g.Close()
 	w.Header().Set("Content-Encoding", "gzip")
@@ -127,13 +135,8 @@ func handlerPublisherPage(
 func newSWANDataFromCookies(r *http.Request) ([]*swan.Pair, error) {
 	var p []*swan.Pair
 	for _, c := range r.Cookies() {
-		if c.Name == "swid" || c.Name == "sid" ||
-			c.Name == "pref" || c.Name == "stop" {
-			i, err := swan.NewPairFromCookie(c)
-			if err != nil {
-				return nil, err
-			}
-			p = append(p, i)
+		if swan.IsSWANCookie(c) {
+			p = append(p, swan.NewPairFromCookie(c))
 		}
 	}
 	return p, nil
@@ -196,8 +199,9 @@ func redirectToCleanURL(
 func redirectToSWANFetch(
 	d *common.Domain,
 	w http.ResponseWriter,
-	r *http.Request) {
-	u, err := getSWANURL(d, r)
+	r *http.Request,
+	p []*swan.Pair) {
+	u, err := getSWANURL(d, r, p)
 	if err != nil {
 		common.ReturnProxyError(d.Config, w, err)
 		return
@@ -207,12 +211,14 @@ func redirectToSWANFetch(
 
 func getSWANURL(
 	d *common.Domain,
-	r *http.Request) (string, *common.SWANError) {
+	r *http.Request,
+	p []*swan.Pair) (string, *common.SWANError) {
 	return d.CreateSWANURL(
 		r,
 		common.GetCleanURL(d.Config, r).String(),
 		"fetch",
 		func(q url.Values) {
+			addSWANParams(r, &q, p)
 			setFlags(d, &q)
 			if d.SwanNodeCount > 0 {
 				q.Set("nodeCount", fmt.Sprintf("%d", d.SwanNodeCount))
@@ -236,7 +242,7 @@ func setFlags(d *common.Domain, q *url.Values) {
 func getHomeNode(
 	d *common.Domain,
 	r *http.Request) (string, *common.SWANError) {
-	b, err := d.CallSWANURL("home-node", nil)
+	b, err := d.CallSWANStorageURL(r, "home-node", nil)
 	if err != nil {
 		return "", err
 	}
@@ -251,12 +257,13 @@ func setCookies(r *http.Request, w http.ResponseWriter, p []*swan.Pair) {
 		s = false
 	}
 	for _, i := range p {
-		http.SetCookie(w, i.AsCookie(r, w, s))
+		c := i.AsCookie(r, w, s)
+		http.SetCookie(w, c)
 	}
 }
 
 // Returns the CMP preferences URL.
-func getCMPURL(d *common.Domain, r *http.Request) string {
+func getCMPURL(d *common.Domain, r *http.Request, p []*swan.Pair) string {
 	var u url.URL
 	u.Scheme = d.Config.Scheme
 	u.Host = d.CMP
@@ -264,9 +271,20 @@ func getCMPURL(d *common.Domain, r *http.Request) string {
 	q := u.Query()
 	q.Set("returnUrl", common.GetCleanURL(d.Config, r).String())
 	q.Set("accessNode", d.SWANAccessNode)
+	addSWANParams(r, &q, p)
 	setFlags(d, &q)
 	u.RawQuery = q.Encode()
 	return u.String()
+}
+
+// Add the SWAN data values known the to publisher. Used for default values if
+// others do not already exist in the SWAN network.
+func addSWANParams(r *http.Request, q *url.Values, p []*swan.Pair) {
+	if p != nil {
+		for _, i := range p {
+			q.Set(i.Key, i.Value)
+		}
+	}
 }
 
 // isSet returns true if all three of the values are present in the results and
@@ -285,6 +303,22 @@ func isSet(d []*swan.Pair) bool {
 		}
 	}
 	return c == 3
+}
+
+// Get the revalidation time from the swan validation cookie if present. Then
+// check to see if the time has elapsed. If so then return true to indicate the
+// SWAN data needs to be revalidated with the SWAN Operator.
+func revalidateNeeded(d []*swan.Pair) bool {
+	for _, e := range d {
+		if e.Key == "val" {
+			t, err := time.Parse(swan.ValidationTimeFormat, e.Value)
+			if err != nil {
+				return true
+			}
+			return time.Now().UTC().After(t)
+		}
+	}
+	return false
 }
 
 func decode(d *common.Domain, v string) ([]byte, *common.SWANError) {

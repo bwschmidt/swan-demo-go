@@ -151,16 +151,19 @@ func (d *Domain) LookupHTML(p string) *template.Template {
 	return t
 }
 
-func (d *Domain) setCommon(r *http.Request, q *url.Values) {
-
-	// Set the access key
-	q.Set("accessKey", d.SWANAccessKey)
-
-	// Set the user interface title, message and colours.
-	q.Set("title", "Your Preference Management")
-
-	// Add the headers that are relevant to the home node calculation.
-	swift.SetHomeNodeHeaders(r, q)
+// CallSWANStorageURL is like CallSWANURL but adds the parameters needed for the
+// home node calculation.
+func (d *Domain) CallSWANStorageURL(
+	r *http.Request,
+	action string,
+	addParams func(url.Values) error) ([]byte, *SWANError) {
+	return d.CallSWANURL(action, func(q url.Values) error {
+		swift.SetHomeNodeHeaders(r, &q)
+		if addParams != nil {
+			return addParams(q)
+		}
+		return nil
+	})
 }
 
 // CallSWANURL constructs a URL, gets the response, and then returns the
@@ -218,8 +221,7 @@ func (d *Domain) CreateSWANURL(
 	returnURL string,
 	action string,
 	addParams func(url.Values)) (string, *SWANError) {
-	b, err := d.CallSWANURL(action, func(q url.Values) error {
-		d.setCommon(r, &q)
+	b, err := d.CallSWANStorageURL(r, action, func(q url.Values) error {
 
 		// Set the return URL after the operation completes.
 		q.Set("returnUrl", returnURL)

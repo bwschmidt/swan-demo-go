@@ -42,14 +42,14 @@ func HandlerAdvert(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 	// advert and set cookies to store it in the response.
 	if r.Form.Get("encrypted") != "" {
 		var e *common.SWANError
-		m.results, e = newSWANData(d, r.Form.Get("encrypted"))
+		m.swanData, e = newSWANData(d, r.Form.Get("encrypted"))
 		if e != nil {
 			common.ReturnProxyError(d.Config, w, e)
 			return
 		}
-		setCookies(r, w, m.results)
+		setCookies(r, w, m.swanData)
 	} else {
-		m.results, err = newSWANDataFromCookies(r)
+		m.swanData, err = newSWANDataFromCookies(r)
 		if err != nil {
 			common.ReturnStatusCodeError(
 				d.Config,
@@ -57,7 +57,7 @@ func HandlerAdvert(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 				err,
 				http.StatusBadRequest)
 		}
-		if m.results == nil {
+		if m.swanData == nil {
 			common.ReturnStatusCodeError(
 				d.Config,
 				w,

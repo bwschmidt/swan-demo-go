@@ -34,18 +34,18 @@ import (
 // Model used with HTML templates.
 type Model struct {
 	common.PageModel
-	results []*swan.Pair // The SWAN data for display
+	swanData []*swan.Pair // The SWAN data for display
 }
 
 // CMPURL returns the URL for the CMP dialog.
 func (m Model) CMPURL() string {
-	return getCMPURL(m.Domain, m.Request)
+	return getCMPURL(m.Domain, m.Request, m.swanData)
 }
 
 // SWANURL returns the URL for the SWAN operation. Used when the SWAN
 // transaction is completed in a pop up window or iFrame.
 func (m Model) SWANURL() string {
-	u, _ := getSWANURL(m.Domain, m.Request)
+	u, _ := getSWANURL(m.Domain, m.Request, m.swanData)
 	return u
 }
 
@@ -206,7 +206,7 @@ func (m Model) pref() *swan.Pair { return m.findResult("pref") }
 func (m Model) stop() *swan.Pair { return m.findResult("stop") }
 
 func (m Model) findResult(k string) *swan.Pair {
-	for _, n := range m.results {
+	for _, n := range m.swanData {
 		if strings.EqualFold(k, n.Key) {
 			return n
 		}
@@ -218,14 +218,26 @@ func (m Model) findResult(k string) *swan.Pair {
 func (m *Model) newOfferID(placement string) (*owid.Node, *common.SWANError) {
 	var n owid.Node
 	var err *common.SWANError
+	if m.swid() == nil {
+		return nil, &common.SWANError{Err: fmt.Errorf("SWID missing")}
+	}
+	if m.sid() == nil {
+		return nil, &common.SWANError{Err: fmt.Errorf("SID missing")}
+	}
+	if m.pref() == nil {
+		return nil, &common.SWANError{Err: fmt.Errorf("Pref missing")}
+	}
+	if m.stop() == nil {
+		return nil, &common.SWANError{Err: fmt.Errorf("Stop missing")}
+	}
 	n.OWID, err = m.Domain.CallSWANURL("create-offer-id",
 		func(q url.Values) error {
 			q.Add("placement", placement)
 			q.Add("pubdomain", m.Request.Host)
-			q.Add("swid", m.swid().AsBase64())
-			q.Add("sid", m.sid().AsBase64())
-			q.Add("pref", m.pref().AsBase64())
-			q.Add("stop", m.stop().AsBase64())
+			q.Add("swid", m.swid().Value)
+			q.Add("sid", m.sid().Value)
+			q.Add("pref", m.pref().Value)
+			q.Add("stop", m.stop().Value)
 			return nil
 		})
 	if err != nil {

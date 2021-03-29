@@ -101,7 +101,7 @@ func AsString(p *swan.Pair) string {
 	}
 	o, err := p.AsOWID()
 	if err != nil || o == nil {
-		return string(p.Value)
+		return p.Value
 	}
 	return o.PayloadAsString()
 }
@@ -113,7 +113,7 @@ func AsPrintable(p *swan.Pair) string {
 	}
 	o, err := p.AsOWID()
 	if err != nil || o == nil {
-		return string(p.Value)
+		return p.Value
 	}
 	return o.PayloadAsPrintable()
 }
