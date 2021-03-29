@@ -311,6 +311,10 @@
             {{ range $publisher := .DomainsByCategory "Publisher" }}
             <li><a href="//{{ $publisher.Host }}">{{ $publisher.Name }}</a></li>
             {{ end }}
+            <li>{{ .HomeNode }}</li>
+            {{ range $h := .HttpHeaders }}
+            <li>{{ $h }}</li>
+            {{end}}
           </ol>
         </div>
       </aside>

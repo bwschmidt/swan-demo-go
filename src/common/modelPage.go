@@ -17,6 +17,7 @@
 package common
 
 import (
+	"fmt"
 	"fod"
 	"net/http"
 	"net/url"
@@ -31,6 +32,17 @@ type PageModel struct {
 	Domain *Domain // The domain associated with the request
 	// The request that relates to the page request with the ParseForm method complete
 	Request *http.Request
+}
+
+// HttpHeaders available in the request.
+func (m PageModel) HttpHeaders() []string {
+	s := make([]string, len(m.Request.Header))
+	i := 0
+	for k, v := range m.Request.Header {
+		s[i] = fmt.Sprintf("%s: %s", k, v)
+		i++
+	}
+	return s
 }
 
 // SupportsHTTPS returns true if the server supports HTTPS.
