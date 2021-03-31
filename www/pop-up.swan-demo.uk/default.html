@@ -79,7 +79,7 @@
             function getCookieAsString(n)
             {
               var s = "";
-              Uint8Array.from(atob(getCookie(n)), c => s += c);
+              Uint8Array.from(getCookie(n), c => s += c);
               return s;
             }
             function getOWIDCookieAsString(n)
