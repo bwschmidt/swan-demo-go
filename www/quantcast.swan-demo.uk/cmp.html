@@ -7,6 +7,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="/bootstrap.min.css" rel="stylesheet">
     <style>
+    .icon {
+        background-color: transparent;
+        border: none;
+    }
     .modal {
         display: block;
         overflow: scroll;
@@ -73,28 +77,46 @@
                 <div class="modal-body">
                     <div class="pt-3 pb-3">
                         <div class="form-group mb-6">
-                            <label for="swid">Secure Web ID</label>
+                            <label for="swid">
+                                <span>Secure Web ID</span>
+                                <button class="icon" type="button" data-toggle="collapse" data-target="#swidHelp" aria-expanded="false" aria-controls="collapseExample">
+                                    <img src="/info-circle.svg">
+                                </button>
+                            </label>
                             <input class="button-link reset" type="submit" value="Reset" name="reset-swid"/>
                             <input type="text" class="form-control" value="{{ .SWIDAsString }}" readonly>
                             <input type="hidden" id="swid" name="swid" value="{{ .SWIDAsOWID }}">
-                            <small id="swidHelp" class="form-text text-muted">
-                                This ID enables your ad-funded access to the Open Web. You can reset it at any time. Recipients promise not to use for personalized marketing or associate this with your identity without consent.
+                            <small id="swidHelp" class="form-text text-muted collapse">
+                                This ID enables your ad-funded access to the Open Web. You can reset it at any time. Recipients promise not to use for personalized marketing or associate this with your identity without consent. Your consent will automatically expire 2 years after you provide it. You have a right to be forgotten, which you can exercise at any time by resetting your Secure Web ID. You can also obtain a temporary Secure Web ID by using the incognito/private browsing function of your browser.
                             </small>
                         </div>
                         <div class="form-group form-check mb-6 pl-2 py-4">
                             <div>
                             <input type="checkbox" id="pref" name="pref" {{ if eq .Pref "on" }} checked {{ end }}>
-                            <label class="form-check-label small" for="pref">Personalize Marketing</label>
+                            <label class="form-check-label small" for="pref">
+                                <span>Personalize Marketing</span>
+                                <button class="icon" type="button" data-toggle="collapse" data-target="#prefHelp2" aria-expanded="false" aria-controls="collapseExample">
+                                    <img src="/info-circle.svg">
+                                </button>
+                            </label>
                             <small id="prefHelp" class="form-text text-muted">
-                                Tick to receive more personalized content.
+                                Tick to receive more personalized content. If you choose not to receive personalized content, you may still receive targeted content unrelated to your browsing activity.
+                            </small>
+                            <small id="prefHelp2" class="form-text text-muted collapse">
+                                “Personalized marketing” means delivering targeted content to a particular web-enabled device based on your browsing activity and interactions.
                             </small>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="email">Email address (optional)</label>
+                            <label for="email">
+                                <span>Email address (optional)</span>
+                                <button class="icon" type="button" data-toggle="collapse" data-target="#emailHelp" aria-expanded="false" aria-controls="collapseExample">
+                                    <img src="/info-circle.svg">
+                                </button>
+                            </label>
                             <input type="email" class="form-control" id="email" name="email" aria-describedby="emailHelp" placeholder="Optional email" value="{{ .Email }}">
-                            <small id="emailHelp" class="form-text text-muted">
-                                Advertisers, publishers and their partners will receive only an encrypted version of your email. By providing this, they can apply your preferences to your experience when you use other web-enabled devices.
+                            <small id="emailHelp" class="form-text text-muted collapse">
+                                Advertisers, publishers and their partners will receive only an encrypted version of your email address. By providing this, you can apply your preferences to your experience when you use other web-enabled devices.
                             </small>
                         </div>
                     </div>        
@@ -105,5 +127,18 @@
             </div>
         </div>
     </form>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="jquery-3.2.1.slim.min.js"></script>
+    <script src="popper.min.js"></script>
+    <script src="bootstrap.min.js"></script>
+    <script src="holder.min.js"></script>
+    <script>
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+    })
+    </script>
 </body>
 </html>
