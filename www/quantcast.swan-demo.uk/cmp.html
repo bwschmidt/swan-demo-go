@@ -87,11 +87,10 @@
                             <input type="text" class="form-control" value="{{ .SWIDAsString }}" readonly>
                             <input type="hidden" id="swid" name="swid" value="{{ .SWIDAsOWID }}">
                             <small id="swidHelp" class="form-text text-muted collapse">
-                                This ID enables your ad-funded access to the Open Web. You can reset it at any time. Recipients promise not to use for personalized marketing or associate this with your identity without consent. Your consent will automatically expire 2 years after you provide it. You have a right to be forgotten, which you can exercise at any time by resetting your Secure Web ID. You can also obtain a temporary Secure Web ID by using the incognito/private browsing function of your browser.
+                                You have a right to be forgotten, which you can exercise at any time by resetting your Secure Web ID. You can also obtain a temporary Secure Web ID by using the incognito/private browsing function of your browser.
                             </small>
                         </div>
                         <div class="form-group form-check mb-6 pl-2 py-4">
-                            <div>
                             <input type="checkbox" id="pref" name="pref" {{ if eq .Pref "on" }} checked {{ end }}>
                             <label class="form-check-label small" for="pref">
                                 <span>Personalize Marketing</span>
@@ -100,12 +99,12 @@
                                 </button>
                             </label>
                             <small id="prefHelp" class="form-text text-muted">
-                                Tick to receive more personalized content. If you choose not to receive personalized content, you may still receive targeted content unrelated to your browsing activity.
+                                You may still receive targeted content unrelated to your browsing activity or interactions.
                             </small>
                             <small id="prefHelp2" class="form-text text-muted collapse">
-                                “Personalized marketing” means delivering targeted content to a particular web-enabled device based on your browsing activity and interactions.
+                                Select "Personalized marketing" to consent to receive targeted content to a web-enabled device based on your browsing activity and interactions.
+                                Your consent will automatically expire 2 years after you provide it.
                             </small>
-                            </div>
                         </div>
                         <div class="form-group">
                             <label for="email">
@@ -116,7 +115,14 @@
                             </label>
                             <input type="email" class="form-control" id="email" name="email" aria-describedby="emailHelp" placeholder="Optional email" value="{{ .Email }}">
                             <small id="emailHelp" class="form-text text-muted collapse">
-                                Advertisers, publishers and their partners will receive only an encrypted version of your email address. By providing this, you can apply your preferences to your experience when you use other web-enabled devices.
+                                By providing your email address, you can apply your preferences to your experience when you use other web-enabled devices.
+                            </small>
+                        </div>
+                        <div class="form-group">
+                            <small id="genHelp" class="form-text text-muted">
+                                <p>You may change your preferences at any time by toggling the applicable preference options above. Please see further our <a href="https://github.com/SWAN-community/swan/blob/main/model-terms-explainer.md">Privacy Policy</a>.</p>
+                                <p>These details are shared with the SWAN Network to manage your preferences. See further the SWAN Network <a href="https://github.com/SWAN-community/swan/blob/main/legal-entity-explainer.md">Privacy Notice</a>.</p>
+                                <p>Note: links are to explainers not real privacy policies. All data is used for demonstration purposes only.</p>
                             </small>
                         </div>
                     </div>        
