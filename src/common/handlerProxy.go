@@ -67,6 +67,7 @@ func handlerSWANProxy(
 	g := gzip.NewWriter(w)
 	defer g.Close()
 	w.Header().Set("Content-Encoding", "gzip")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", res.Header.Get("Content-Type"))
 	w.Header().Set("Cache-Control", "no-cache")
 	_, err = g.Write(b)
