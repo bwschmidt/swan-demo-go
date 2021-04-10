@@ -49,16 +49,28 @@ func handleStaticFolder(
 	w http.ResponseWriter,
 	r *http.Request,
 	folder string) (bool, error) {
+
+	// Get all the file system items in the folder provided.
 	files, err := ioutil.ReadDir(folder)
 	if err != nil {
 		return false, &SWANError{err, nil}
 	}
+
+	// Loop through the file system items to find any that match the request.
 	for _, f := range files {
+
+		// If this file system item is a file and it matches the name of the
+		// file requested in the URL path then serve the file.
 		if f.IsDir() == false &&
 			f.Name() == filepath.Base(r.URL.Path) {
 			return handlerFile(w, r, filepath.Join(folder, f.Name())), nil
 		}
-		if f.IsDir() == true && "\\"+f.Name() == filepath.Dir(r.URL.Path) {
+
+		// If this file system item is a directory and it matches the last part
+		// of the request URL path then evaluate the folder for the requested
+		// static file.
+		if f.IsDir() == true &&
+			strings.HasSuffix(filepath.Dir(r.URL.Path), f.Name()) {
 			return handleStaticFolder(d, w, r, folder+filepath.Dir(r.URL.Path))
 		}
 	}

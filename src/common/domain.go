@@ -61,21 +61,28 @@ type Domain struct {
 	handler func(d *Domain, w http.ResponseWriter, r *http.Request)
 }
 
+// GetConfig returns the configuration from the folder, or nil if the
+// configuration does not exist.
+func GetConfigFile(folder string) *os.File {
+	f, _ := os.Open(filepath.Join(folder, "config.json"))
+	return f
+}
+
 // NewDomain creates a new instance of domain information from the file
 // provided.
-func NewDomain(c *Configuration, folder string) (*Domain, error) {
-	var d Domain
+func NewDomain(
+	c *Configuration,
+	folder string,
+	configFile *os.File) (*Domain, error) {
+	var err error
 
-	// Read the configuration for the folder provided.
-	configFile, err := os.Open(filepath.Join(folder, "config.json"))
+	// Read the configuration file into the domain data structure.
+	var d Domain
 	defer configFile.Close()
-	if err != nil {
-		return nil, err
-	}
 	jsonParser := json.NewDecoder(configFile)
 	jsonParser.Decode(&d)
 
-	// Set the private members.
+	// Add some additional parameters.
 	d.Config = c
 	d.Host = filepath.Base(folder)
 	d.folder = folder
@@ -84,7 +91,6 @@ func NewDomain(c *Configuration, folder string) (*Domain, error) {
 		return nil, err
 	}
 	d.owidStore = c.owid
-
 	return &d, nil
 }
 

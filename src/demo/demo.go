@@ -71,7 +71,8 @@ func AddHandlers(settingsFile string) {
 }
 
 // parseDomains returns an array of domains (e.g. swan-demo.uk) with all the
-// information needed to server static, API and HTML requests.
+// information needed to server static, API and HTML requests. Folder names
+// relate to the domain name and must contain a config.json file to be valid.
 // c is the general server configuration.
 // path provides the root folder where the child folders are the names of the
 // domains that the demo responds to.
@@ -84,22 +85,20 @@ func parseDomains(
 		return nil, err
 	}
 	for _, f := range files {
-
-		if f.Name() == "owid-js" {
-			continue
-		}
-
-		// Domains are the directories of the folder provided.
 		if f.IsDir() {
-			domain, err := common.NewDomain(c, filepath.Join(path, f.Name()))
-			if err != nil {
-				return nil, err
+			p := filepath.Join(path, f.Name())
+			g := common.GetConfigFile(p)
+			if g != nil {
+				domain, err := common.NewDomain(c, p, g)
+				if err != nil {
+					return nil, err
+				}
+				err = addHandler(domain)
+				if err != nil {
+					return nil, err
+				}
+				domains = append(domains, domain)
 			}
-			err = addHandler(domain)
-			if err != nil {
-				return nil, err
-			}
-			domains = append(domains, domain)
 		}
 	}
 	return domains, nil
