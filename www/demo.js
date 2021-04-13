@@ -1,7 +1,9 @@
+// JavaScript used only in the SWAN demo. Not for production use.
+
 var loaded = false;
 
 stop = function(s, d, r) {
-    loadOWID.then(() => {
+    loadOWID().then(() => {
         fetch("/stop?" +
             "host=" + encodeURIComponent(d) + "&" +
             "returnUrl=" + encodeURIComponent(r),
