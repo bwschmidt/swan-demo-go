@@ -50,9 +50,6 @@ func handlerStop(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 		func(q url.Values) {
 			q.Set("host", r.Form.Get("host"))
 
-			// Demonstrate the CMP can control the nodes used.
-			q.Set("nodeCount", "30")
-
 			// Demonstrate the CMP can set all the messages.
 			if q.Get("message") == "" {
 				q.Set("message", fmt.Sprintf(
