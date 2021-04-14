@@ -32,6 +32,12 @@ func handlerStatic(
 	var err error
 	folder := d.folder
 	found := false
+
+	// If the request is for the favicon.ico then rename the path.
+	if r.URL.Path == "/favicon.ico" {
+		r.URL.Path = "/noun_Swan_3263882.svg"
+	}
+
 	for found == false && strings.Contains(folder, "www") {
 		found, err = handleStaticFolder(d, w, r, folder)
 		if err != nil {
