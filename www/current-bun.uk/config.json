@@ -7,6 +7,7 @@
    "swanProgressColor": "#5a5a5a",
    "swanDisplayUserInterface" : false,
    "swanPostMessage": false,
+   "swanUseHomeNode": true,
    "cmp": "liveramp.swan-demo.uk",
    "SWANAccessNode": "51db.uk",
    "SWANAccessKey": "PubKeyCurrentBun",

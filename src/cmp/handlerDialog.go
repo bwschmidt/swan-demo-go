@@ -327,8 +327,8 @@ func redirectToSWANDialog(
 		"fetch",
 		func(q url.Values) {
 
-			// CMP fetch operations only need to consider one node as the
-			// caller will have already recently accessed SWAN.
+			// User Interface Provider fetch operations only need to consider
+			// one node as the caller will have already recently accessed SWAN.
 			q.Add("nodeCount", "1")
 
 			// Use the return URL provided in the request to this URL as the

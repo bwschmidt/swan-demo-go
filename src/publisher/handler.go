@@ -237,6 +237,11 @@ func setFlags(d *common.Domain, q *url.Values) {
 	} else {
 		q.Set("displayUserInterface", "false")
 	}
+	if d.SwanUseHomeNode {
+		q.Set("useHomeNode", "true")
+	} else {
+		q.Set("useHomeNode", "false")
+	}
 }
 
 func getHomeNode(

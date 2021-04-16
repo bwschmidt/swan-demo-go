@@ -44,6 +44,7 @@ type Domain struct {
 	SwanProgressColor        string // Message progress color if used with SWAN
 	SwanPostMessage          bool   // True if the publisher gets the results from SWAN as a post message
 	SwanDisplayUserInterface bool   // True to display the user interface
+	SwanUseHomeNode          bool   // True to use the home node if it has current data
 	SwanNodeCount            int    // The number of SWAN nodes to use for operations
 	// The domain of the access node used with SWAN (only set for CMPs)
 	SWANAccessNode string
