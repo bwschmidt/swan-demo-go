@@ -262,8 +262,10 @@ func setCookies(r *http.Request, w http.ResponseWriter, p []*swan.Pair) {
 		s = false
 	}
 	for _, i := range p {
-		c := i.AsCookie(r, w, s)
-		http.SetCookie(w, c)
+		if i.Value != "" {
+			c := i.AsCookie(r, w, s)
+			http.SetCookie(w, c)
+		}
 	}
 }
 
