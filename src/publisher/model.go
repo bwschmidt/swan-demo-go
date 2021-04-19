@@ -105,17 +105,68 @@ func (m Model) Stopped() []string {
 
 func (m Model) NewOfferIDAsString() string {
 
+	d := m.Domain
 	// Use the SWAN network to generate the Offer ID.
-	r, ae := m.newOfferID("placement")
+	offer, ae := m.newOfferID("placement")
 	if ae != nil {
 		return ""
 	}
-	// Get the OWID tree as a base 64 string.
-	e, err := r.AsJSON()
+
+	// Verify that this domain can create OWIDs. Failure to register a domain
+	// as an OWID creator is a common setup mistake.
+	_, err := d.GetOWIDCreator()
 	if err != nil {
 		return ""
 	}
-	return base64.StdEncoding.EncodeToString(e)
+
+	// The single leaf is the parent Processor OWID. If there isn't a single
+	// leaf then too much information has been sent from the caller.
+	parent, err := offer.GetLeaf()
+	if err != nil {
+		return ""
+	}
+
+	// Create an OWID for this processor.
+	t, err := d.OWID.CreateOWID(nil)
+	if err != nil {
+		return ""
+	}
+	if t == nil {
+		return ""
+	}
+
+	// Sign the Processor OWID with the root OWID now that it's part of the
+	// tree. This can be used by down stream suppliers to verify that this
+	// processor was involved in the transaction.
+	r, err := offer.GetOWID()
+	if err != nil {
+		return ""
+	}
+	err = d.OWID.Sign(t, r)
+	if err != nil {
+		return ""
+	}
+
+	// Add this signed Processor OWID to the children of the parent.
+	// var n *owid.Node
+	// n, err = parent.AddOWID(t)
+	// if err != nil {
+		// return ""
+	// }
+
+	var c owid.Node
+	c.OWID, err = t.AsByteArray()
+	if err != nil {
+		return ""
+	}
+	_, err = parent.AddChild(&c)
+
+	// Get the OWID tree as a base 64 string.
+	e, err := offer.AsJSON()
+	if err != nil {
+		return ""
+	}
+	return string(e)
 }
 
 // DomainsByCategory returns all the domains that match the category.
