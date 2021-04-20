@@ -18,7 +18,7 @@
     };
 
     window.adInfo = function(offer) {
-      var owid = "http://cmp.swan-demo.uk/info?owid=" + btoa(window.swan_offers[offer]);
+      var owid = "http://cmp.swan-demo.uk/info?owid=" + btoa(JSON.stringify(window.swan_offers[offer]));
       window.open(owid, "_blank");
     };
 
@@ -59,7 +59,7 @@
     var pbjs = pbjs || {};
     pbjs.que = pbjs.que || [];
 </script>
-<script src="http://localhost:9999/build/dev/prebid.js" async></script>
+<script src="prebid.js" async></script>
 
 <script>
     var googletag = googletag || {};

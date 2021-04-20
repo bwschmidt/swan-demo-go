@@ -119,8 +119,7 @@ func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 				Price: rand.Float64()*5,
 				Height: e.Banner.Formats[0].Height,
 				Width: e.Banner.Formats[0].Width,
-				CreativeID: "swan-crid"
-			}
+				CreativeID: "swan-crid"}
 			bids[i] = bid
 		}
 		var seatbids = []openrtb.SeatBid {openrtb.SeatBid{Seat: "swan-seat", Bids: bids}}
