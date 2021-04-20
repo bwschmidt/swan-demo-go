@@ -104,64 +104,67 @@ func (m Model) Stopped() []string {
 
 func (m Model) NewOfferIDAsString() string {
 
-	d := m.Domain
-	// Use the SWAN network to generate the Offer ID.
-	offer, ae := m.newOfferID("placement")
-	if ae != nil {
-		return ""
-	}
+	// this function is just duplicating the new offer functions
+	// so i can hack a placement id. will refactor
 
-	// Verify that this domain can create OWIDs. Failure to register a domain
-	// as an OWID creator is a common setup mistake.
-	_, err := d.GetOWIDCreator()
+	var err error
+	of := swan.NewOffer()
+
+	// Get the page placement from the form parameters.
+	of.Placement = "advert1"
+
+	// Set the publisher domain from the request.
+	of.PubDomain = m.Request.Host
+
+	// Get the SWID as an OWID.
+	of.SWID, err = getOWID(m.Config(), m.Request, m.swid())
 	if err != nil {
 		return ""
 	}
 
-	// The single leaf is the parent Processor OWID. If there isn't a single
-	// leaf then too much information has been sent from the caller.
-	parent, err := offer.GetLeaf()
+	// Get the Signed in Identifier (SID) as an OWID.
+	of.SID, err = getOWID(m.Config(), m.Request, m.sid())
 	if err != nil {
 		return ""
 	}
 
-	// Create an OWID for this processor.
-	t, err := d.OWID.CreateOWID(nil)
-	if err != nil {
-		return ""
-	}
-	if t == nil {
-		return ""
-	}
-
-	// Sign the Processor OWID with the root OWID now that it's part of the
-	// tree. This can be used by down stream suppliers to verify that this
-	// processor was involved in the transaction.
-	r, err := offer.GetOWID()
-	if err != nil {
-		return ""
-	}
-	err = d.OWID.Sign(t, r)
+	// Get the preferences as an OWID.
+	of.Preferences, err = getOWID(m.Config(), m.Request, m.pref())
 	if err != nil {
 		return ""
 	}
 
-	// Add this signed Processor OWID to the children of the parent.
-	// var n *owid.Node
-	// n, err = parent.AddOWID(t)
-	// if err != nil {
-		// return ""
-	// }
+	// Get the stopped adverts string.
+	of.Stopped = offerGetStopped(m.Request)
 
-	var c owid.Node
-	c.OWID, err = t.AsByteArray()
+	// Random one time data is used to ensure the Offer ID is unique for all
+	// time.
+	of.UUID, err = uuid.New().MarshalBinary()
 	if err != nil {
 		return ""
 	}
-	_, err = parent.AddChild(&c)
 
-	// Get the OWID tree as a base 64 string.
-	e, err := offer.AsJSON()
+	b, err := of.AsByteArray()
+	if err != nil {
+		return ""
+	}
+	oc, err := m.Domain.GetOWIDCreator()
+	if err != nil {
+		return ""
+	}
+	o, err := oc.CreateOWIDandSign(b)
+	if err != nil {
+		return ""
+	}
+
+	be, err := o.AsByteArray()
+	if err != nil {
+		return ""
+	}
+
+	n := &owid.Node{OWID: be}
+
+	e, err := n.AsJSON()
 	if err != nil {
 		return ""
 	}
