@@ -110,15 +110,17 @@ func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 			ad.MediaURL)
 
 			var adomain = []string {ad.AdvertiserURL}
-			var bid = openrtb.Bid{ID: "bid-id",
-														ImpID: e.ID,
-														AdvDomains: adomain,
-														Ext: b,
-														AdMarkup: adm,
-														Price: rand.Float64()*5,
-													  Height: e.Banner.Formats[0].Height,
-														Width: e.Banner.Formats[0].Width,
-														CreativeID: "swan-crid"}
+			var bid = openrtb.Bid{
+				ID: "bid-id",
+				ImpID: e.ID,
+				AdvDomains: adomain,
+				Ext: b,
+				AdMarkup: adm,
+				Price: rand.Float64()*5,
+				Height: e.Banner.Formats[0].Height,
+				Width: e.Banner.Formats[0].Width,
+				CreativeID: "swan-crid"
+			}
 			bids[i] = bid
 		}
 		var seatbids = []openrtb.SeatBid {openrtb.SeatBid{Seat: "swan-seat", Bids: bids}}
