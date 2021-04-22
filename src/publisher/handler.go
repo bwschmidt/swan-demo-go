@@ -222,6 +222,7 @@ func getSWANURL(
 		func(q url.Values) {
 			addSWANParams(r, &q, p)
 			setFlags(d, &q)
+			q.Set("browserWarning", "1")
 			if d.SwanNodeCount > 0 {
 				q.Set("nodeCount", fmt.Sprintf("%d", d.SwanNodeCount))
 			}
