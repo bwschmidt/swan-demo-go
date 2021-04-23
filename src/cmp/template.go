@@ -18,6 +18,7 @@ package cmp
 
 import (
 	"strconv"
+	"strings"
 )
 
 type EmailTemplate struct {
@@ -45,10 +46,11 @@ func (t EmailTemplate) Number(i string) string {
 		return ""
 	}
 
+	var is []string
 	for n, v := range t.Salt {
 		if v == byte(b-1) {
-			return strconv.Itoa(n + 1)
+			is = append(is, strconv.Itoa(n+1))
 		}
 	}
-	return ""
+	return strings.Join(is[:], " ")
 }
