@@ -6,64 +6,7 @@
     <title>{{ .Title }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="/bootstrap.min.css" rel="stylesheet">
-    <style>
-    .icon {
-        background-color: transparent;
-        border: none;
-    }        
-    .modal {
-        display: block;
-        overflow: scroll;
-    }
-    .reset {
-        float:right;
-        border: none;
-        background: none;
-        font-size: 0.8em;
-        text-decoration: underline;
-    }
-    body, .blur {
-        height: 100vh;
-        width: 100vw;
-    }
-    body {
-        background-repeat: no-repeat;
-        background-position: center;
-        background-color: {{ .BackgroundColor }};
-        backdrop-filter: blur(4px);
-    }
-    .blur {
-        background-color: rgba(0,0,0, 0.4);
-    }
-    @media only screen and (max-width: 600px) {
-        body {
-            background-image: url(//{{ .PublisherHost }}/background-600.png);
-        }
-    }
-    @media only screen and (min-width: 600px) {
-        body {
-            background-image: url(//{{ .PublisherHost }}/background-767.png);
-        }
-    }
-    @media only screen and (min-width: 768px) {
-        {
-            background-image: url(//{{ .PublisherHost }}/background-991.png);
-        }
-    }
-    @media only screen and (min-width: 992px) {
-        body {
-            background-image: url(//{{ .PublisherHost }}/background-1199.png);
-        }
-    }
-    @media only screen and (min-width: 1200px) {
-        body {
-            background-image: url(//{{ .PublisherHost }}/background.png);
-        }
-    }
-    #salt-container {
-        float: left;
-    }
-    </style>
+    <link href="/cmp.css" rel="stylesheet">
 </head>
 <body>
     <div class="blur"></div>
