@@ -26,7 +26,7 @@ function saltShow() {
 // Clear the salt 
 function saltClear() {
     $('#salt-form-group').collapse('hide');
-    complete();
+    saltComplete();
 }
 
 // Called when the salt grid has been completed.
