@@ -27,11 +27,12 @@ import (
 
 // infoModel data needed for the advert information interface.
 type infoModel struct {
-	OWIDs     map[*owid.OWID]interface{}
-	Bid       *swan.Bid
-	Offer     *swan.Offer
-	Root      *owid.OWID
-	ReturnURL template.HTML
+	OWIDs      map[*owid.OWID]interface{}
+	Bid        *swan.Bid
+	Offer      *swan.Offer
+	Root       *owid.OWID
+	ReturnURL  template.HTML
+	AccessNode string
 }
 
 func (m *infoModel) findOffer() (*owid.OWID, *swan.Offer) {
@@ -88,6 +89,7 @@ func handlerInfo(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	m.ReturnURL = template.HTML(f.String())
+	m.AccessNode = r.Form.Get("accessNode")
 
 	// Display the template form.
 	g := gzip.NewWriter(w)

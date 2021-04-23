@@ -48,7 +48,15 @@ func handlerStop(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 		r.Form.Get("returnUrl"),
 		"stop",
 		func(q url.Values) {
+
+			// Take the host name from
 			q.Set("host", r.Form.Get("host"))
+
+			// Use the access node from the form as this will be used by the
+			// publisher to decrypt the result.
+			if r.Form.Get("accessNode") != "" {
+				q.Set("accessNode", r.Form.Get("accessNode"))
+			}
 
 			// Demonstrate the CMP can set all the messages.
 			if q.Get("message") == "" {

@@ -2,11 +2,12 @@
 
 var loaded = false;
 
-stop = function(s, d, r) {
+stop = function(s, d, r, a) {
     loadOWID().then(() => {
         fetch("/stop?" +
             "host=" + encodeURIComponent(d) + "&" +
-            "returnUrl=" + encodeURIComponent(r),
+            "returnUrl=" + encodeURIComponent(r) + "&" +
+            "accessNode=" + encodeURIComponent(a),
             { method: "GET", mode: "cors", cache: "no-cache" })
             .then(r => r.text() )
             .then(m => {

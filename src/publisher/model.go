@@ -175,6 +175,11 @@ func (m Model) NewAdvertHTML(placement string) (template.HTML, error) {
 		n = n.GetParent()
 	}
 	q.Set("returnUrl", t.String())
+
+	// Set the access node so that the CMP knows which node to use to encrypt
+	// the results of a stop operation.
+	q.Set("accessNode", m.Domain.SWANAccessNode)
+
 	i.RawQuery = q.Encode()
 
 	// Return a FORM HTML element with a button for the advert. The OWID tree

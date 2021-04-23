@@ -91,7 +91,7 @@
         <script>
             function stopAdvert() {
                 {{ if and .Root .Bid }}
-                stop("{{ .Root.AsString }}", "{{ .Bid.AdvertiserURL }}", "{{ .ReturnURL }}");
+                stop("{{ .Root.AsString }}", "{{ .Bid.AdvertiserURL }}", "{{ .ReturnURL }}", "{{ .AccessNode }}");
                 {{ end }}
             }
         </script>
