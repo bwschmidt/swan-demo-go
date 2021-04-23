@@ -93,6 +93,7 @@ func handlerFile(
 	w http.ResponseWriter,
 	r *http.Request,
 	f string) bool {
+	w.Header().Set("Cache-Control", "no-cache")
 	switch filepath.Ext(f) {
 	case ".ico":
 		http.ServeFile(w, r, f)
