@@ -290,7 +290,7 @@ func (m *Model) newOffer() (*swan.Offer, error) {
 	}
 
 	// Get the stopped adverts string.
-	o.Stopped = offerGetStopped(m.Request)
+	o.Stopped = offerGetStopped(m.Request, m.stop())
 
 	// Random one time data is used to ensure the Offer ID is unique for all
 	// time.
@@ -304,8 +304,18 @@ func (m *Model) newOffer() (*swan.Offer, error) {
 
 // Returns an array of stopped advert IDs. As the parameter is optional no error
 // is returned.
-func offerGetStopped(r *http.Request) []string {
-	return strings.Split(r.FormValue("stop"), " ")
+func offerGetStopped(r *http.Request, p *swan.Pair) []string {
+	var s []string
+
+	// Get stopped adverts from swan pair.
+	if p != nil {
+		s = append(s, strings.Split(p.Value, " ")...)
+	}
+
+	// Get stopped adverts from the form.
+	s = append(s, strings.Split(r.FormValue("stop"), " ")...)
+
+	return s
 }
 
 // Returns the value as a string associated with the form parameter k. If the
