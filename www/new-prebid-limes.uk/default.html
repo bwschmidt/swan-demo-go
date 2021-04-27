@@ -17,8 +17,27 @@
         advert1: JSON.parse({{ .NewOfferIDAsString }})
     };
 
-    window.adInfo = function(offer) {
-      var owid = "http://cmp.swan-demo.uk/info?owid=" + btoa(JSON.stringify(window.swan_offers[offer]));
+    window.swan_trees = {
+      advert1: []
+    }
+
+    function find_owids(tree, placement) {
+        if( tree !== null && typeof tree == "object" ) {
+            Object.entries(tree).forEach(([key, value]) => {
+                if (key === "OWID") {
+                  value = value.replace(/=/g, '')
+                  value = encodeURIComponent(value)
+                  window.swan_trees[placement].push(value);
+                } else if (key === "Children" && value != null) {
+                  value.forEach(e => find_owids(e, placement));
+                }
+            });
+        }
+    }
+
+    window.adInfo = function(placement) {
+      find_owids(window.swan_offers[placement], placement)
+      var owid = "http://cmp.swan-demo.uk/info?owid=" + window.swan_trees[placement].join("&owid=");
       window.open(owid, "_blank");
     };
 
