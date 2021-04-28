@@ -61,6 +61,23 @@
 
   <main role="main">
 
+    {{ if eq .SWIDAsString "" }}
+    <div class="modal" id="checkSWAN" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content bg-dark text-white">
+          <div class="modal-body">
+            <span>We need to check your privacy settings. You'll be returned to this page.</span>
+            <span>Tap continue, or close this browser tab.</span>
+            <a href="#">Learn more<i class="fa fa-angle-right ml-2"></i></a>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-light btn-sm" type="button" onclick='window.location.href="{{ .CMPURL }}"'>Continue</button>
+          </div>
+        </div>
+      </div>
+    </div>    
+    {{ end }}
+
     {{ if eq .IsCrawler false }}
     <div class="carousel">
       <div class="carousel-inner">
@@ -71,6 +88,8 @@
                 {{ if eq .SWIDAsString "" }}
                 <script>
                   var p = document.currentScript.parentNode;
+
+                  // Helper methods to retrieve cookies.
                   function getCookie(n) {
                     var c = new RegExp(n + "=([^;]+)").exec(document.cookie);
                     return c? c[1] : "";
@@ -91,7 +110,14 @@
                     var v = getCookie(n);
                     return (v != null) ? unescape(new owid().parse(v).payloadAsPrintable()) : null;
                   }
-                  function fetchAdvert(data) {
+
+                  // Called by the last script that is added to the DOM. 
+                  // Fetches the advert in a fetch request and also passed the
+                  // encrypted SWAN data. The response will set cookies that 
+                  // can be used to update the preference fields. If no cookies
+                  // are present then 3PC is not available and the user must
+                  // be asked if they wish to continue.
+                  function swanComplete(data) {
                     var u = "/advert?placement=heading";
                     if (data) {
                       u += "&encrypted=" + data;
@@ -99,9 +125,18 @@
                     fetch(u)
                       .then(r => r.text())
                       .then(m => {
-                        if (getCookie("swan-pref") == "") {
-                          window.location.href = "{{ .CMPURL }}";
+                        if (getCookie("swan-pref") == "" ||
+                          getCookie("swan-swid") == "" ||
+                          getCookie("swan-sid") == "") {
+
+                          // Display the message requesting SWAN is consulted
+                          // explicitly.
+                          $('#checkSWAN').modal('show');
+
                         } else {
+
+                          // SWAN data is available so fetch this from the 
+                          // cookies.
                           var a = document.createElement("div");
                           a.innerHTML = m;
                           p.insertBefore(a, p.firstChild);
@@ -115,30 +150,29 @@
                         console.log(x);
                       });
                   }
-                  function swanComplete(d) {
-                    fetchAdvert(d);
-                  }
+
+                  // Add the first script to the DOM.
                   var s = document.createElement("script");
                   s.src = "{{ .SWANURL }}";
                   p.appendChild(s);
+
                 </script>
                 {{ else }}
-                  {{ if .Personalized }}
-                  <script>
-                    var p = document.currentScript.parentNode;
-                    fetch("/advert?placement=heading")
-                      .then(r => r.text() )
-                      .then(m => {
-                        var a = document.createElement("div");
-                        a.innerHTML = m;
-                        p.insertBefore(a, p.firstChild);})
-                      .catch(x => {
-                        console.log(x);
-                      });
-                  </script>
-                  {{ else }}
-                    <p>Personalization needed to show adverts.</p>
-                  {{ end }}
+                <script>
+
+                  // A simple script to fetch the advert using cookies to pass
+                  // the SWAN data.
+                  var p = document.currentScript.parentNode;
+                  fetch("/advert?placement=heading")
+                    .then(r => r.text() )
+                    .then(m => {
+                      var a = document.createElement("div");
+                      a.innerHTML = m;
+                      p.insertBefore(a, p.firstChild);})
+                    .catch(x => {
+                      console.log(x);
+                    });
+                </script>
                 {{ end }}
                 <figcaption class="figure-caption text-white">advert</figcaption>
               </figure>
@@ -268,13 +302,6 @@
       $('[data-toggle="tooltip"]').tooltip()
     })
   </script>
-  {{ if not .Personalized }}
-  <script type="text/javascript">
-    $(window).on('load', function() {
-        $('#personalize').modal('show');
-    });
-  </script>
-  {{ end }}
 
   <svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" viewBox="0 0 500 500" preserveAspectRatio="none"
     style="display: none; visibility: hidden; position: absolute; top: -100%; left: -100%;">
