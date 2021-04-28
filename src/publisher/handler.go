@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"net/url"
 	"swan"
+	"swanop"
 	"time"
 )
 
@@ -328,7 +329,7 @@ func isSet(d []*swan.Pair) bool {
 func revalidateNeeded(d []*swan.Pair) bool {
 	for _, e := range d {
 		if e.Key == "val" {
-			t, err := time.Parse(swan.ValidationTimeFormat, e.Value)
+			t, err := time.Parse(swanop.ValidationTimeFormat, e.Value)
 			if err != nil {
 				return true
 			}

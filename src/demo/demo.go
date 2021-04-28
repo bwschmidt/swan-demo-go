@@ -27,7 +27,7 @@ import (
 	"os"
 	"path/filepath"
 	"publisher"
-	"swan"
+	"swanop"
 )
 
 // AddHandlers and outputs configuration information.
@@ -37,7 +37,7 @@ func AddHandlers(settingsFile string) {
 	dc := common.NewConfig(settingsFile)
 
 	// Get the example simple access control implementations.
-	swa := swan.NewAccessSimple(dc.AccessKeys)
+	swa := swanop.NewAccessSimple(dc.AccessKeys)
 
 	// Get all the domains for the SWAN demo.
 	wd, err := os.Getwd()
@@ -54,7 +54,7 @@ func AddHandlers(settingsFile string) {
 
 	// Add the SWAN handlers, with the demo handler being used for any
 	// malformed storage requests.
-	err = swan.AddHandlers(
+	err = swanop.AddHandlers(
 		settingsFile,
 		swa,
 		common.Handler(domains))
