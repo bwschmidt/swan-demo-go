@@ -29,15 +29,15 @@ import (
 type infoModel struct {
 	OWIDs      map[*owid.OWID]interface{}
 	Bid        *swan.Bid
-	Offer      *swan.Offer
+	Impression *swan.Impression
 	Root       *owid.OWID
 	ReturnURL  template.HTML
 	AccessNode string
 }
 
-func (m *infoModel) findOffer() (*owid.OWID, *swan.Offer) {
+func (m *infoModel) findImpression() (*owid.OWID, *swan.Impression) {
 	for k, v := range m.OWIDs {
-		if o, ok := v.(*swan.Offer); ok {
+		if o, ok := v.(*swan.Impression); ok {
 			return k, o
 		}
 	}
@@ -82,7 +82,7 @@ func handlerInfo(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 
 	// Set the common fields.
 	m.Bid = m.findBid()
-	m.Root, m.Offer = m.findOffer()
+	m.Root, m.Impression = m.findImpression()
 	f, err := common.GetReturnURL(r)
 	if err != nil {
 		common.ReturnServerError(d.Config, w, err)

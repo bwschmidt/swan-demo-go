@@ -287,7 +287,7 @@ func infoRole(s interface{}) string {
 	_, fok := s.(*swan.Failed)
 	_, bok := s.(*swan.Bid)
 	_, eok := s.(*swan.Empty)
-	_, ook := s.(*swan.Offer)
+	_, iok := s.(*swan.Impression)
 	if fok {
 		return "Failed"
 	}
@@ -297,8 +297,8 @@ func infoRole(s interface{}) string {
 	if eok {
 		return "Empty"
 	}
-	if ook {
-		return "Offer"
+	if iok {
+		return "Impression"
 	}
 	return ""
 }

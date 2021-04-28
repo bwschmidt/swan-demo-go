@@ -34,8 +34,8 @@ func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the SWAN Offer that relates to the advert.
-	o, err := getOffer(r)
+	// Get the SWAN Impression that relates to the advert.
+	o, err := getImpression(r)
 	if err != nil {
 		common.ReturnServerError(d.Config, w, err)
 		return
@@ -45,7 +45,7 @@ func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 	var m MarketerModel
 	m.Domain = d
 	m.Request = r
-	m.offer = o
+	m.impression = o
 
 	g := gzip.NewWriter(w)
 	defer g.Close()
@@ -58,7 +58,7 @@ func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getOffer(r *http.Request) (*owid.Node, error) {
+func getImpression(r *http.Request) (*owid.Node, error) {
 
 	// Parse the form data.
 	err := r.ParseForm()
