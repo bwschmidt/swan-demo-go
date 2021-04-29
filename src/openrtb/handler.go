@@ -42,7 +42,7 @@ func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == openRTBPath && r.Method == "POST" {
 
 		// Unpack the body of the request to form the bid data structure.
-		o, err := getOffer(d, r)
+		o, err := getImpression(d, r)
 		if err != nil {
 			common.ReturnStatusCodeError(d.Config, w, err, http.StatusBadRequest)
 			return
@@ -92,12 +92,12 @@ func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getSWANOffer(r *owid.Node) (*swan.Offer, error) {
+func getSWANImpression(r *owid.Node) (*swan.Impression, error) {
 	f, err := r.GetOWID()
 	if err != nil {
 		return nil, err
 	}
-	o, err := swan.OfferFromOWID(f)
+	o, err := swan.ImpressionFromOWID(f)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func changePubDomain(r *owid.Node, newPubDomain string) error {
 	if err != nil {
 		return err
 	}
-	o, err := swan.OfferFromOWID(f)
+	o, err := swan.ImpressionFromOWID(f)
 	if err != nil {
 		return err
 	}
@@ -155,8 +155,8 @@ func HandleTransaction(d *common.Domain, n *owid.Node) (*owid.Node, error) {
 	// byte array to use as the payload from the Processor OWID.
 	if len(d.Adverts) > 0 {
 
-		// The root node must be the Offer.
-		offer, err := swan.OfferFromNode(n.GetRoot())
+		// The root node must be the Impression.
+		impression, err := swan.ImpressionFromNode(n.GetRoot())
 		if err != nil {
 			return nil, err
 		}
@@ -166,7 +166,7 @@ func HandleTransaction(d *common.Domain, n *owid.Node) (*owid.Node, error) {
 		i := 10
 		for i > 0 {
 			w := d.Adverts[rand.Intn(len(d.Adverts))]
-			if offer.IsStopped(w.AdvertiserURL) == false {
+			if impression.IsStopped(w.AdvertiserURL) == false {
 				b.AdvertiserURL = w.AdvertiserURL
 				b.MediaURL = w.MediaURL
 				t.Payload, err = b.AsByteArray()
@@ -293,7 +293,7 @@ func isBid(n *owid.Node) (bool, error) {
 	return ok, nil
 }
 
-func getOffer(d *common.Domain, r *http.Request) (*owid.Node, error) {
+func getImpression(d *common.Domain, r *http.Request) (*owid.Node, error) {
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return nil, err

@@ -58,16 +58,16 @@ Regards,
 [INSERT YOU NAME]
 
 --- DO NOT CHANGE THE TEXT BELOW THIS LINE ---
-{{ .OfferID }}
+{{ .ImpressionID }}
 --- DO NOT CHANGE THE TEXT ABOVE THIS LINE ---`)
 
 // Complaint used to format an email template.
 type Complaint struct {
-	Offer        *swan.Offer // The offer that the complaint relates to
+	Impression   *swan.Impression // The impression that the complaint relates to
 	DPRURL       string
 	Organization string
 	Country      string
-	offerID      *owid.OWID
+	impressionID *owid.OWID
 	swanOWID     *owid.OWID
 }
 
@@ -78,22 +78,22 @@ func (c *Complaint) Date() string {
 
 // SWID to use in the email template.
 func (c *Complaint) SWID() string {
-	return c.Offer.SWID.AsString()
+	return c.Impression.SWID.AsString()
 }
 
 // SID to use in the email template.
 func (c *Complaint) SID() string {
-	return c.Offer.SID.AsString()
+	return c.Impression.SID.AsString()
 }
 
 // Preferences string to use in the email template.
 func (c *Complaint) Preferences() string {
-	return c.Offer.PreferencesAsString()
+	return c.Impression.PreferencesAsString()
 }
 
-// OfferID as a string
-func (c *Complaint) OfferID() string {
-	return c.offerID.AsString()
+// ImpressionID as a string
+func (c *Complaint) ImpressionID() string {
+	return c.impressionID.AsString()
 }
 
 // SWANOWID as a string
@@ -111,7 +111,7 @@ func newComplaintTemplate(n string, b string) *template.Template {
 
 func newComplaint(
 	cfg *common.Configuration,
-	offerID *owid.OWID,
+	impressionID *owid.OWID,
 	swanID *owid.OWID) (*Complaint, error) {
 	var err error
 
@@ -120,14 +120,14 @@ func newComplaint(
 	c.DPRURL = "URL of the DPR"
 	c.Country = "Region of the CMP"
 
-	// Work out the offer ID from the OWID provided.
-	c.Offer, err = swan.OfferFromOWID(offerID)
+	// Work out the impression ID from the OWID provided.
+	c.Impression, err = swan.ImpressionFromOWID(impressionID)
 	if err != nil {
 		return nil, err
 	}
 
 	// Set the OWIDs as strings.
-	c.offerID = offerID
+	c.impressionID = impressionID
 	c.swanOWID = swanID
 
 	// Set the organization as the domain for the moment.
@@ -149,12 +149,12 @@ func handlerComplain(
 		return
 	}
 
-	// Check that the offer ID and the SWAN ID are present.
-	if r.Form.Get("offerid") == "" {
+	// Check that the impression ID and the SWAN ID are present.
+	if r.Form.Get("impressionid") == "" {
 		common.ReturnStatusCodeError(
 			d.Config,
 			w,
-			fmt.Errorf("'offerid' missing"),
+			fmt.Errorf("'impressionid' missing"),
 			http.StatusBadRequest)
 		return
 	}
@@ -168,12 +168,12 @@ func handlerComplain(
 	}
 
 	// Get the SWAN OWIDs from the parameters.
-	offerID, err := owid.FromBase64(r.Form.Get("offerid"))
+	impressionID, err := owid.FromBase64(r.Form.Get("impressionid"))
 	if err != nil {
 		common.ReturnStatusCodeError(
 			d.Config,
 			w,
-			fmt.Errorf("'offerid' not a valid OWID"),
+			fmt.Errorf("'impressionid' not a valid OWID"),
 			http.StatusBadRequest)
 		return
 	}
@@ -188,7 +188,7 @@ func handlerComplain(
 	}
 
 	// Create the complaint object.
-	c, err := newComplaint(d.Config, offerID, swanOWID)
+	c, err := newComplaint(d.Config, impressionID, swanOWID)
 	if err != nil {
 		common.ReturnServerError(d.Config, w, err)
 		return

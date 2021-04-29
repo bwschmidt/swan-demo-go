@@ -127,8 +127,8 @@ func (m Model) NewAdvertHTML(placement string) (template.HTML, error) {
 
 	rand.Seed(time.Now().UTC().UnixNano())
 
-	// Use the SWAN network to generate the Offer ID.
-	r, err := m.newOfferNode()
+	// Use the SWAN network to generate the Impression ID.
+	r, err := m.newImpressionNode()
 	if err != nil {
 		return "", err
 	}
@@ -225,9 +225,9 @@ func (m Model) findResult(k string) *swan.Pair {
 	return nil
 }
 
-// newOfferNode returns a new Offer OWID Node.
-func (m *Model) newOfferNode() (*owid.Node, error) {
-	o, err := m.newOfferOWID()
+// newImpressionNode returns a new Impression OWID Node.
+func (m *Model) newImpressionNode() (*owid.Node, error) {
+	o, err := m.newImpressionOWID()
 	if err != nil {
 		return nil, err
 	}
@@ -238,10 +238,10 @@ func (m *Model) newOfferNode() (*owid.Node, error) {
 	return &owid.Node{OWID: b}, nil
 }
 
-// Creates a new Offer OWID from the form parameters of the request. If values
+// Creates a new Impression OWID from the form parameters of the request. If values
 // are missing or are invalid then an error is returned.
-func (m *Model) newOfferOWID() (*owid.OWID, error) {
-	of, err := m.newOffer()
+func (m *Model) newImpressionOWID() (*owid.OWID, error) {
+	of, err := m.newImpression()
 	if err != nil {
 		return nil, err
 	}
@@ -260,12 +260,12 @@ func (m *Model) newOfferOWID() (*owid.OWID, error) {
 	return o, nil
 }
 
-// Returns a new unsigned swan.Offer ready to be used the byte array payload in
+// Returns a new unsigned swan.Impression ready to be used the byte array payload in
 // an OWID that the caller is generating a a Root Party for the commencement of
 // an advertising request.
-func (m *Model) newOffer() (*swan.Offer, error) {
+func (m *Model) newImpression() (*swan.Impression, error) {
 	var err error
-	o := swan.NewOffer()
+	o := swan.NewImpression()
 
 	// Get the page placement from the form parameters.
 	o.Placement, err = getValue(m.Request, "placement")
@@ -295,9 +295,9 @@ func (m *Model) newOffer() (*swan.Offer, error) {
 	}
 
 	// Get the stopped adverts string.
-	o.Stopped = offerGetStopped(m.Request, m.stop())
+	o.Stopped = impressionGetStopped(m.Request, m.stop())
 
-	// Random one time data is used to ensure the Offer ID is unique for all
+	// Random one time data is used to ensure the Impression ID is unique for all
 	// time.
 	o.UUID, err = uuid.New().MarshalBinary()
 	if err != nil {
@@ -309,7 +309,7 @@ func (m *Model) newOffer() (*swan.Offer, error) {
 
 // Returns an array of stopped advert IDs. As the parameter is optional no error
 // is returned.
-func offerGetStopped(r *http.Request, p *swan.Pair) []string {
+func impressionGetStopped(r *http.Request, p *swan.Pair) []string {
 	var s []string
 
 	// Get stopped adverts from swan pair.
