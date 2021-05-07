@@ -232,6 +232,9 @@ executable for web services.
 
 `build.sh` : builds AWS or Azure packages on Linux ready for manual deployment.
 
+`cert.ps1` : Creates self signed certificates to run the demo using the https 
+scheme. You will need `openssl` available in your path environment variable.
+
 `dep.ps1` : gets SWAN demo dependencies on Windows.
 
 `appsettings.json` : application settings for production.
@@ -577,9 +580,43 @@ is displayed.
 
 ## Google Cloud Platform 
 
-TODO - prerequisites and steps to set up the demo on GCP environment
+WIP - prerequisites and steps to set up the demo on GCP environment
 
-### Azure CosmosDB / Table Storage
+### Pre-requisites
+
+* Local Go version 1.15 or greater installation sufficient to run the Go command
+line.
+
+* Familiar with the concepts associated with 
+[SWAN](https://github.com/SWAN-community/swan),
+[SWIFT](https://github.com/SWAN-community/swift), and 
+[OWID](https://github.com/SWAN-community/owid).
+
+* Firebase project with the ability to manage Cloud Firestore.
+
+### Google Firebase
+
+See the Cloud FireStore [Quick Start](https://firebase.google.com/docs/firestore/quickstart)
+
+If you are running the SWAN demo locally, then follow the steps to initialize on
+your own server, otherwise, follow the steps to initialize on google cloud 
+platform.
+
+#### Steps
+
+- Set the `GCP_PROJECT` environment variable value as your Firebase Project ID
+- If running the SWAN demo locally then follow the steps to generate a [new service account](https://cloud.google.com/compute/docs/access/create-enable-service-accounts-for-instances):
+  - Create a new service account.
+  - Give the new service account the `Firebase Admin SDK Administrator Service Agent` role.
+  - On the service account, generate a new key.
+  - Set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable to point to your key path.
+
+## Local
+
+
+
+
+## Azure CosmosDB / Table Storage
 
 If you are using Azure Storage Tables, this demo requires your storage account 
 name and key to be securely stored in environment variables local to the machine 

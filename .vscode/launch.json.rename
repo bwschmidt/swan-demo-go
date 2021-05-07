@@ -17,6 +17,7 @@
                 "51D_RESOURCE_KEY":"Used for bot detection. Visit https://configure.51degrees.com/vXyRZz8B to get a free resource key",
                 "AZURE_STORAGE_ACCESS_KEY":"",
                 "AZURE_STORAGE_ACCOUNT":"",
+                "GCP_PROJECT": "",
                 "SMTP_SENDER":"",
                 "SMTP_HOST":"",
                 "SMTP_PORT":"",
