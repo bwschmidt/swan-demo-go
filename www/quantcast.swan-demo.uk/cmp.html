@@ -11,6 +11,7 @@
 <body>
     <div class="blur"></div>
     <form method="POST">
+        {{ .HiddenFields }}
         <div class="modal" style="display: block" tabindex="-1" role="dialog">
             <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
@@ -95,7 +96,7 @@
                     </div>        
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" id="update" class="w-75 mx-auto btn btn-primary text-center">Update</button>
+                    <button id="update" name="update" type="submit" class="w-75 mx-auto btn btn-primary text-center">Update</button>
                 </div>
             </div>
         </div>
