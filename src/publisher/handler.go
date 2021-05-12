@@ -253,13 +253,11 @@ func isSet(d []*swan.Pair) bool {
 	c := 0
 	for _, e := range d {
 		if e.Key == "pref" || e.Key == "swid" || e.Key == "sid" {
-			o, err := e.AsOWID()
+			_, err := e.AsOWID()
 			if err != nil {
 				return false
 			}
-			if len(o.Payload) > 0 {
-				c++
-			}
+			c++
 		}
 	}
 	return c == 3

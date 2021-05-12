@@ -330,16 +330,19 @@ func getOWID(
 	c *common.Configuration,
 	r *http.Request,
 	p *swan.Pair) (*owid.OWID, error) {
-	o, err := owid.FromBase64(p.Value)
-	if err != nil {
-		return nil, err
+	if p != nil {
+		o, err := owid.FromBase64(p.Value)
+		if err != nil {
+			return nil, err
+		}
+		e, err := o.Verify(c.Scheme)
+		if err != nil {
+			return nil, err
+		}
+		if e == false {
+			return nil, fmt.Errorf("'%s' not a valid OWID", p.Key)
+		}
+		return o, nil
 	}
-	e, err := o.Verify(c.Scheme)
-	if err != nil {
-		return nil, err
-	}
-	if e == false {
-		return nil, fmt.Errorf("'%s' not a valid OWID", p.Key)
-	}
-	return o, nil
+	return nil, nil
 }

@@ -195,19 +195,7 @@ func handlerDialog(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 				http.StatusBadRequest)
 			return
 		}
-		var s *salt.Salt
-		if sf := r.Form.Get("salt"); sf != "" {
-			s, err = salt.FromBase64(sf)
-			if err != nil {
-				common.ReturnStatusCodeError(
-					d.Config,
-					w,
-					err,
-					http.StatusBadRequest)
-				return
-			}
-		}
-		err = o.SetSalt(c, s)
+		err = o.SetSalt(c, r.Form.Get("salt"))
 		if err != nil {
 			common.ReturnStatusCodeError(
 				d.Config,
@@ -267,7 +255,7 @@ func handlerDialog(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 func sendReminderEmail(d *common.Domain, o *swan.Update) error {
 
 	// Get the salt to display the grid in the email.
-	s, err := salt.FromByteArray(o.Salt().Payload)
+	s, err := salt.FromBase64(string(o.Salt().Payload))
 	if err != nil {
 		return err
 	}
