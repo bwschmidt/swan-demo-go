@@ -12,9 +12,9 @@ $expiryDate = ((Get-date).AddDays(90)).ToString("yyyy-MM-dd")
 
 Write-Output "Network: $($network)"
 Write-Output "Expiry: $($expiryDate)"
-$ok = Read-Host "Ok? (y/n)"
+$ok = Read-Host "Ok? [y/N]"
 
-if ($ok -eq "n" -or $ok -eq "N") {
+if ($ok -ne "y" -and $ok -ne "Y") {
     Break
 }
 
