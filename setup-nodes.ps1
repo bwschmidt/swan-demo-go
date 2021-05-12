@@ -12,7 +12,11 @@ $expiryDate = ((Get-date).AddDays(90)).ToString("yyyy-MM-dd")
 
 Write-Output "Network: $($network)"
 Write-Output "Expiry: $($expiryDate)"
-Read-Host "Ok?"
+$ok = Read-Host "Ok? (y/n)"
+
+if ($ok -eq "n" -or $ok -eq "N") {
+    Break
+}
 
 ## Set-up SWIFT access nodes as OWID creators
 $nodes | ForEach-Object {

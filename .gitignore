@@ -14,4 +14,3 @@ application
 .config
 .vscode/launch.json
 Dockerfile
-.swan/*
