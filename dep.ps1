@@ -12,6 +12,6 @@ $cmd = "go get " +
     "github.com/satori/go.uuid " +
     "cloud.google.com/go/firestore " +
     "firebase.google.com/go " +
-    "google.golang.org/api/iterator" + 
-    "get golang.org/x/sys/unix"
+    "google.golang.org/api/iterator " + 
+    "golang.org/x/sys/unix"
 Invoke-Expression $cmd

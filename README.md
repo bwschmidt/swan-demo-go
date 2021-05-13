@@ -126,7 +126,7 @@ line.
     * **Linux**: Run `./dep.sh` in a terminal.
     * **Windows**: Run `.\dep.ps1` in Powershell.
 
-3. Build the swan-demo server:
+3. Build the swan-demo server - if using VSCode then skip this step:
     * **Linux**: Run `./build.sh` in a terminal
     * **Windows**: Run `go build -o .\application.exe .\src\server.go`
 
@@ -139,7 +139,7 @@ line.
 
 5. Set environment variables:
    * If using vscode, then a launch file is provided for convenience. Rename  
-     `.vscode\launch.json-rename` to `.vscode\launch.json` 
+     `.vscode\launch.json.rename` to `.vscode\launch.json` 
    * Otherwise set the following environment variables:
 
     **Linux**
@@ -167,7 +167,7 @@ line.
     ```
 
 6. Run the Server:
-   * **VSCode** If using vscode then the `.vscode\launch.json-rename` file contains all
+   * **VSCode** If using vscode then the `.vscode\launch.json.rename` file contains all
      the necessary settings to debug the server.
    * **Linux**: Run `./application appsettings.dev.json` in a terminal.
    * **Windows**: Run `.\application.exe .\appsettings.dev.json` in a Powershell 
@@ -200,7 +200,7 @@ line.
     ```
 
     The vscode `launch.json` file can also be used to set environment variables, 
-    see `the .vscode\launch.json-rename` sample file.
+    see `the .vscode\launch.json.rename` sample file.
 
   * OR, for AWS, specify region and credentials in either environment variables 
     or in `~/.aws/credentials` and `~/.aws/config` files. See 
@@ -775,7 +775,7 @@ openssl x509 -req -days 3650 -in uk.csr -signkey uk.key -out uk.crt -extensions 
 The demo features a local storage option. Creators, Swift Nodes and Swift Secrets 
 are stored locally in json files.
 
-This is the default configuration of the demo. See `.vscode\launch.json-rename`
+This is the default configuration of the demo. See `.vscode\launch.json.rename`
 The files are stored in a folder called `.swan`, the files are named consistently
 with the tables names when using cloud storage solutions.
 
