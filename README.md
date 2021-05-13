@@ -137,12 +137,43 @@ line.
      terminal. 
    * **Windows**: Run `.\setup-hosts.ps1` in an elevated Powershell terminal.
 
-5. Run the Server:
+5. Set environment variables:
+   * If using vscode, then a launch file is provided for convenience. Rename  
+     `.vscode\launch.json-rename` to `.vscode\launch.json` 
+   * Otherwise set the following environment variables:
+
+    **Linux**
+    ```sh
+    export PORT=80
+    export OWID_FILE="swan/creators.json"
+    export SWIFT_SECRETS_FILE=".swan/swiftsecrets.json"
+    export SWIFT_NODES_FILE="swan/swiftnodes.json"
+    ```
+
+    **Windows - CMD**
+    ```bat
+    setx PORT=80
+    setx OWID_FILE="swan/creators.json"
+    setx SWIFT_SECRETS_FILE=".swan/swiftsecrets.json"
+    setx SWIFT_NODES_FILE="swan/swiftnodes.json"
+    ```
+
+    **Windows - Powershell**
+    ```powershell
+    $Env:PORT=80
+    $Env:OWID_FILE="swan/creators.json"
+    $Env:SWIFT_SECRETS_FILE=".swan/swiftsecrets.json"
+    $Env:SWIFT_NODES_FILE="swan/swiftnodes.json"
+    ```
+
+6. Run the Server:
+   * **VSCode** If using vscode then the `.vscode\launch.json-rename` file contains all
+     the necessary settings to debug the server.
    * **Linux**: Run `./application appsettings.dev.json` in a terminal.
    * **Windows**: Run `.\application.exe .\appsettings.dev.json` in a Powershell 
      window.
 
-6. Naviagte to http://new-pork-limes.uk in your prefered browser.
+7. Navigate to http://new-pork-limes.uk in your preferred browser.
 
 ## Local Installation
 
