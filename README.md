@@ -1,7 +1,80 @@
 # ![Secured Web Addressability Network](https://raw.githubusercontent.com/SWAN-community/swan/main/images/swan.128.pxls.100.dpi.png)
+# Secured Web Addressability Network (SWAN) Demo
 
-# Secured Web Addressability Network (SWAN) 
-Demo in go of SWAN, SWIFT and OWID
+Demo of SWAN, SWIFT and OWID implemented in Go.
+
+## Quick Start 
+
+To get you up an running quickly on a local machine using JSON for storage.
+
+### Prerequisites 
+
+* Local Go version 1.15 or greater installation sufficient to run the Go command
+line.
+
+### Steps
+
+1. Clone the repository and navigate to the demo root directory:
+   ```sh
+   git clone --recurse-submodules https://github.com/SWAN-community/swan-demo-go
+   cd swan-demo-go
+   ```
+
+2. Get dependencies:
+    * **Linux**: Run `./dep.sh` in a terminal.
+    * **Windows**: Run `.\dep.ps1` in Powershell.
+
+3. Build the swan-demo server - if using VSCode then skip this step:
+    * **Linux**: Run `./build.sh` in a terminal.
+    * **Windows**: Run `go build -o .\application.exe .\src\server.go`
+
+4. Configure hosts file, when running locally the demo requires that a lot of 
+   host names be redirected to localhost - the following scripts will append 
+   the contents of `hosts-sample` to your hosts file. Please review these 
+   scripts before executing or update your hosts file manually.
+   * **Linux**: Run `sudo ./setup-hosts.sh` in a 
+     terminal. 
+   * **Windows**: Run `.\setup-hosts.ps1` in an elevated Powershell terminal.
+
+6. Set environment variables:
+   * If using Visual Studio Code, then a launch file is provided for convenience. 
+     Rename `.vscode\launch.json.rename` to `.vscode\launch.json` 
+   * OR, set the following environment variables:
+
+    **Linux**
+    ```sh
+    export PORT=80
+    export OWID_FILE="swan/creators.json"
+    export SWIFT_SECRETS_FILE=".swan/swiftsecrets.json"
+    export SWIFT_NODES_FILE="swan/swiftnodes.json"
+    ```
+
+    **Windows - CMD**
+    ```bat
+    setx PORT=80
+    setx OWID_FILE="swan/creators.json"
+    setx SWIFT_SECRETS_FILE=".swan/swiftsecrets.json"
+    setx SWIFT_NODES_FILE="swan/swiftnodes.json"
+    ```
+
+    **Windows - Powershell**
+    ```powershell
+    $Env:PORT=80
+    $Env:OWID_FILE="swan/creators.json"
+    $Env:SWIFT_SECRETS_FILE=".swan/swiftsecrets.json"
+    $Env:SWIFT_NODES_FILE="swan/swiftnodes.json"
+    ```
+
+7. Run the Demo Server:
+   * **VSCode** If using Visual Studio Code, then the `.vscode\launch.json.rename` 
+     file contains all the necessary settings to run and debug the demo.
+   * **Linux**: Run `./application appsettings.dev.json` in a terminal.
+   * **Windows**: Run `.\application.exe .\appsettings.dev.json` in a Powershell 
+     window.
+
+8. Navigate to http://new-pork-limes.uk in your preferred browser.
+
+# SWAN Concepts
 
 The SWAN demo implements the concepts explained in 
 [SWAN](https://github.com/SWAN-community/swan)
@@ -109,71 +182,6 @@ same time, run:
 ```
 git clone --recurse-submodules https://github.com/SWAN-community/swan-demo-go
 ```
-
-## Quick Start 
-
-### Prerequisites 
-
-* Local Go version 1.15 or greater installation sufficient to run the Go command
-line.
-
-### Steps
-
-1. [Clone the repository](#get-the-code) and navigate to the demo root directory: 
-   `cd swan-demo-go`
-
-2. Get dependencies:
-    * **Linux**: Run `./dep.sh` in a terminal.
-    * **Windows**: Run `.\dep.ps1` in Powershell.
-
-3. Build the swan-demo server - if using VSCode then skip this step:
-    * **Linux**: Run `./build.sh` in a terminal
-    * **Windows**: Run `go build -o .\application.exe .\src\server.go`
-
-4. Set hosts file - the following scripts will append the contents of 
-   `hosts-sample` to your hosts file. Please review these scripts before 
-   executing or update your hosts file manually.
-   * **Linux**: Run `sudo ./setup-hosts.sh` in a 
-     terminal. 
-   * **Windows**: Run `.\setup-hosts.ps1` in an elevated Powershell terminal.
-
-5. Set environment variables:
-   * If using vscode, then a launch file is provided for convenience. Rename  
-     `.vscode\launch.json.rename` to `.vscode\launch.json` 
-   * Otherwise set the following environment variables:
-
-    **Linux**
-    ```sh
-    export PORT=80
-    export OWID_FILE="swan/creators.json"
-    export SWIFT_SECRETS_FILE=".swan/swiftsecrets.json"
-    export SWIFT_NODES_FILE="swan/swiftnodes.json"
-    ```
-
-    **Windows - CMD**
-    ```bat
-    setx PORT=80
-    setx OWID_FILE="swan/creators.json"
-    setx SWIFT_SECRETS_FILE=".swan/swiftsecrets.json"
-    setx SWIFT_NODES_FILE="swan/swiftnodes.json"
-    ```
-
-    **Windows - Powershell**
-    ```powershell
-    $Env:PORT=80
-    $Env:OWID_FILE="swan/creators.json"
-    $Env:SWIFT_SECRETS_FILE=".swan/swiftsecrets.json"
-    $Env:SWIFT_NODES_FILE="swan/swiftnodes.json"
-    ```
-
-6. Run the Server:
-   * **VSCode** If using vscode then the `.vscode\launch.json.rename` file contains all
-     the necessary settings to debug the server.
-   * **Linux**: Run `./application appsettings.dev.json` in a terminal.
-   * **Windows**: Run `.\application.exe .\appsettings.dev.json` in a Powershell 
-     window.
-
-7. Navigate to http://new-pork-limes.uk in your preferred browser.
 
 ## Local Installation
 
@@ -288,7 +296,7 @@ The following host resolutions are used in the sample configuration:
 * Run the server:
 
   ```
-  ./src/server appsettings.dev.json
+  ./application appsettings.dev.json
   ```
 
 * Set up the access nodes, participants and storage nodes. Either run the setup 
