@@ -1,3 +1,9 @@
+
+
+##################################################
+# The following entries are used by the SWAN demo.
+##################################################
+
 # domains from the www folder
 127.0.0.1	new-pork-limes.uk
 127.0.0.1   biscuit-news.uk
@@ -180,3 +186,7 @@
 127.0.0.1	28.51de.uk
 127.0.0.1	29.51de.uk
 127.0.0.1	30.51de.uk
+
+##########################
+# End of SWAN demo entries
+##########################

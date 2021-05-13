@@ -41,6 +41,51 @@ Marketer     | cool-cars.uk |  | cool-bikes.uk |  | cool-creams.uk | ... etc
              |              |  |               |  |                |
              +--------------+  +---------------+  +----------------+
 ```
+
+# Files
+
+`Procfile` : needed by AWS Elastic Beanstalk to indicate the application 
+executable for web services.
+
+`build.ps1` : builds AWS or Azure packages on Windows ready for manual deployment.
+
+`build.sh` : builds AWS or Azure packages on Linux ready for manual deployment.
+
+`cert.ps1` : Creates self signed certificates to run the demo using the https 
+scheme. You will need `openssl` available in your path environment variable.
+
+`dep.ps1` : gets SWAN demo dependencies on Windows.
+
+`Dockerfile.rename` : A sample dockerfile which can be used to build a Docker
+container suitable for use with Azure App Services.
+
+`appsettings.json` : application settings for production.
+
+`appsettings.dev.json` : application settings for development.
+
+`.ebextensions/.config.rename` : AWS Elastic Beanstalk .config template ready for
+additional SSL certificates.
+
+`hosts-sample` : A sample hosts file containing all the domains used in the demo
+
+`setup-hosts.sh` : Appends the contents of `hosts-sample` to the system hosts 
+file (Linux).
+
+`setup-hosts.ps1` : Appends the contents of `hosts-sample` to the system hosts 
+file (Windows).
+
+`setup-nodes.ps1` : Registers creators and set's up Swift access and storage 
+nodes (Windows).
+
+`setup-nodes.sh` : Registers creators and set's up Swift access and storage 
+nodes (Linux).
+
+`.vscode/launch.json.rename` : template Visual Studio Code launch settings 
+including place holders for the storage environment variable values.
+
+Note: `.gitignore` will ignore `launch.json`, and `.ebextensions/.config` to 
+limit the risk of commits containing access keys.
+
 # Deployment
 
 The demo currently supports the following environments:
@@ -64,6 +109,40 @@ same time, run:
 ```
 git clone --recurse-submodules https://github.com/SWAN-community/swan-demo-go
 ```
+
+## Quick Start 
+
+### Prerequisites 
+
+* Local Go version 1.15 or greater installation sufficient to run the Go command
+line.
+
+### Steps
+
+1. [Clone the repository](#get-the-code) and navigate to the demo root directory: 
+   `cd swan-demo-go`
+
+2. Get dependencies:
+    * **Linux**: Run `./dep.sh` in a terminal.
+    * **Windows**: Run `.\dep.ps1` in Powershell.
+
+3. Build the swan-demo server:
+    * **Linux**: Run `./build.sh` in a terminal
+    * **Windows**: Run `go build -o .\application.exe .\src\server.go`
+
+4. Set hosts file - the following scripts will append the contents of 
+   `hosts-sample` to your hosts file. Please review these scripts before 
+   executing or update your hosts file manually.
+   * **Linux**: Run `sudo ./setup-hosts.sh` in a 
+     terminal. 
+   * **Windows**: Run `.\setup-hosts.ps1` in an elevated Powershell terminal.
+
+5. Run the Server:
+   * **Linux**: Run `./application appsettings.dev.json` in a terminal.
+   * **Windows**: Run `.\application.exe .\appsettings.dev.json` in a Powershell 
+     window.
+
+6. Naviagte to http://new-pork-limes.uk in your prefered browser.
 
 ## Local Installation
 
@@ -262,44 +341,6 @@ The following host resolutions are used in the sample configuration:
 preferences:
 
   http://new-pork-limes.uk
-
-# Files
-
-`Procfile` : needed by AWS Elastic Beanstalk to indicate the application 
-executable for web services.
-
-`build.ps1` : builds AWS or Azure packages on Windows ready for manual deployment.
-
-`build.sh` : builds AWS or Azure packages on Linux ready for manual deployment.
-
-`cert.ps1` : Creates self signed certificates to run the demo using the https 
-scheme. You will need `openssl` available in your path environment variable.
-
-`dep.ps1` : gets SWAN demo dependencies on Windows.
-
-`Dockerfile.rename` : A sample dockerfile which can be used to build a Docker
-container suitable for use with Azure App Services.
-
-`appsettings.json` : application settings for production.
-
-`appsettings.dev.json` : application settings for development.
-
-`.ebextensions/.config.rename` : AWS Elastic Beanstalk .config template ready for
-additional SSL certificates.
-
-`hosts-sample` : A sample hosts file containing all the domains used in the demo
-
-`setup-nodes.ps1` : Registers creators and set's up Swift access and storage 
-nodes (Windows).
-
-`setup-nodes.sh` : Registers creators and set's up Swift access and storage 
-nodes (Linux).
-
-`.vscode/launch.json.rename` : template Visual Studio Code launch settings 
-including place holders for the storage environment variable values.
-
-Note: `.gitignore` will ignore `launch.json`, and `.ebextensions/.config` to 
-limit the risk of commits containing access keys.
 
 # Environments
 
