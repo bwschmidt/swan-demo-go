@@ -5,6 +5,7 @@
 ##################################################
 
 # domains from the www folder
+127.0.0.1	cisne-demo.es
 127.0.0.1	cmp.cisne-demo.es
 127.0.0.1	an.cisne-demo.es
 127.0.0.1	sn.cisne-demo.es
