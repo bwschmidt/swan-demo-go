@@ -65,6 +65,12 @@
 		"PublicKey": "-----BEGIN RSA PUBLIC KEY-----\nMEgCQQCorhc7fVbVocdi5cl2G9WFGVUJLFSpT7iztd4f1LjIPS58iT7PWZevHQPQ\nPLON3eMj4v9JuD13fblre1q11X4PAgMBAAE=\n-----END RSA PUBLIC KEY-----\n",
 		"Name": "Centro DSP"
 	},
+	"cisne-demo.es": {
+		"Domain": "cisne-demo.es",
+		"PrivateKey": "-----BEGIN RSA PRIVATE KEY-----\nMIIBOgIBAAJBAKz+xUO5Y+OaRXeQ2QComzBLDYppPLbFw4HsJYbZisB943hgBvVg\nheruTxzexEyuxVZW+vwOx2u6nqpMSBjIe7UCAwEAAQJBAJ5miWmBjx0QXRsl3gzk\nVXTaxANAaP9SBboo6BOZjZrCKAZxqnWJbk8MfFLjM/XiaCTa+1krbHr4f4hyTHEV\n9wECIQDEllC1nUQPbfjrtKqAozdgq0k124CgEaMwq8GSQ3AZTQIhAOFHLRu7NF7n\nMITj2tFTb0dsRxJGTpTyQCJ2mV1kKfgJAiBUlXBolCACm4issfFio9dh6pD3cVho\nhu42NNB2xDlpSQIgNMj0rNbEgqgxGjI5h2rBXD7muEV5DDVnCaw4a0WY/+ECIC6Z\nSGhso/ozV29kYsVmBKs2/ipco3G3kvjXWdhnxKP6\n-----END RSA PRIVATE KEY-----\n",
+		"PublicKey": "-----BEGIN RSA PUBLIC KEY-----\nMEgCQQCs/sVDuWPjmkV3kNkAqJswSw2KaTy2xcOB7CWG2YrAfeN4YAb1YIXq7k8c\n3sRMrsVWVvr8Dsdrup6qTEgYyHu1AgMBAAE=\n-----END RSA PUBLIC KEY-----\n",
+		"Name": "Cisne Example"
+	},
 	"cmp.cisne-demo.es": {
 		"Domain": "cmp.cisne-demo.es",
 		"PrivateKey": "-----BEGIN RSA PRIVATE KEY-----\nMIIBOwIBAAJBAJ6vapS+JWMYHQxTYXU1Ih4o6WkuH7jsy8VX/OaFiLJ4trnJYu2u\nyHWyTidSewOR5pqZevOhhPVRaBq762YMu8MCAwEAAQJAK6EpWboqB2Pi4LewLQyt\n08MF4gBngm3A3QKDK1J9sivlm4TxwOJTN1jzp/q4SYFq4DLJk2qFPdi42LE/xWd0\naQIhAM6jN8AybygrViZWuWTG3+UKdVyJds1Uu6iXXlQGG201AiEAxJe0aTy7aYpc\ndC39rzegp1aikPqYnXPN5kAX0CM3vBcCIQClTUaNFwt7G+fn9ZqLtthnNo2aQFFs\ngus4PBb2qogIPQIgMwjCz9LxP+uoJozN30+MiARIfWRge/dVCyG2TNTnog8CIQC0\nxNcyYMngy8/CY4MbwIywzxR8ANv/XyoBBC8wnN+QZA==\n-----END RSA PRIVATE KEY-----\n",
