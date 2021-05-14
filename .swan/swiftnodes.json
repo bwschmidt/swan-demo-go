@@ -1238,5 +1238,21 @@
 		"Expires": "2021-08-10T00:00:00Z",
 		"Role": 1,
 		"ScrambleKey": "ctSxY6j_1Lt2nRxLwWcA9CGIuGBumfrpOXaJglNsqeo"
+	},
+	"an.cisne-demo.es": {
+		"Network": "cisne",
+		"Domain": "an.cisne-demo.es",
+		"Created": "2021-05-13T18:10:17.574637Z",
+		"Expires": "2099-08-13T00:00:00Z",
+		"Role": 0,
+		"ScrambleKey": "XHJn06V1rqheIdI6i9XIo8W43R6yqfhMiw_WhKspi1w"
+	},
+	"sn.cisne-demo.es": {
+		"Network": "cisne",
+		"Domain": "sn.cisne-demo.es",
+		"Created": "2021-05-13T18:09:52.9754613Z",
+		"Expires": "2099-08-13T00:00:00Z",
+		"Role": 1,
+		"ScrambleKey": "enptetzdBLU-TgOfbzhh1HsVrbB1_HaVg5rThB6E3J0"
 	}
 }
