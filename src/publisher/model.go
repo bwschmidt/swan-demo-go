@@ -105,71 +105,14 @@ func (m Model) Stopped() []string {
 
 func (m Model) NewOfferIDAsString() string {
 
-	// this function is just duplicating the new offer functions
-	// so i can hack a placement id. will refactor
-
 	var err error
-	of := swan.NewOffer()
 
-	// Get the page placement from the form parameters.
-	of.Placement = "advert1"
-
-	// Set the publisher domain from the request.
-	of.PubDomain = m.Request.Host
-
-	// Get the SWID as an OWID.
-	of.SWID, err = getOWID(m.Config(), m.Request, m.swid())
+	r, err := m.newSWANIDOWID()
 	if err != nil {
 		return ""
 	}
 
-	// Get the Signed in Identifier (SID) as an OWID.
-	of.SID, err = getOWID(m.Config(), m.Request, m.sid())
-	if err != nil {
-		return ""
-	}
-
-	// Get the preferences as an OWID.
-	of.Preferences, err = getOWID(m.Config(), m.Request, m.pref())
-	if err != nil {
-		return ""
-	}
-
-	// Get the stopped adverts string.
-	of.Stopped = offerGetStopped(m.Request)
-
-	// Random one time data is used to ensure the Offer ID is unique for all
-	// time.
-	of.UUID, err = uuid.New().MarshalBinary()
-	if err != nil {
-		return ""
-	}
-
-	b, err := of.AsByteArray()
-	if err != nil {
-		return ""
-	}
-	oc, err := m.Domain.GetOWIDCreator()
-	if err != nil {
-		return ""
-	}
-	o, err := oc.CreateOWIDandSign(b)
-	if err != nil {
-		return ""
-	}
-
-	be, err := o.AsByteArray()
-	if err != nil {
-		return ""
-	}
-
-	n := &owid.Node{OWID: be}
-
-	e, err := n.AsJSON()
-	if err != nil {
-		return ""
-	}
-	return string(e)
+	return r.AsString()
 }
 
 // DomainsByCategory returns all the domains that match the category.

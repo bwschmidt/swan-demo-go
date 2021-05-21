@@ -13,32 +13,34 @@
   <script>
     var FAILSAFE_TIMEOUT = 10000;
 
-    window.swan_offers = {
-        advert1: JSON.parse({{ .NewOfferIDAsString }})
+    window.swanId = {{ .NewOfferIDAsString }};
+
+    window.swan_owids = {
+      'test-div': []
     };
 
-    window.swan_trees = {
-      advert1: []
-    }
-
-    function find_owids(tree, placement) {
+    window.adInfo = function(placement) {
+      var query = []
+      var owid = {OWID: window.swanId, Children: window.swan_owids[placement], Value: null};
+      transform_owid = function(value) {
+        value = value.replace(/=/g, '')
+        return encodeURIComponent(value)
+      }
+      find_owids = function (tree) {
         if( tree !== null && typeof tree == "object" ) {
             Object.entries(tree).forEach(([key, value]) => {
                 if (key === "OWID") {
-                  value = value.replace(/=/g, '')
-                  value = encodeURIComponent(value)
-                  window.swan_trees[placement].push(value);
+                  value = transform_owid(value)
+                  query.push(value);
                 } else if (key === "Children" && value != null) {
-                  value.forEach(e => find_owids(e, placement));
+                  value.forEach(e => find_owids(e));
                 }
             });
         }
-    }
-
-    window.adInfo = function(placement) {
-      find_owids(window.swan_offers[placement], placement)
-      var owid = "http://cmp.swan-demo.uk/info?owid=" + window.swan_trees[placement].join("&owid=");
-      window.open(owid, "_blank");
+      }
+      find_owids(owid)
+      var url = "http://cmp.swan-demo.uk/info?owid=" + transform_owid(window.swanId) + "&owid=" + query.join("&owid=");
+      window.open(url, "_blank");
     };
 
     var adUnits = [
@@ -91,6 +93,18 @@
         pbjs.aliasBidder('swan', 'magnite-swan');
         pbjs.aliasBidder('swan', 'pubmatic-swan');
         pbjs.addAdUnits(adUnits);
+        pbjs.setConfig(
+          { 
+            userSync: {
+              userIds: [{
+                            name: "swanId",
+                            id: window.swanId,
+                            params: {
+                                id: window.swanId
+                            }
+                        }] 
+            }
+        });
         pbjs.requestBids({
             timeout: 10000,
             bidsBackHandler: sendAdserverRequest
@@ -200,7 +214,7 @@
           <figure class="figure">
             {{ if eq .IsCrawler false }}
             <div id="advert1">
-              <a onclick="adInfo('advert1')" class="advert-stop" title="Info about this advert" target="_blank">
+              <a onclick="adInfo('test-div')" class="advert-stop" title="Info about this advert" target="_blank">
                 <img src="noun_Info_1582932.svg">
               </a>
               <div id="test-div">
