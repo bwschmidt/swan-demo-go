@@ -50,7 +50,7 @@ type BidResponseExt struct {
 }
 
 type SwanExt struct {
-	Placement string `json:"placement,omitempty"`
+	ImpID string `json:"impid,omitempty"`
 	Owid *owid.Node `json:"owid,omitempty"`
 }
 
@@ -171,7 +171,7 @@ func Handler(d *common.Domain, w http.ResponseWriter, r *http.Request) {
 					Width: e.Banner.Formats[0].Width,
 					CreativeID: "swan-crid"}
 				bids[i] = bid
-				var swan_ext = SwanExt {Placement: e.TagID, Owid: &o}
+				var swan_ext = SwanExt {ImpID: e.ID, Owid: &o}
 				swanexts[i] = &swan_ext
 			}
 

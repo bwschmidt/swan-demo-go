@@ -9,39 +9,11 @@
   <link href="bootstrap.min.css" rel="stylesheet">
   <link href="blog.css" rel="stylesheet">
   <link href="advert.css" rel="stylesheet">
-
+  <script src="swan.js"></script>
   <script>
     var FAILSAFE_TIMEOUT = 10000;
 
     window.swanId = {{ .NewOfferIDAsString }};
-
-    window.swan_owids = {
-      'test-div': []
-    };
-
-    window.adInfo = function(placement) {
-      var query = []
-      var owid = {OWID: window.swanId, Children: window.swan_owids[placement], Value: null};
-      transform_owid = function(value) {
-        value = value.replace(/=/g, '')
-        return encodeURIComponent(value)
-      }
-      find_owids = function (tree) {
-        if( tree !== null && typeof tree == "object" ) {
-            Object.entries(tree).forEach(([key, value]) => {
-                if (key === "OWID") {
-                  value = transform_owid(value)
-                  query.push(value);
-                } else if (key === "Children" && value != null) {
-                  value.forEach(e => find_owids(e));
-                }
-            });
-        }
-      }
-      find_owids(owid)
-      var url = "http://cmp.swan-demo.uk/info?owid=" + transform_owid(window.swanId) + "&owid=" + query.join("&owid=");
-      window.open(url, "_blank");
-    };
 
     var adUnits = [
         {
@@ -80,7 +52,7 @@
     var pbjs = pbjs || {};
     pbjs.que = pbjs.que || [];
 </script>
-<script src="prebid.js" async></script>
+<script src="prebid/build/dev/prebid.js" async></script>
 
 <script>
     var googletag = googletag || {};
@@ -214,7 +186,7 @@
           <figure class="figure">
             {{ if eq .IsCrawler false }}
             <div id="advert1">
-              <a onclick="adInfo('test-div')" class="advert-stop" title="Info about this advert" target="_blank">
+              <a onclick="swan.adInfo('test-div')" class="advert-stop" title="Info about this advert" target="_blank">
                 <img src="noun_Info_1582932.svg">
               </a>
               <div id="test-div">
