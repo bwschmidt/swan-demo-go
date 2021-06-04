@@ -5,7 +5,7 @@ Demo of SWAN, SWIFT and OWID implemented in Go.
 
 ## Quick Start 
 
-To get you up an running quickly on a local machine using JSON for storage.
+To get you up and running quickly on a local machine using JSON for storage.
 
 ### Prerequisites 
 
@@ -36,7 +36,7 @@ line.
      terminal. 
    * **Windows**: Run `.\setup-hosts.ps1` in an elevated Powershell terminal.
 
-6. Set environment variables:
+5. Set environment variables:
    * If using Visual Studio Code, then a launch file is provided for convenience. 
      Rename `.vscode\launch.json.rename` to `.vscode\launch.json` 
    * OR, set the following environment variables:
@@ -45,7 +45,6 @@ line.
     ```sh
     export PORT=80
     export OWID_FILE="swan/creators.json"
-    export SWIFT_SECRETS_FILE=".swan/swiftsecrets.json"
     export SWIFT_NODES_FILE="swan/swiftnodes.json"
     ```
 
@@ -53,7 +52,6 @@ line.
     ```bat
     setx PORT=80
     setx OWID_FILE="swan/creators.json"
-    setx SWIFT_SECRETS_FILE=".swan/swiftsecrets.json"
     setx SWIFT_NODES_FILE="swan/swiftnodes.json"
     ```
 
@@ -61,18 +59,17 @@ line.
     ```powershell
     $Env:PORT=80
     $Env:OWID_FILE="swan/creators.json"
-    $Env:SWIFT_SECRETS_FILE=".swan/swiftsecrets.json"
     $Env:SWIFT_NODES_FILE="swan/swiftnodes.json"
     ```
 
-7. Run the Demo Server:
+6. Run the Demo Server:
    * **VSCode** If using Visual Studio Code, then the `.vscode\launch.json.rename` 
      file contains all the necessary settings to run and debug the demo.
    * **Linux**: Run `./application appsettings.dev.json` in a terminal.
    * **Windows**: Run `.\application.exe .\appsettings.dev.json` in a Powershell 
      window.
 
-8. Navigate to http://new-pork-limes.uk in your preferred browser.
+7. Navigate to http://new-pork-limes.uk in your preferred browser.
 
 # SWAN Concepts
 
@@ -203,14 +200,15 @@ line.
 
     ```                
     OWID_FILE: ".swan/creators.json"
-    SWIFT_SECRETS_FILE: ".swan/swiftsecrets.json"
     SWIFT_NODES_FILE: ".swan/swiftnodes.json"
     ```
 
     The vscode `launch.json` file can also be used to set environment variables, 
     see `the .vscode\launch.json.rename` sample file.
 
-  * OR, for AWS, specify region and credentials in either environment variables 
+  * OR, for AWS:
+    * Set the ``AWS_ENABLED`` environment variable to true.
+    * Specify region and credentials in either environment variables 
     or in `~/.aws/credentials` and `~/.aws/config` files. See 
     [Configuring AWS SDK for Go](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html) to set up your environment. Make sure 
     to set the `AWS_REGION`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` as 
@@ -250,6 +248,7 @@ The following host resolutions are used in the sample configuration:
   ```
   # domains from the www folder
   127.0.0.1	new-pork-limes.uk
+  127.0.0.1	new-prebid-limes.uk
   127.0.0.1 biscuit-news.uk
   127.0.0.1	current-bun.uk
   127.0.0.1	cool-bikes.uk
@@ -357,7 +356,8 @@ The following host resolutions are used in the sample configuration:
   * For each of the access and storage nodes that will be used for the SWIFT 
   component of the demo register these using the following URL. Enter the network 
   as "swan" (no quotes). The records from these steps will be visible in the 
-  ``swiftnodes`` and ``swiftsecrets`` tables.
+  ``swiftnodes`` and ``swiftsecrets`` tables or if using local storage the 
+  ``swiftnodes.json`` file.
 
     **Access nodes**
 
@@ -484,7 +484,11 @@ folder with directories for all the domains the demo will respond to. Note the
 SWIFT domains used for storage do not need to be present in the www folder.
 
 * Create a new Elastic Beanstalk Application and Environment using the 
-[AWS document](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/create_deploy_go.html).
+[AWS documentation](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/create_deploy_go.html).
+
+* On your new Elastic Beanstalk instance set the following environment variables:
+  * ``AWS_ENABLED`` - ``true``
+  * ``PORT`` - ``5000``
 
 * Give the Elastic Beanstalk Environment permissions to create and read DynamoDB
 tables:
@@ -780,8 +784,8 @@ openssl x509 -req -days 3650 -in uk.csr -signkey uk.key -out uk.crt -extensions 
 
 ### Storage
 
-The demo features a local storage option. Creators, Swift Nodes and Swift Secrets 
-are stored locally in json files.
+The demo features a local storage option. Creators and Swift Nodes are stored
+locally in json files.
 
 This is the default configuration of the demo. See `.vscode\launch.json.rename`
 The files are stored in a folder called `.swan`, the files are named consistently
@@ -789,11 +793,28 @@ with the tables names when using cloud storage solutions.
 
 * Creators - `.swan\creators.json`
 * Swift Nodes - `.swan\swiftnodes.json`
-* Sift Secrets - `.swan\swiftsecrets.json`
 
 These files are available in source control and contain pre-populated data. A 
 script has been provided for convenience if you want to regenerate the data i.e. 
 to use a different set of secrets.
+
+### OWID Storage
+
+If using multiple stores to simulate multiple stores for SWIFT, the store for 
+OWID must be specified as OWID only supports one instance of store.
+
+To specify the storage implementation to use, set the environment variable 
+`OWID_STORE` to one of the following:
+
+* Azure Table Storage - `azure`
+* Google Firebase - `gcp`
+* Local Storage - `local`
+* AWS DynamoDB - `aws`
+
+If the `OWID_STORE` environment is not set then the first configured store in 
+the above order will be used instead.
+
+See `.vscode/launch.json.rename` for a sample.
 
 #### Steps:
 
@@ -816,3 +837,108 @@ If configuring an Azure App Service then see:
 
 Use the Command Palette (Ctrl + Shift + P) to running the 
 `Go: Install/Update Tools` to install `gopkgs`, `dlv` and `gopls`.
+
+## Prebid
+
+The publisher new-prebid-limes shows a demo of how SWAN data might transact in Prebid.js. To run the demo you will have to build Prebid.js:
+
+```
+cd www/prebid
+npm install
+gulp serve-fast
+```
+
+This demo uses a demo library `new-prebid-limes.uk/swan.js` which exists simply to collect any SWAN signatures returned to the page and format them when needed for a request to the CMP info page.
+
+The included branch of Prebid.js includes a [swanIdSystem](https://github.com/openx/Prebid.js/blob/swan-demo/modules/swanIdSystem.js) module which reads the swanId of the page from `window.swanId` and exposes it to bidders (the publisher can control which bidders receive the swanId). In the demo it is exposed as an eid:
+
+```
+{
+  "user": {
+    "ext": {
+      "eids": [
+        {
+          "source": "swan.io",
+          "uids": [
+            {
+              "id": "Am5ldy1wcmViaWQtbGltZXMudWsAVnILAEYBAAABAW5ldy1wcmViaWQtbGltZXMudWsAEAAAAO+5CvBYC06tlwUMC7LNAqACNTFkYS51awAb/wkAEAAAAKLBNyHy5UE5kcN3KQkAvpdtkGrfd/KBl3Mk1r0f7MrQKmuCpmXZqjNHFJe9pJG0a7QPHShEvYHUorxiS7RKB2w9rzP0fnC0fzeox4zE69NFAmNtcC5zd2FuLWRlbW8udWsAkkULAAIAAABvbhXF8zuDcui52ZUJqx8i5/ZvkVtqRv1H2qyq/2ixzhJ5SPEvn6RVxVJo1dX0c04ds5i6ojRAH3YbIqCUDp5a4+kCNTFkYS51awBJcgsAAAAAACJblIVvjFskyW1leVSAyTvHOQalKCCrktEPjHp9/KQHaRjbAf8/foYvRtzvI8KQhnXZqI88fGZnFyxHEOe+jCNjb29sLWNhcnMudWsNAGbf7GSQpz/Y8M/abqvDEoH3XIIxbU3qoQnVtZcbOPwcpwYZBbxyBThZsrfj76OJXe1BxtXgxdTvPb8pYFxaNbQ",
+              "atype": 1
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+```
+
+SWAN readers are required to return OWID signatures when they use SWAN data. The included [`swanBidAdapter`](https://github.com/openx/Prebid.js/blob/swan-demo/modules/swanBidAdapter.js) shows how this might be done. In the example the bidder returns a tree of OWIDs using the `BidResponse.ext.swan_owids` field in OpenRTB. The BidResponse extension is used instead of Bid extension because SWAN data can be used without the submission of a bid. These OWIDs are then passed to `swan.js` in the page.
+```
+BidResponse
+{
+  "id": "swan-bid",
+  "ext": {
+    "swan_owids": [
+      {
+        "impid": "22600961cdf2dc",
+        "owid": {
+          "OWID": "Am5ldy1wcmViaWQtbGltZXMudWsAVnILAEYBAAABAW5ldy1wcmViaWQtbGltZXMudWsAEAAAAO+5CvBYC06tlwUMC7LNAqACNTFkYS51awAb/wkAEAAAAKLBNyHy5UE5kcN3KQkAvpdtkGrfd/KBl3Mk1r0f7MrQKmuCpmXZqjNHFJe9pJG0a7QPHShEvYHUorxiS7RKB2w9rzP0fnC0fzeox4zE69NFAmNtcC5zd2FuLWRlbW8udWsAkkULAAIAAABvbhXF8zuDcui52ZUJqx8i5/ZvkVtqRv1H2qyq/2ixzhJ5SPEvn6RVxVJo1dX0c04ds5i6ojRAH3YbIqCUDp5a4+kCNTFkYS51awBJcgsAAAAAACJblIVvjFskyW1leVSAyTvHOQalKCCrktEPjHp9/KQHaRjbAf8/foYvRtzvI8KQhnXZqI88fGZnFyxHEOe+jCNjb29sLWNhcnMudWsNAGbf7GSQpz/Y8M/abqvDEoH3XIIxbU3qoQnVtZcbOPwcpwYZBbxyBThZsrfj76OJXe1BxtXgxdTvPb8pYFxaNbQ=",
+          "Children": [
+            {
+              "OWID": "AnB1Ym1hdGljLnN3YW4tZGVtby51awBWcgsAAgAAAAEDLMTHhj4R3CuSKdKJb09EHlhF1zqksgAgfX3MY5PTw7u+FfC4V8PJVtBF5N1T6WWH8+LATVitImD+2COXGp6tjw==",
+              "Children": [
+                {
+                  "OWID": "AmJpZHN3aXRjaC5zd2FuLWRlbW8udWsAVnILAAIAAAABAxX5d7Y8Pli/92GduwPACGuLrx5l+BtlHPNJKzW+7INyDyfkfbr5gMy2g5yn76HknKw5TRSZiDLU5KhO3Cx//n0=",
+                  "Children": [
+                    {
+                      "OWID": "AmNlbnRyby5zd2FuLWRlbW8udWsAVnILAEIAAAABAGNvb2wtYmlrZXMudWsvcm9iZXJ0LWJ5ZS10RzM2cnZDZXFuZy11bnNwbGFzaC5qcGcAY29vbC1iaWtlcy51awBz6XFdFsuqNUYj4FDcMbGBUDCSrQAzw68Axx9CWnL/Hbv794nwsfqHJugwOA/y0wmuS1Uwk/9KX/NQGa+GJHj+",
+                      "Children": null,
+                      "Value": null
+                    },
+                    {
+                      "OWID": "AmRhdGF4dS5zd2FuLWRlbW8udWsAVnILAEIAAAABAGNvb2wtYmlrZXMudWsvcm9iZXJ0LWJ5ZS10RzM2cnZDZXFuZy11bnNwbGFzaC5qcGcAY29vbC1iaWtlcy51awCX/oTwFpXMKFMyOQfe6mHtTuXEUkR80RQ7gjGSa4jHx/WOTRKUT4NqOuCub91+NUBvkAwpdaPy7SmS9ud2eZ0p",
+                      "Children": null,
+                      "Value": null
+                    },
+                    {
+                      "OWID": "Am1lZGlhbWF0aC5zd2FuLWRlbW8udWsAVnILAEIAAAABAGNvb2wtYmlrZXMudWsvcm9iZXJ0LWJ5ZS10RzM2cnZDZXFuZy11bnNwbGFzaC5qcGcAY29vbC1iaWtlcy51awBHAac8aYTE1X+Ptg+2M5VZ2Xwcj30GYNJDfGODpsg6gnLv1cW4/QqoBhWfKOW/Im84pGi8N1E7tj/kMTtw59Dp",
+                      "Children": null,
+                      "Value": null
+                    },
+                    {
+                      "OWID": "Am9hdGguc3dhbi1kZW1vLnVrAFZyCwBIAAAAAQBjb29sLWNyZWFtcy51ay9iZWUtbmF0dXJhbGxlcy11X0hqSGZrekF5TS11bnNwbGFzaC5qcGcAY29vbC1jcmVhbXMudWsAn8xrJETFajRbDn2iDMaC8/Qx/IxQRnAS8AfRO6j48dQHeCzCR4kVCc1ZC9tyEEDKbVYz0mlSsG5A/JhsJ6wnWw==",
+                      "Children": null,
+                      "Value": null
+                    },
+                    {
+                      "OWID": "AnRoZXRyYWRlZGVzay5zd2FuLWRlbW8udWsAVnILAEIAAAABAGNvb2wtYmlrZXMudWsvcm9iZXJ0LWJ5ZS10RzM2cnZDZXFuZy11bnNwbGFzaC5qcGcAY29vbC1iaWtlcy51awCf58s1fIjpxQrdUHLqdNHB+3vXbxAxxXeooOZ/g2a9R0A132ZeBRcpgr2BadsoHd8JLqrt4BShkFIj0QqopMnm",
+                      "Children": null,
+                      "Value": null
+                    },
+                    {
+                      "OWID": "AnpldGEuc3dhbi1kZW1vLnVrAFZyCwBIAAAAAQBjb29sLWNyZWFtcy51ay9iZWUtbmF0dXJhbGxlcy11X0hqSGZrekF5TS11bnNwbGFzaC5qcGcAY29vbC1jcmVhbXMudWsATuxHQWQ59ch+E4zA59j1eBySgeEWzPVzGd2Wn2vfYWwPcGY/9kZK82A3LWSncxrZrYO20SXD1TPiWiPf9j9A8g==",
+                      "Children": [
+                        {
+                          "OWID": "AmxpdmVpbnRlbnQuc3dhbi1kZW1vLnVrAFZyCwACAAAAAQM55HrmAo6su1AGS8MzTn5XsPkGW32Xuq1nzaZcnXcDAK/8zNP/T5nhZyd98XUZJ13hXcQOSgcUdqRAoBXrGXLU",
+                          "Children": null,
+                          "Value": null
+                        }
+                      ],
+                      "Value": -1
+                    }
+                  ],
+                  "Value": 0
+                }
+              ],
+              "Value": 0
+            }
+          ],
+          "Value": null
+        }
+      }
+    ]
+  }
+}
+```
+
+The swan-demo package includes a prebid route in the OpenRTB controller which is used to return SWAN BidResponses for the demo. It is an OpenRTB interface around the existing demo advertising mechanism.
