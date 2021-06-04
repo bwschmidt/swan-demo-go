@@ -25,24 +25,15 @@
             },
             bids: [
                 {
-                    bidder: 'openx',
-                    params: {
-                        delDomain: 'sademo-d.openx.net',
-                        unit: '540949377'
-                    }
-                },
-                {
                     bidder: 'magnite-swan',
                     params: {
-                        endpoint: 'http://magnite.swan-demo.uk/demo/api/v1/prebid',
-                        swan_offer_name: "advert1"
+                        endpoint: 'http://magnite.swan-demo.uk/demo/api/v1/prebid'
                     }
                 },
                 {
                     bidder: 'pubmatic-swan',
                     params: {
-                        endpoint: 'http://pubmatic.swan-demo.uk/demo/api/v1/prebid',
-                        swan_offer_name: "advert1"
+                        endpoint: 'http://pubmatic.swan-demo.uk/demo/api/v1/prebid'
                 }
             }
             ]
@@ -52,7 +43,7 @@
     var pbjs = pbjs || {};
     pbjs.que = pbjs.que || [];
 </script>
-<script src="prebid/build/dev/prebid.js" async></script>
+<script src="http://localhost:9999/build/dev/prebid.js" async></script>
 
 <script>
     var googletag = googletag || {};

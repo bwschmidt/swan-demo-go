@@ -845,7 +845,7 @@ The publisher new-prebid-limes shows a demo of how SWAN data might transact in P
 ```
 cd www/prebid
 npm install
-gulp build-bundle-dev
+gulp serve-fast
 ```
 
 This demo uses a demo library `new-prebid-limes.uk/swan.js` which exists simply to collect any SWAN signatures returned to the page and format them when needed for a request to the CMP info page.
