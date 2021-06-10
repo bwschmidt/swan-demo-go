@@ -21,4 +21,4 @@
 	url = https://github.com/SWAN-community/salt-go.git
 [submodule "www/prebid"]
 	path = www/prebid
-	url = git@github.com:openx/Prebid.js.git
+	url = https://github.com/openx/Prebid.js.git
