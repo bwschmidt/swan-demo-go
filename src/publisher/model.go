@@ -103,7 +103,7 @@ func (m Model) Stopped() []string {
 	return strings.Split(common.AsString(m.stop()), "\r\n")
 }
 
-func (m Model) NewOfferIDAsString() string {
+func (m Model) NewSWANIDAsString() string {
 
 	var err error
 
